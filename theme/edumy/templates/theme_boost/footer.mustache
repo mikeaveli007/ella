@@ -1,0 +1,79 @@
+{{#footer_4}}
+  <section class="footer_one home8 pb0">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-6 offset-lg-3">
+          {{#logo_footer}}
+            <div class="logo-widget home8 mb60">
+              {{#logo_image_footer}}<img class="img-fluid" src="{{{footerlogo1}}}" alt="{{ sitename }}" {{#logo_styles_footer}} style="{{{logo_styles_footer}}}" {{/logo_styles_footer}}>{{/logo_image_footer}}
+              {{#logotype_footer}}<span>{{ sitename }}</span>{{/logotype_footer}}
+            </div>
+          {{/logo_footer}}
+          <div class="footer_contact_widget home8 text-center">
+            {{{footer_col_1_body}}}
+          </div>
+          <div class="footer_social_widget home8 mt35 mb80">
+            <ul>
+              {{> theme_edumy/ccn_social_icons }}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      <div class="row">
+        {{#cocoon_copyright}}
+          <div class="col-lg-6 col-xl-6">
+            <div class="copyright-widget text-center mt25">
+              <p>{{{ cocoon_copyright }}}</p>
+            </div>
+          </div>
+        {{/cocoon_copyright}}
+        {{#footer_menu}}
+          <div class="col-lg-6 col-xl-6 pb25 pt25 text-right tac-smd">
+            <div class="footer_menu_widget home3">
+              {{{footer_menu}}}
+            </div>
+          </div>
+        {{/footer_menu}}
+      </div>
+    </div>
+  </section>
+{{/footer_4}}
+{{^footer_4}}
+  {{#footer_1}}
+    {{> theme_edumy/ccn_footer_default }}
+  {{/footer_1}}
+  {{#footer_2}}
+    {{> theme_edumy/ccn_footer_default }}
+  {{/footer_2}}
+  {{#footer_3}}
+    {{> theme_edumy/ccn_footer_default }}
+  {{/footer_3}}
+  {{#footer_5}}
+    {{> theme_edumy/ccn_footer_default }}
+  {{/footer_5}}
+  {{#footer_6}}
+    {{> theme_edumy/ccn_footer_default }}
+  {{/footer_6}}
+  {{#footer_7}}
+    {{> theme_edumy/ccn_footer_default }}
+  {{/footer_7}}
+  {{#footer_8}}
+    {{> theme_edumy/ccn_footer_8 }}
+  {{/footer_8}}
+  {{#footer_9}}
+    {{> theme_edumy/ccn_footer_9 }}
+  {{/footer_9}}
+{{/footer_4}}
+
+{{#back_to_top}}
+  <a class="scrollToHome" href="#"><i class="flaticon-up-arrow-1"></i></a>
+{{/back_to_top}}
+
+{{#gmaps_key}}
+  <script src="//maps.googleapis.com/maps/api/js?key={{gmaps_key}}"></script>
+{{/gmaps_key}}
+
+{{{custom_js}}}
+{{{ output.standard_end_of_body_html }}}

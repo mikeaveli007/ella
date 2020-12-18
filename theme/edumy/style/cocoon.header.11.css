@@ -1,0 +1,29 @@
+.ccnHeader11.menu_style_home_one.stricky-fixed {
+  /* background-color: #0d1648; */
+}
+header.ccnHeader11.header-nav.menu_style_home_one.stricky-fixed .ace-responsive-menu>li>a.active span,
+header.ccnHeader11.header-nav.menu_style_home_one.stricky-fixed .ace-responsive-menu>li>a.active span,
+header.ccnHeader11.header-nav.menu_style_home_one.stricky-fixed .ace-responsive-menu>li>a,
+header.ccnHeader11.header-nav.menu_style_home_one.stricky-fixed a.navbar_brand span,
+header.ccnHeader11.header-nav.menu_style_home_one.stricky-fixed .sign_up_btn .btn,
+header.ccnHeader11.header-nav.menu_style_home_one.stricky-fixed #search-button i {
+  /* color: #fff; */
+}
+@media (min-width: 1200px) {
+  .ccnHeader11.stricky-fixed .header_user_notif {
+    position: absolute;
+    right: 80px;
+  }
+  header.ccnHeader11.header-nav.menu_style_home_one .sign_up_btn li.list_s a.btn.flaticon-user {
+    position: absolute;
+    top: 20px;
+    right: 70px;
+  }
+  .ccn_context_frontend header.ccnHeader11.header-nav.menu_style_home_one:not(.stricky-fixed) a.navbar_brand {
+    z-index: 1;
+  }
+  .ccn_context_frontend .ccnHeader11.header-nav.menu_style_home_one.home10:not(.stricky-fixed) ul.ace-responsive-menu {
+    position: relative;
+    left: -100px;
+  }
+}
