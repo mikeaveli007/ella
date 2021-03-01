@@ -63,8 +63,8 @@ if (empty($options['verbose'])) {
 } else {
     $trace = new text_progress_trace();
 }
-
+echo "before result";
 $result = enrol_cohort_sync($trace, null);
 $trace->finished();
-
+echo "after";
 exit($result);

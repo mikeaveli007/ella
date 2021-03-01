@@ -24,6 +24,13 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+if (!defined('CORE_MEDIA_VIDEO_WIDTH')) {
+    define('CORE_MEDIA_VIDEO_WIDTH', 900);
+}
+if (!defined('CORE_MEDIA_VIDEO_HEIGHT')) {
+    define('CORE_MEDIA_VIDEO_HEIGHT', 675);
+};
+
 require_once(__DIR__ . '/lib.php');
 
 $THEME->name = 'boost';

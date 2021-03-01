@@ -113,7 +113,7 @@ class filter_glossary extends moodle_text_filter {
                     $attributes = array(
                         'href'  => $link,
                         'title' => str_replace('&amp;', '&', $title), // Undo the s() mangling.
-                        'class' => 'glossary autolink concept glossaryid' . $concept->glossaryid);
+                        'class' => 'glossary concept glossaryid' . $concept->glossaryid);
                 }
                 // This flag is optionally set by resource_pluginfile()
                 // if processing an embedded file use target to prevent getting nested Moodles.
