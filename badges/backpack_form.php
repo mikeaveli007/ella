@@ -50,9 +50,6 @@ class edit_backpack_form extends moodleform {
         $mform->addElement('hidden', 'userid', $USER->id);
         $mform->setType('userid', PARAM_INT);
 
-        $mform->addElement('hidden', 'backpackurl', BADGE_BACKPACKURL);
-        $mform->setType('backpackurl', PARAM_URL);
-
         if (isset($this->_customdata['email'])) {
             // Email will be passed in when we're in the process of verifying the user's email address,
             // so set the connection status, lock the email field, and provide options to resend the verification
@@ -61,10 +58,10 @@ class edit_backpack_form extends moodleform {
                 array('class' => 'notconnected', 'id' => 'connection-status'));
             $mform->addElement('static', 'status', get_string('status'), $status);
             $mform->addElement('hidden', 'email', $this->_customdata['email']);
-            $mform->setType('email', PARAM_RAW_TRIMMED);
+            $mform->setType('email', PARAM_EMAIL);
             $mform->hardFreeze(['email']);
-            $status = html_writer::tag('span', $this->_customdata['email'], []);
-            $mform->addElement('static', 'emailverify', get_string('email'), $status);
+            $emailverify = html_writer::tag('span', s($this->_customdata['email']), []);
+            $mform->addElement('static', 'emailverify', get_string('email'), $emailverify);
             $buttonarray = [];
             $buttonarray[] = &$mform->createElement('submit', 'submitbutton',
                                                     get_string('backpackconnectionresendemail', 'badges'));
@@ -80,7 +77,7 @@ class edit_backpack_form extends moodleform {
             $mform->addElement('text', 'email', get_string('email'), 'maxlength="100" size="30"');
             $mform->addHelpButton('email', 'backpackemail', 'badges');
             $mform->addRule('email', get_string('required'), 'required', null, 'client');
-            $mform->setType('email', PARAM_RAW_TRIMMED);
+            $mform->setType('email', PARAM_EMAIL);
             $this->add_action_buttons(false, get_string('backpackconnectionconnect', 'badges'));
         }
     }
@@ -94,7 +91,7 @@ class edit_backpack_form extends moodleform {
         // We don't need to verify the email address if we're clearing a pending email verification attempt.
         if (!isset($data['revertbutton'])) {
             $check = new stdClass();
-            $check->backpackurl = $data['backpackurl'];
+            $check->backpackurl = BADGE_BACKPACKURL;
             $check->email = $data['email'];
 
             $bp = new OpenBadgesBackpackHandler($check);

@@ -705,7 +705,9 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $rrule = "FREQ=MONTHLY;INTERVAL=12;BYMONTHDAY=2";
 
         $mang = new rrule_manager($rrule);
-        $until = time() + (YEARSECS * $mang::TIME_UNLIMITED_YEARS);
+        $untildate = new DateTime();
+        $untildate->add(new DateInterval('P' . $mang::TIME_UNLIMITED_YEARS . 'Y'));
+        $until = $untildate->getTimestamp();
 
         $mang->parse_rrule();
         $mang->create_events($this->event);
@@ -860,7 +862,9 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $rrule = "FREQ=MONTHLY;INTERVAL=12;BYDAY=1MO";
 
         $mang = new rrule_manager($rrule);
-        $until = time() + (YEARSECS * $mang::TIME_UNLIMITED_YEARS);
+        $untildate = new DateTime();
+        $untildate->add(new DateInterval('P' . $mang::TIME_UNLIMITED_YEARS . 'Y'));
+        $until = $untildate->getTimestamp();
 
         $mang->parse_rrule();
         $mang->create_events($this->event);
@@ -868,7 +872,7 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $records = $DB->get_records('event', ['repeatid' => $this->event->id], 'timestart ASC', 'id, repeatid, timestart');
         $expecteddate = new DateTime('first Monday of this month');
         // Move to the next interval's first Monday if the calculated start date is after this month's first Monday.
-        if ($expecteddate->getTimestamp() < $startdatetime->getTimestamp()) {
+        if ($expecteddate->getTimestamp() < $startdate->getTimestamp()) {
             $expecteddate->add($interval);
             $expecteddate->modify('first Monday of this month');
         }

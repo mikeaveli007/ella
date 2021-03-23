@@ -1,5 +1,38 @@
 # Change log for the Ad-hoc database queries report
 
+## Changes in 3.9
+
+* Scheduled reports which accumulate one row at a time now display
+  with the most recent data at the top.
+* When sending emails for scheduled reports, the number of rows in
+  the results is now added to the subject line.
+
+
+## Changes in 3.8
+
+* Report results can now be downloaded in any of data format that Moodle supports, not just CSV.
+* Admins can control the maximum possible limit for the number of rows a query can return.
+* Admins can now set which day is considered the first of the week for weekly reports.
+  This defaults to the Moodle setting for this for new installs. For existing installs,
+  it stays the same as before (Saturday) but you can change it.
+
+
+## Changes in 3.7
+
+* If a report has query parameters, they can now be set in the URL
+  (GET parameters) so you can bookmark a particular variant of a report.
+* There is a parameter you can add to the URL of a report, so it is
+  displayed with 'embedded' page layout, suitable for showing in an iframe.
+* Also, change the page layout used in the normal case to 'report'.
+* Query param values that are integers are now sent to the database as
+  integers, which can lead to queries being optimised better.
+* Fix an issue with showing the results of scheduled reports, when the
+  report only produces data sometimes.
+* Improve handling of 'pretty' column names.
+* Fix compatibility with the messaging API changes in Moodle 3.6.
+* Improve message default settings on install.
+* Move hard-coded English string 'Run report' to the language file.
+
 
 ## Changes in 3.6
 

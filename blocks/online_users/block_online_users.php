@@ -74,28 +74,42 @@ class block_online_users extends block_base {
 
         //Calculate minutes
         $minutes  = floor($timetoshowusers/60);
+        $periodminutes = get_string('periodnminutes', 'block_online_users', $minutes);
 
-        // Verify if we can see the list of users, if not just print number of users
-        if (!has_capability('block/online_users:viewlist', $this->page->context)) {
-            if (!$usercount = $onlineusers->count_users()) {
-                $usercount = get_string("none");
-            }
-            $this->content->text = "<div class=\"info\">".get_string("periodnminutes","block_online_users",$minutes).": $usercount</div>";
+        // Count users.
+        $usercount = $onlineusers->count_users();
+        if ($usercount === 0) {
+            $usercount = get_string('nouser', 'block_online_users');
+        } else if ($usercount === 1) {
+            $usercount = get_string('numuser', 'block_online_users', $usercount);
+        } else {
+            $usercount = get_string('numusers', 'block_online_users', $usercount);
+        }
+
+        $this->content->text = '<div class="info">'.$usercount.' ('.$periodminutes.')</div>';
+
+        // Verify if we can see the list of users, if not just print number of users.
+        // If the current user is not logged in OR it's a guest then don't show any users.
+        if (!has_capability('block/online_users:viewlist', $this->page->context)
+                || isguestuser() || !isloggedin()) {
             return $this->content;
         }
+
         $userlimit = 50; // We'll just take the most recent 50 maximum.
+        $initialcount = 0;
         if ($users = $onlineusers->get_users($userlimit)) {
+            require_once($CFG->dirroot . '/user/lib.php');
+            $initialcount = count($users);
             foreach ($users as $user) {
+                if (!user_can_view_profile($user)) {
+                    unset($users[$user->id]);
+                    continue;
+                }
                 $users[$user->id]->fullname = fullname($user);
             }
         } else {
             $users = array();
         }
-
-        $usercount = $onlineusers->count_users();
-        $usercount = ": $usercount";
-
-        $this->content->text = "<div class=\"info\">(".get_string("periodnminutes","block_online_users",$minutes)."$usercount)</div>";
 
         //Now, we have in users, the list of users to show
         //Because they are online
@@ -132,9 +146,15 @@ class block_online_users extends block_base {
                 }
                 $this->content->text .= "</li>\n";
             }
+            if ($initialcount - count($users) > 0) {
+                $this->content->text .= '<li class="listentry"><div class="otherusers">';
+                $this->content->text .= html_writer::span(
+                    get_string('otherusers', 'block_online_users', $initialcount - count($users))
+                );
+                $this->content->text .= "</div>";
+                $this->content->text .= "</li>\n";
+            }
             $this->content->text .= '</ul><div class="clearer"><!-- --></div>';
-        } else {
-            $this->content->text .= "<div class=\"info\">".get_string("none")."</div>";
         }
 
         return $this->content;

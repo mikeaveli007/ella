@@ -76,6 +76,16 @@ require_capability('mod/assign:manageoverrides', $context);
 if ($overrideid) {
     // Editing an override.
     $data = clone $override;
+
+    if ($override->groupid) {
+        if (!groups_group_visible($override->groupid, $course, $cm)) {
+            print_error('invalidoverrideid', 'assign');
+        }
+    } else {
+        if (!groups_user_groups_visible($course, $override->userid, $cm)) {
+            print_error('invalidoverrideid', 'assign');
+        }
+    }
 } else {
     // Creating a new override.
     $data = new stdClass();
@@ -183,7 +193,7 @@ if ($mform->is_cancelled()) {
         unset($fromform->id);
         $fromform->id = $DB->insert_record('assign_overrides', $fromform);
         if ($groupmode) {
-            $fromform->sortorder = $fromform->id;
+            $fromform->sortorder = 1;
 
             $overridecountgroup = $DB->count_records('assign_overrides',
                 array('userid' => null, 'assignid' => $assigninstance->id));
@@ -196,7 +206,7 @@ if ($mform->is_cancelled()) {
             }
 
             $DB->update_record('assign_overrides', $fromform);
-
+            reorder_group_overrides($assigninstance->id);
         }
 
         // Determine which override created event to fire.

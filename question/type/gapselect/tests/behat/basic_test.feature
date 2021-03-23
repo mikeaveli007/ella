@@ -27,15 +27,18 @@ Feature: Test all the basic functionality of this question type
       | General feedback          | The cat sat on the mat.       |
       | id_choices_0_answer       | cat                           |
       | id_choices_1_answer       | sat                           |
+      | id_choices_1_choicegroup  | 2                             |
       | id_choices_2_answer       | mat                           |
       | id_choices_3_answer       | dog                           |
       | id_choices_4_answer       | table                         |
+      | id_choices_5_answer       | ran                           |
+      | id_choices_5_choicegroup  | 2                             |
       | Hint 1                    | First hint                    |
       | Hint 2                    | Second hint                   |
     Then I should see "Select missing words 001"
 
     # Preview it.
-    When I click on "Preview" "link" in the "Select missing words 001" "table_row"
+    When I choose "Preview" action for "Select missing words 001" in the question bank
     And I switch to "questionpreview" window
 
     # Gaps (drop-down menus) do not have labels. ids and names are generated
@@ -48,8 +51,8 @@ Feature: Test all the basic functionality of this question type
       | How questions behave | Interactive with multiple tries |
       | Marked out of        | 3                               |
       | Marks                | Show mark and max               |
-      | Specific feedback    | Shown |
-      | Right answer         | Shown |
+      | Specific feedback    | Shown                           |
+      | Right answer         | Shown                           |
     And I press "Start again with these options"
 
     # Answer question correctly
@@ -113,8 +116,8 @@ Feature: Test all the basic functionality of this question type
 
     # Answer question incorrectly
     And I set space "1" to "mat" in the select missing words question
-    And I set space "2" to "cat" in the select missing words question
-    And I set space "3" to "sat" in the select missing words question
+    And I set space "2" to "ran" in the select missing words question
+    And I set space "3" to "table" in the select missing words question
     And I press "Check"
     Then I should see "Your answer is incorrect"
     And I should see "The cat sat on the mat"
@@ -133,16 +136,19 @@ Feature: Test all the basic functionality of this question type
     Then I should see "Select missing words 001"
 
     # Edit the copy and verify the form field contents.
-    When I click on "Edit" "link" in the "Select missing words 001" "table_row"
+    When I choose "Edit question" action for "Select missing words 001" in the question bank
     Then the following fields match these values:
       | Question name             | Select missing words 001      |
       | Question text             | The [[1]] [[2]] on the [[3]]. |
       | General feedback          | The cat sat on the mat.       |
       | id_choices_0_answer       | cat                           |
       | id_choices_1_answer       | sat                           |
+      | id_choices_1_choicegroup  | 2                             |
       | id_choices_2_answer       | mat                           |
       | id_choices_3_answer       | dog                           |
       | id_choices_4_answer       | table                         |
+      | id_choices_5_answer       | ran                           |
+      | id_choices_5_choicegroup  | 2                             |
       | Hint 1                    | First hint                    |
       | Hint 2                    | Second hint                   |
     And I set the following fields to these values:

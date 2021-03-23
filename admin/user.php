@@ -38,12 +38,6 @@
     $strunlock = get_string('unlockaccount', 'admin');
     $strconfirm = get_string('confirm');
 
-    if (empty($CFG->loginhttps)) {
-        $securewwwroot = $CFG->wwwroot;
-    } else {
-        $securewwwroot = str_replace('http:','https:',$CFG->wwwroot);
-    }
-
     $returnurl = new moodle_url('/admin/user.php', array('sort' => $sort, 'dir' => $dir, 'perpage' => $perpage, 'page'=>$page));
 
     // The $user variable is also used outside of these if statements.
@@ -166,10 +160,13 @@
 
     // Carry on with the user listing
     $context = context_system::instance();
-    $extracolumns = get_extra_user_fields($context);
+    // These columns are always shown in the users list.
+    $requiredcolumns = array('city', 'country', 'lastaccess');
+    // Extra columns containing the extra user fields, excluding the required columns (city and country, to be specific).
+    $extracolumns = get_extra_user_fields($context, $requiredcolumns);
     // Get all user name fields as an array.
     $allusernamefields = get_all_user_name_fields(false, null, null, null, true);
-    $columns = array_merge($allusernamefields, $extracolumns, array('city', 'country', 'lastaccess'));
+    $columns = array_merge($allusernamefields, $extracolumns, $requiredcolumns);
 
     foreach ($columns as $column) {
         $string[$column] = get_user_field_name($column);
@@ -252,7 +249,7 @@
 
     } else {
 
-        $countries = get_string_manager()->get_list_of_countries(false);
+        $countries = get_string_manager()->get_list_of_countries(true);
         if (empty($mnethosts)) {
             $mnethosts = $DB->get_records('mnet_host', null, 'id', 'id,wwwroot,name');
         }
@@ -262,11 +259,17 @@
                 $users[$key]->country = $countries[$user->country];
             }
         }
-        if ($sort == "country") {  // Need to resort by full country name, not code
+        if ($sort == "country") {
+            // Need to resort by full country name, not code.
             foreach ($users as $user) {
                 $susers[$user->id] = $user->country;
             }
-            asort($susers);
+            // Sort by country name, according to $dir.
+            if ($dir === 'DESC') {
+                arsort($susers);
+            } else {
+                asort($susers);
+            }
             foreach ($susers as $key => $value) {
                 $nusers[] = $users[$key];
             }
@@ -339,7 +342,7 @@
             if (has_capability('moodle/user:update', $sitecontext)) {
                 // prevent editing of admins by non-admins
                 if (is_siteadmin($USER) or !is_siteadmin($user)) {
-                    $url = new moodle_url($securewwwroot.'/user/editadvanced.php', array('id'=>$user->id, 'course'=>$site->id));
+                    $url = new moodle_url('/user/editadvanced.php', array('id'=>$user->id, 'course'=>$site->id));
                     $buttons[] = html_writer::link($url, $OUTPUT->pix_icon('t/edit', $stredit));
                 }
             }
@@ -371,7 +374,7 @@
             $row = array ();
             $row[] = "<a href=\"../user/view.php?id=$user->id&amp;course=$site->id\">$fullname</a>";
             foreach ($extracolumns as $field) {
-                $row[] = $user->{$field};
+                $row[] = s($user->{$field});
             }
             $row[] = $user->city;
             $row[] = $user->country;
@@ -398,7 +401,7 @@
         echo $OUTPUT->paging_bar($usercount, $page, $perpage, $baseurl);
     }
     if (has_capability('moodle/user:create', $sitecontext)) {
-        $url = new moodle_url($securewwwroot . '/user/editadvanced.php', array('id' => -1));
+        $url = new moodle_url('/user/editadvanced.php', array('id' => -1));
         echo $OUTPUT->single_button($url, get_string('addnewuser'), 'get');
     }
 

@@ -117,10 +117,9 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
                 $name = empty($value['name']) ? '' : $value['name'];
                 $attr = empty($value['attr']) ? array() : $value['attr'];
                 $class = empty($value['pixattr']['class']) ? '' : $value['pixattr']['class'];
-                $alt = empty($value['pixattr']['alt']) ? '' : $value['pixattr']['alt'];
                 $al = new action_menu_link_secondary(
                     new moodle_url($url),
-                    new pix_icon($icon, $alt, null, array('class' => "smallicon " . $class)),
+                    new pix_icon($icon, '', null, array('class' => "smallicon " . $class)),
                     $name,
                     $attr
                 );
@@ -231,7 +230,12 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
         $o .= $this->section_availability($section);
 
         $o .= html_writer::start_tag('div', array('class' => 'summary'));
-        $o .= $this->format_summary_text($section);
+        if ($section->uservisible || $section->visible) {
+            // Show summary if section is available or has availability restriction information.
+            // Do not show summary if section is hidden but we still display it because of course setting
+            // "Hidden sections are shown in collapsed form".
+            $o .= $this->format_summary_text($section);
+        }
         $o .= html_writer::end_tag('div');
 
         return $o;
@@ -323,8 +327,8 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
                 'url'   => new moodle_url('/course/editsection.php', array('id' => $section->id, 'sr' => $sectionreturn)),
                 'icon' => 'i/settings',
                 'name' => $streditsection,
-                'pixattr' => array('class' => '', 'alt' => $streditsection),
-                'attr' => array('class' => 'icon edit', 'title' => $streditsection));
+                'pixattr' => array('class' => ''),
+                'attr' => array('class' => 'icon edit'));
         }
 
         if ($section->section) {
@@ -338,8 +342,8 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
                             'url' => $url,
                             'icon' => 'i/hide',
                             'name' => $strhidefromothers,
-                            'pixattr' => array('class' => '', 'alt' => $strhidefromothers),
-                            'attr' => array('class' => 'icon editing_showhide', 'title' => $strhidefromothers,
+                            'pixattr' => array('class' => ''),
+                            'attr' => array('class' => 'icon editing_showhide',
                                 'data-sectionreturn' => $sectionreturn, 'data-action' => 'hide'));
                     } else {
                         $strshowfromothers = get_string('showfromothers', 'format_'.$course->format);
@@ -348,8 +352,8 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
                             'url' => $url,
                             'icon' => 'i/show',
                             'name' => $strshowfromothers,
-                            'pixattr' => array('class' => '', 'alt' => $strshowfromothers),
-                            'attr' => array('class' => 'icon editing_showhide', 'title' => $strshowfromothers,
+                            'pixattr' => array('class' => ''),
+                            'attr' => array('class' => 'icon editing_showhide',
                                 'data-sectionreturn' => $sectionreturn, 'data-action' => 'show'));
                     }
                 }
@@ -365,8 +369,8 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
                                 'url' => $url,
                                 'icon' => 'i/up',
                                 'name' => $strmoveup,
-                                'pixattr' => array('class' => '', 'alt' => $strmoveup),
-                                'attr' => array('class' => 'icon moveup', 'title' => $strmoveup));
+                                'pixattr' => array('class' => ''),
+                                'attr' => array('class' => 'icon moveup'));
                         }
 
                         $url = clone($baseurl);
@@ -378,8 +382,8 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
                                 'url' => $url,
                                 'icon' => 'i/down',
                                 'name' => $strmovedown,
-                                'pixattr' => array('class' => '', 'alt' => $strmovedown),
-                                'attr' => array('class' => 'icon movedown', 'title' => $strmovedown));
+                                'pixattr' => array('class' => ''),
+                                'attr' => array('class' => 'icon movedown'));
                         }
                     }
                 }
@@ -400,8 +404,8 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
                     'url' => $url,
                     'icon' => 'i/delete',
                     'name' => $strdelete,
-                    'pixattr' => array('class' => '', 'alt' => $strdelete),
-                    'attr' => array('class' => 'icon editing_delete', 'title' => $strdelete));
+                    'pixattr' => array('class' => ''),
+                    'attr' => array('class' => 'icon editing_delete'));
             }
         }
 
@@ -409,7 +413,7 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
     }
 
     /**
-     * Generate a summary of a section for display on the 'coruse index page'
+     * Generate a summary of a section for display on the 'course index page'
      *
      * @param stdClass $section The course_section entry from DB
      * @param stdClass $course The course entry from DB
@@ -443,12 +447,17 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
         }
         $o .= $this->output->heading($title, 3, 'section-title');
 
+        $o .= $this->section_availability($section);
         $o.= html_writer::start_tag('div', array('class' => 'summarytext'));
-        $o.= $this->format_summary_text($section);
+
+        if ($section->uservisible || $section->visible) {
+            // Show summary if section is available or has availability restriction information.
+            // Do not show summary if section is hidden but we still display it because of course setting
+            // "Hidden sections are shown in collapsed form".
+            $o .= $this->format_summary_text($section);
+        }
         $o.= html_writer::end_tag('div');
         $o.= $this->section_activity_summary($section, $course, null);
-
-        $o .= $this->section_availability($section);
 
         $o .= html_writer::end_tag('div');
         $o .= html_writer::end_tag('li');
@@ -552,6 +561,10 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
         if (!$section->visible) {
             if ($canviewhidden) {
                 $o .= $this->courserenderer->availability_info(get_string('hiddenfromstudents'), 'ishidden');
+            } else {
+                // We are here because of the setting "Hidden sections are shown in collapsed form".
+                // Student can not see the section contents but can see its name.
+                $o .= $this->courserenderer->availability_info(get_string('notavailable'), 'ishidden');
             }
         } else if (!$section->uservisible) {
             if ($section->availableinfo) {
@@ -559,7 +572,7 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
                 // so there is definitely something to print.
                 $formattedinfo = \core_availability\info::format_info(
                         $section->availableinfo, $section->course);
-                $o .= $this->courserenderer->availability_info($formattedinfo);
+                $o .= $this->courserenderer->availability_info($formattedinfo, 'isrestricted');
             }
         } else if ($canviewhidden && !empty($CFG->enableavailability)) {
             // Check if there is an availability restriction.
@@ -568,7 +581,7 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
             if ($fullinfo) {
                 $formattedinfo = \core_availability\info::format_info(
                         $fullinfo, $section->course);
-                $o .= $this->courserenderer->availability_info($formattedinfo);
+                $o .= $this->courserenderer->availability_info($formattedinfo, 'isrestricted isfullinfo');
             }
         }
         return $o;
@@ -590,7 +603,7 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
      * Show if something is on on the course clipboard (moving around)
      *
      * @param stdClass $course The course entry from DB
-     * @param int $sectionno The section number in the coruse which is being dsiplayed
+     * @param int $sectionno The section number in the course which is being displayed
      * @return string HTML to output.
      */
     protected function course_activity_clipboard($course, $sectionno = null) {
@@ -620,7 +633,7 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
      *
      * @param stdClass $course The course entry from DB
      * @param array $sections The course_sections entries from the DB
-     * @param int $sectionno The section number in the coruse which is being dsiplayed
+     * @param int $sectionno The section number in the course which is being displayed
      * @return array associative array with previous and next section link
      */
     protected function get_nav_links($course, $sections, $sectionno) {
@@ -665,7 +678,7 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
     /**
      * Generate the header html of a stealth section
      *
-     * @param int $sectionno The section number in the coruse which is being dsiplayed
+     * @param int $sectionno The section number in the course which is being displayed
      * @return string HTML to output.
      */
     protected function stealth_section_header($sectionno) {
@@ -695,7 +708,7 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
     /**
      * Generate the html for a hidden section
      *
-     * @param int $sectionno The section number in the coruse which is being dsiplayed
+     * @param int $sectionno The section number in the course which is being displayed
      * @param int|stdClass $courseorid The course to get the section name for (object or just course id)
      * @return string HTML to output.
      */
@@ -769,20 +782,11 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
         $course = course_get_format($course)->get_course();
 
         // Can we view the section in question?
-        if (!($sectioninfo = $modinfo->get_section_info($displaysection))) {
-            // This section doesn't exist
-            print_error('unknowncoursesection', 'error', null, $course->fullname);
-            return;
-        }
-
-        if (!$sectioninfo->uservisible) {
-            if (!$course->hiddensections) {
-                echo $this->start_section_list();
-                echo $this->section_hidden($displaysection, $course->id);
-                echo $this->end_section_list();
-            }
-            // Can't view this section.
-            return;
+        if (!($sectioninfo = $modinfo->get_section_info($displaysection)) || !$sectioninfo->uservisible) {
+            // This section doesn't exist or is not available for the user.
+            // We actually already check this in course/view.php but just in case exit from this function as well.
+            print_error('unknowncoursesection', 'error', course_get_url($course),
+                format_string($course->fullname));
         }
 
         // Copy activity clipboard..
@@ -891,18 +895,12 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
                 continue;
             }
             // Show the section if the user is permitted to access it, OR if it's not available
-            // but there is some available info text which explains the reason & should display.
+            // but there is some available info text which explains the reason & should display,
+            // OR it is hidden but the course has a setting to display hidden sections as unavilable.
             $showsection = $thissection->uservisible ||
-                    ($thissection->visible && !$thissection->available &&
-                    !empty($thissection->availableinfo));
+                    ($thissection->visible && !$thissection->available && !empty($thissection->availableinfo)) ||
+                    (!$thissection->visible && !$course->hiddensections);
             if (!$showsection) {
-                // If the hiddensections option is set to 'show hidden sections in collapsed
-                // form', then display the hidden section message - UNLESS the section is
-                // hidden by the availability system, which is set to hide the reason.
-                if (!$course->hiddensections && $thissection->available) {
-                    echo $this->section_hidden($section, $course->id);
-                }
-
                 continue;
             }
 
@@ -953,7 +951,10 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
             return '';
         }
 
-        $options = course_get_format($course)->get_format_options();
+        $format = course_get_format($course);
+        $options = $format->get_format_options();
+        $maxsections = $format->get_max_sections();
+        $lastsection = $format->get_last_section_number();
         $supportsnumsections = array_key_exists('numsections', $options);
 
         if ($supportsnumsections) {
@@ -964,13 +965,15 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
             echo html_writer::start_tag('div', array('id' => 'changenumsections', 'class' => 'mdl-right'));
 
             // Increase number of sections.
-            $straddsection = get_string('increasesections', 'moodle');
-            $url = new moodle_url('/course/changenumsections.php',
-                array('courseid' => $course->id,
-                      'increase' => true,
-                      'sesskey' => sesskey()));
-            $icon = $this->output->pix_icon('t/switch_plus', $straddsection);
-            echo html_writer::link($url, $icon.get_accesshide($straddsection), array('class' => 'increase-sections'));
+            if ($lastsection < $maxsections) {
+                $straddsection = get_string('increasesections', 'moodle');
+                $url = new moodle_url('/course/changenumsections.php',
+                    array('courseid' => $course->id,
+                          'increase' => true,
+                          'sesskey' => sesskey()));
+                $icon = $this->output->pix_icon('t/switch_plus', $straddsection);
+                echo html_writer::link($url, $icon.get_accesshide($straddsection), array('class' => 'increase-sections'));
+            }
 
             if ($course->numsections > 0) {
                 // Reduce number of sections sections.
@@ -986,11 +989,14 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
             echo html_writer::end_tag('div');
 
         } else if (course_get_format($course)->uses_sections()) {
+            if ($lastsection >= $maxsections) {
+                // Don't allow more sections if we already hit the limit.
+                return;
+            }
             // Current course format does not have 'numsections' option but it has multiple sections suppport.
             // Display the "Add section" link that will insert a section in the end.
             // Note to course format developers: inserting sections in the other positions should check both
             // capabilities 'moodle/course:update' and 'moodle/course:movesections'.
-
             echo html_writer::start_tag('div', array('id' => 'changenumsections', 'class' => 'mdl-right'));
             if (get_string_manager()->string_exists('addsections', 'format_'.$course->format)) {
                 $straddsections = get_string('addsections', 'format_'.$course->format);
@@ -1002,9 +1008,10 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
             if ($sectionreturn !== null) {
                 $url->param('sectionreturn', $sectionreturn);
             }
-            $icon = $this->output->pix_icon('t/add', $straddsections);
+            $icon = $this->output->pix_icon('t/add', '');
+            $newsections = $maxsections - $lastsection;
             echo html_writer::link($url, $icon . $straddsections,
-                array('class' => 'add-sections', 'data-add-sections' => $straddsections));
+                array('class' => 'add-sections', 'data-add-sections' => $straddsections, 'new-sections' => $newsections));
             echo html_writer::end_tag('div');
         }
     }

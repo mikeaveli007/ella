@@ -16,12 +16,14 @@
 }}
 <div class="message-text-container">
     <textarea data-region="send-message-txt"
+        dir="auto"
         rows="1"
         data-auto-rows
         data-max-rows="5"
         role="textbox"
         aria-label="{{#str}} writeamessage, message {{/str}}"
-        placeholder="{{#str}} writeamessage, message {{/str}}"></textarea>
+        placeholder="{{#str}} writeamessage, message {{/str}}"
+        maxlength="4096"></textarea>
 </div>
 <div class="send-button-container">
     <button class="btn btn-link" data-action="send-message">{{#str}}send, message{{/str}}</button>

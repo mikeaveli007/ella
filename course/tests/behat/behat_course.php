@@ -83,7 +83,7 @@ class behat_course extends behat_base {
 
         // Select Miscellaneous category.
         $this->i_click_on_category_in_the_management_interface(get_string('miscellaneous'));
-        $this->execute("behat_course::i_should_see_the_courses_management_page", get_string('categoriesandcoures'));
+        $this->execute("behat_course::i_should_see_the_courses_management_page", get_string('categoriesandcourses'));
 
         // Click create new course.
         $this->execute('behat_general::i_click_on_in_the',
@@ -304,7 +304,7 @@ class behat_course extends behat_base {
 
         // Click on highlight topic link.
         $this->execute('behat_general::i_click_on_in_the',
-            array(get_string('markthistopic'), "link", $this->escape($xpath), "xpath_element")
+            array(get_string('highlight'), "link", $this->escape($xpath), "xpath_element")
         );
     }
 
@@ -326,7 +326,7 @@ class behat_course extends behat_base {
 
         // Click on un-highlight topic link.
         $this->execute('behat_general::i_click_on_in_the',
-            array(get_string('markedthistopic'), "link", $this->escape($xpath), "xpath_element")
+            array(get_string('highlightoff'), "link", $this->escape($xpath), "xpath_element")
         );
     }
 
@@ -346,7 +346,7 @@ class behat_course extends behat_base {
         $showlink->click();
 
         if ($this->running_javascript()) {
-            $this->getSession()->wait(self::TIMEOUT * 1000, self::PAGE_READY_JS);
+            $this->getSession()->wait(self::get_timeout() * 1000, self::PAGE_READY_JS);
             $this->i_wait_until_section_is_available($sectionnumber);
         }
     }
@@ -380,7 +380,7 @@ class behat_course extends behat_base {
         );
 
         if ($this->running_javascript()) {
-            $this->getSession()->wait(self::TIMEOUT * 1000, self::PAGE_READY_JS);
+            $this->getSession()->wait(self::get_timeout() * 1000, self::PAGE_READY_JS);
             $this->i_wait_until_section_is_available($sectionnumber);
         }
     }
@@ -399,7 +399,7 @@ class behat_course extends behat_base {
 
         // We need to know the course format as the text strings depends on them.
         $courseformat = $this->get_course_format();
-        if (get_string_manager()->string_exists('editsection', $courseformat)) {
+        if ($sectionnumber > 0 && get_string_manager()->string_exists('editsection', $courseformat)) {
             $stredit = get_string('editsection', $courseformat);
         } else {
             $stredit = get_string('editsection');
@@ -444,7 +444,7 @@ class behat_course extends behat_base {
         $xpath = $this->section_exists($sectionnumber);
 
         // The important checking, we can not check the img.
-        $this->execute('behat_general::should_exist_in_the', ['This topic is highlighted as the current topic', 'icon', $xpath, 'xpath_element']);
+        $this->execute('behat_general::should_exist_in_the', ['Remove highlight', 'link', $xpath, 'xpath_element']);
     }
 
     /**
@@ -775,11 +775,10 @@ class behat_course extends behat_base {
         // Ensure the destination is valid.
         $sectionxpath = $this->section_exists($sectionnumber);
 
-        $activitynode = $this->get_activity_element('Move', 'icon', $activityname);
-
         // JS enabled.
         if ($this->running_javascript()) {
 
+            $activitynode = $this->get_activity_element('Move', 'icon', $activityname);
             $destinationxpath = $sectionxpath . "/descendant::ul[contains(concat(' ', normalize-space(@class), ' '), ' yui3-dd-drop ')]";
 
             $this->execute("behat_general::i_drag_and_i_drop_it_in",
@@ -810,22 +809,12 @@ class behat_course extends behat_base {
      * @param string $newactivityname
      */
     public function i_change_activity_name_to($activityname, $newactivityname) {
-
-        if (!$this->running_javascript()) {
-            throw new DriverException('Change activity name step is not available with Javascript disabled');
-        }
-
-        $activity = $this->escape($activityname);
-
-        $this->execute('behat_course::i_click_on_in_the_activity',
-            array(get_string('edittitle'), "link", $activity)
-        );
-
-        // Adding chr(10) to save changes.
-        $this->execute('behat_forms::i_set_the_field_to',
-            array('title', $this->escape($newactivityname) . chr(10))
-        );
-
+        $this->execute('behat_forms::i_set_the_field_in_container_to', [
+            get_string('edittitle'),
+            $activityname,
+            'activity',
+            $newactivityname
+        ]);
     }
 
     /**
@@ -1124,11 +1113,8 @@ class behat_course extends behat_base {
     protected function get_activity_element($element, $selectortype, $activityname) {
         $activitynode = $this->get_activity_node($activityname);
 
-        // Transforming to Behat selector/locator.
-        list($selector, $locator) = $this->transform_selector($selectortype, $element);
-        $exception = new ElementNotFoundException($this->getSession(), '"' . $element . '" "' . $selectortype . '" in "' . $activityname . '" ');
-
-        return $this->find($selector, $locator, $exception, $activitynode);
+        $exception = new ElementNotFoundException($this->getSession(), "'{$element}' '{$selectortype}' in '${activityname}'");
+        return $this->find($selectortype, $element, $exception, $activitynode);
     }
 
     /**
@@ -1165,9 +1151,9 @@ class behat_course extends behat_base {
 
         // Checking the show button alt text and show icon.
         $showtext = get_string('showfromothers', $courseformat);
-        $linkxpath = $xpath . "/descendant::a[@title=" . behat_context_helper::escape($showtext) . "]";
+        $linkxpath = $xpath . "//a[*[contains(text(), " . behat_context_helper::escape($showtext) . ")]]";
 
-        $exception = new ElementNotFoundException($this->getSession(), 'Show section link ');
+        $exception = new ElementNotFoundException($this->getSession(), 'Show section link');
 
         // Returing the link so both Non-JS and JS browsers can interact with it.
         return $this->find('xpath', $linkxpath, $exception);
@@ -1830,7 +1816,7 @@ class behat_course extends behat_base {
         $node->click();
 
         // Smooth expansion.
-        $this->getSession()->wait(1000, false);
+        $this->getSession()->wait(1000);
     }
 
     /**

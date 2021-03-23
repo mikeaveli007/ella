@@ -266,20 +266,20 @@ if (empty($students)) {
     }
     if (has_capability('moodle/course:bulkmessaging', $coursecontext)) {
         echo '<div class="buttons"><br />';
-        echo '<input type="button" id="checkall" value="'.get_string('selectall').'" /> ';
-        echo '<input type="button" id="checknone" value="'.get_string('deselectall').'" /> ';
+        echo '<input type="button" id="checkall" value="'.get_string('selectall').'" class="btn btn-secondary" /> ';
+        echo '<input type="button" id="checknone" value="'.get_string('deselectall').'" class="btn btn-secondary" /> ';
         echo '</div>';
         echo '<fieldset class="clearfix">';
         echo '<legend class="ftoggler">'.get_string('send_message', 'feedback').'</legend>';
         echo '<div>';
         echo '<label for="feedback_subject">'.get_string('subject', 'feedback').'&nbsp;</label>';
-        echo '<input type="text" id="feedback_subject" size="50" maxlength="255" name="subject" value="'.$subject.'" />';
+        echo '<input type="text" id="feedback_subject" size="50" maxlength="255" name="subject" value="'.s($subject).'" />';
         echo '</div>';
         print_textarea(true, 15, 25, 30, 10, "message", $message);
         print_string('formathtml');
         echo '<input type="hidden" name="format" value="'.FORMAT_HTML.'" />';
         echo '<br /><div class="buttons">';
-        echo '<input type="submit" name="send_message" value="'.get_string('send', 'feedback').'" />';
+        echo '<input type="submit" name="send_message" value="'.get_string('send', 'feedback').'" class="btn btn-secondary" />';
         echo '</div>';
         echo '<input type="hidden" name="sesskey" value="'.sesskey().'" />';
         echo '<input type="hidden" name="action" value="sendmessage" />';

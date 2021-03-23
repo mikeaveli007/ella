@@ -55,6 +55,9 @@ class assign_override_form extends moodleform {
     /** @var int userid, if provided. */
     protected $userid;
 
+    /** @var int sortorder, if provided. */
+    protected $sortorder;
+
     /**
      * Constructor.
      * @param moodle_url $submiturl the form action URL.
@@ -72,6 +75,7 @@ class assign_override_form extends moodleform {
         $this->groupmode = $groupmode;
         $this->groupid = empty($override->groupid) ? 0 : $override->groupid;
         $this->userid = empty($override->userid) ? 0 : $override->userid;
+        $this->sortorder = empty($override->sortorder) ? null : $override->sortorder;
 
         parent::__construct($submiturl, null, 'post');
 
@@ -81,12 +85,15 @@ class assign_override_form extends moodleform {
      * Define this form - called by the parent constructor
      */
     protected function definition() {
-        global $CFG, $DB;
+        global $DB;
 
         $cm = $this->cm;
         $mform = $this->_form;
 
         $mform->addElement('header', 'override', get_string('override', 'assign'));
+
+        $assigngroupmode = groups_get_activity_groupmode($cm);
+        $accessallgroups = ($assigngroupmode == NOGROUPS) || has_capability('moodle/site:accessallgroups', $this->context);
 
         if ($this->groupmode) {
             // Group override.
@@ -97,9 +104,14 @@ class assign_override_form extends moodleform {
                 $mform->addElement('select', 'groupid',
                         get_string('overridegroup', 'assign'), $groupchoices);
                 $mform->freeze('groupid');
+                // Add a sortorder element.
+                $mform->addElement('hidden', 'sortorder', $this->sortorder);
+                $mform->setType('sortorder', PARAM_INT);
+                $mform->freeze('sortorder');
             } else {
                 // Prepare the list of groups.
-                $groups = groups_get_all_groups($cm->course);
+                // Only include the groups the current can access.
+                $groups = $accessallgroups ? groups_get_all_groups($cm->course) : groups_get_activity_allowed_groups($cm);
                 if (empty($groups)) {
                     // Generate an error.
                     $link = new moodle_url('/mod/assign/overrides.php', array('cmid' => $cm->id));
@@ -132,8 +144,27 @@ class assign_override_form extends moodleform {
                 $mform->freeze('userid');
             } else {
                 // Prepare the list of users.
-                $users = get_enrolled_users($this->context, '', 0,
-                        'u.id, u.email, ' . get_all_user_name_fields(true, 'u'));
+                $users = [];
+                list($sort) = users_order_by_sql('u');
+
+                // Get the list of appropriate users, depending on whether and how groups are used.
+                if ($accessallgroups) {
+                    $users = get_enrolled_users($this->context, '', 0,
+                            'u.id, u.email, ' . get_all_user_name_fields(true, 'u'), $sort);
+                } else if ($groups = groups_get_activity_allowed_groups($cm)) {
+                    $enrolledjoin = get_enrolled_join($this->context, 'u.id');
+                    $userfields = 'u.id, u.email, ' . get_all_user_name_fields(true, 'u');
+                    list($ingroupsql, $ingroupparams) = $DB->get_in_or_equal(array_keys($groups), SQL_PARAMS_NAMED);
+                    $params = $enrolledjoin->params + $ingroupparams;
+                    $sql = "SELECT $userfields
+                              FROM {user} u
+                              JOIN {groups_members} gm ON gm.userid = u.id
+                                   {$enrolledjoin->joins}
+                             WHERE gm.groupid $ingroupsql
+                                   AND {$enrolledjoin->wheres}
+                          ORDER BY $sort";
+                    $users = $DB->get_records_sql($sql, $params);
+                }
 
                 // Filter users based on any fixed restrictions (groups, profile).
                 $info = new \core_availability\info_module($cm);
@@ -225,7 +256,6 @@ class assign_override_form extends moodleform {
      * @return array of "element_name"=>"error_description" if there are errors
      */
     public function validation($data, $files) {
-        global $COURSE, $DB;
         $errors = parent::validation($data, $files);
 
         $mform =& $this->_form;

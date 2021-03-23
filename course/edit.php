@@ -161,6 +161,8 @@ if ($editform->is_cancelled()) {
 
         if (!empty($CFG->creatornewroleid) and !is_viewing($context, NULL, 'moodle/role:assign') and !is_enrolled($context, NULL, 'moodle/role:assign')) {
             // Deal with course creators - enrol them internally with default role.
+            // Note: This does not respect capabilities, the creator will be assigned the default role.
+            // This is an expected behaviour. See MDL-66683 for further details.
             enrol_try_internal_enrol($course->id, $USER->id, $CFG->creatornewroleid);
         }
 
@@ -175,7 +177,7 @@ if ($editform->is_cancelled()) {
                 if ($plugin = enrol_get_plugin($instance->enrol)) {
                     if ($plugin->get_manual_enrol_link($instance)) {
                         // We know that the ajax enrol UI will have an option to enrol.
-                        $courseurl = new moodle_url('/enrol/users.php', array('id' => $course->id, 'newcourse' => 1));
+                        $courseurl = new moodle_url('/user/index.php', array('id' => $course->id, 'newcourse' => 1));
                         break;
                     }
                 }

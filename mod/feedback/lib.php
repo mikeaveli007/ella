@@ -45,15 +45,6 @@ define('FEEDBACK_EVENT_TYPE_OPEN', 'open');
 define('FEEDBACK_EVENT_TYPE_CLOSE', 'close');
 
 /**
- * Returns all other caps used in module.
- *
- * @return array
- */
-function feedback_get_extra_capabilities() {
-    return array('moodle/site:accessallgroups');
-}
-
-/**
  * @uses FEATURE_GROUPS
  * @uses FEATURE_GROUPINGS
  * @uses FEATURE_MOD_INTRO
@@ -110,6 +101,11 @@ function feedback_add_instance($feedback) {
     }
     $context = context_module::instance($feedback->coursemodule);
 
+    if (!empty($feedback->completionexpected)) {
+        \core_completion\api::update_completion_date_event($feedback->coursemodule, 'feedback', $feedback->id,
+                $feedback->completionexpected);
+    }
+
     $editoroptions = feedback_get_editor_options();
 
     // process the custom wysiwyg editor in page_after_submit
@@ -148,6 +144,8 @@ function feedback_update_instance($feedback) {
 
     //create or update the new events
     feedback_set_events($feedback);
+    $completionexpected = (!empty($feedback->completionexpected)) ? $feedback->completionexpected : null;
+    \core_completion\api::update_completion_date_event($feedback->coursemodule, 'feedback', $feedback->id, $completionexpected);
 
     $context = context_module::instance($feedback->coursemodule);
 
@@ -688,6 +686,8 @@ function feedback_reset_userdata($data) {
 
     // Updating dates - shift may be negative too.
     if ($data->timeshift) {
+        // Any changes to the list of dates that needs to be rolled should be same during course restore and course reset.
+        // See MDL-9367.
         $shifterror = !shift_course_mod_dates('feedback', array('timeopen', 'timeclose'), $data->timeshift, $data->courseid);
         $status[] = array('component' => $componentstr, 'item' => get_string('datechanged'), 'error' => $shifterror);
     }
@@ -819,7 +819,7 @@ function feedback_set_events($feedback) {
             // Calendar event exists so update it.
             $event->id = $eventid;
             $calendarevent = calendar_event::load($event->id);
-            $calendarevent->update($event);
+            $calendarevent->update($event, false);
         } else {
             // Event doesn't exist so create one.
             $event->courseid     = $feedback->course;
@@ -828,7 +828,7 @@ function feedback_set_events($feedback) {
             $event->modulename   = 'feedback';
             $event->instance     = $feedback->id;
             $event->eventtype    = FEEDBACK_EVENT_TYPE_OPEN;
-            calendar_event::create($event);
+            calendar_event::create($event, false);
         }
     } else if ($eventid) {
         // Calendar event is on longer needed.
@@ -854,7 +854,7 @@ function feedback_set_events($feedback) {
             // Calendar event exists so update it.
             $event->id = $eventid;
             $calendarevent = calendar_event::load($event->id);
-            $calendarevent->update($event);
+            $calendarevent->update($event, false);
         } else {
             // Event doesn't exist so create one.
             $event->courseid     = $feedback->course;
@@ -862,7 +862,7 @@ function feedback_set_events($feedback) {
             $event->userid       = 0;
             $event->modulename   = 'feedback';
             $event->instance     = $feedback->id;
-            calendar_event::create($event);
+            calendar_event::create($event, false);
         }
     } else if ($eventid) {
         // Calendar event is on longer needed.
@@ -879,10 +879,21 @@ function feedback_set_events($feedback) {
  * This function is used, in its new format, by restore_refresh_events()
  *
  * @param int $courseid
+ * @param int|stdClass $instance Feedback module instance or ID.
+ * @param int|stdClass $cm Course module object or ID (not used in this module).
  * @return bool
  */
-function feedback_refresh_events($courseid = 0) {
+function feedback_refresh_events($courseid = 0, $instance = null, $cm = null) {
     global $DB;
+
+    // If we have instance information then we can just update the one event instead of updating all events.
+    if (isset($instance)) {
+        if (!is_object($instance)) {
+            $instance = $DB->get_record('feedback', array('id' => $instance), '*', MUST_EXIST);
+        }
+        feedback_set_events($instance);
+        return true;
+    }
 
     if ($courseid) {
         if (! $feedbacks = $DB->get_records("feedback", array("course" => $courseid))) {
@@ -1372,11 +1383,12 @@ function feedback_items_from_template($feedback, $templateid, $deleteold = false
             if ($completeds = $DB->get_records('feedback_completed', $params)) {
                 $completion = new completion_info($course);
                 foreach ($completeds as $completed) {
+                    $DB->delete_records('feedback_completed', array('id' => $completed->id));
                     // Update completion state
-                    if ($completion->is_enabled($cm) && $feedback->completionsubmit) {
+                    if ($completion->is_enabled($cm) && $cm->completion == COMPLETION_TRACKING_AUTOMATIC &&
+                            $feedback->completionsubmit) {
                         $completion->update_state($cm, COMPLETION_INCOMPLETE, $completed->userid);
                     }
-                    $DB->delete_records('feedback_completed', array('id'=>$completed->id));
                 }
             }
             $DB->delete_records('feedback_completedtmp', array('feedback'=>$feedback->id));
@@ -1730,11 +1742,12 @@ function feedback_delete_all_items($feedbackid) {
     if ($completeds = $DB->get_records('feedback_completed', array('feedback'=>$feedback->id))) {
         $completion = new completion_info($course);
         foreach ($completeds as $completed) {
+            $DB->delete_records('feedback_completed', array('id' => $completed->id));
             // Update completion state
-            if ($completion->is_enabled($cm) && $feedback->completionsubmit) {
+            if ($completion->is_enabled($cm) && $cm->completion == COMPLETION_TRACKING_AUTOMATIC &&
+                    $feedback->completionsubmit) {
                 $completion->update_state($cm, COMPLETION_INCOMPLETE, $completed->userid);
             }
-            $DB->delete_records('feedback_completed', array('id'=>$completed->id));
         }
     }
 
@@ -2759,14 +2772,14 @@ function feedback_delete_completed($completed, $feedback = null, $cm = null, $co
     //first we delete all related values
     $DB->delete_records('feedback_value', array('completed' => $completed->id));
 
-    // Update completion state
-    $completion = new completion_info($course);
-    if ($completion->is_enabled($cm) && $feedback->completionsubmit) {
-        $completion->update_state($cm, COMPLETION_INCOMPLETE, $completed->userid);
-    }
-    // Last we delete the completed-record.
+    // Delete the completed record.
     $return = $DB->delete_records('feedback_completed', array('id' => $completed->id));
 
+    // Update completion state
+    $completion = new completion_info($course);
+    if ($completion->is_enabled($cm) && $cm->completion == COMPLETION_TRACKING_AUTOMATIC && $feedback->completionsubmit) {
+        $completion->update_state($cm, COMPLETION_INCOMPLETE, $completed->userid);
+    }
     // Trigger event for the delete action we performed.
     $event = \mod_feedback\event\response_deleted::create_from_record($completed, $cm, $feedback);
     $event->trigger();
@@ -2991,7 +3004,7 @@ function feedback_send_email($cm, $feedback, $course, $user, $completed = null) 
         return;
     }
 
-    if (is_int($user)) {
+    if (!is_object($user)) {
         $user = $DB->get_record('user', array('id' => $user));
     }
 
@@ -3419,22 +3432,6 @@ function feedback_check_updates_since(cm_info $cm, $from, $filter = array()) {
 }
 
 /**
- * The event is only visible anywhere if the user can submit feedback.
- *
- * @param calendar_event $event
- * @return bool Returns true if the event is visible to the current user, false otherwise.
- */
-function mod_feedback_core_calendar_is_event_visible(calendar_event $event) {
-    global $DB;
-
-    $cm = get_fast_modinfo($event->courseid)->instances['feedback'][$event->instance];
-    $feedbackcompletion = new mod_feedback_completion(null, $cm, 0);
-
-    // The event is only visible if the user can submit it.
-    return $feedbackcompletion->can_complete();
-}
-
-/**
  * This function receives a calendar event and returns the action associated with it, or null if there is none.
  *
  * This is used by block_myoverview in order to display the event appropriately. If null is returned then the event
@@ -3442,23 +3439,42 @@ function mod_feedback_core_calendar_is_event_visible(calendar_event $event) {
  *
  * @param calendar_event $event
  * @param \core_calendar\action_factory $factory
+ * @param int $userid User id to use for all capability checks, etc. Set to 0 for current user (default).
  * @return \core_calendar\local\event\entities\action_interface|null
  */
 function mod_feedback_core_calendar_provide_event_action(calendar_event $event,
-                                                         \core_calendar\action_factory $factory) {
+                                                         \core_calendar\action_factory $factory,
+                                                         int $userid = 0) {
 
-    $cm = get_fast_modinfo($event->courseid)->instances['feedback'][$event->instance];
-    $feedbackcompletion = new mod_feedback_completion(null, $cm, 0);
+    global $USER;
+
+    if (empty($userid)) {
+        $userid = $USER->id;
+    }
+
+    $cm = get_fast_modinfo($event->courseid, $userid)->instances['feedback'][$event->instance];
+
+    if (!$cm->uservisible) {
+        // The module is not visible to the user for any reason.
+        return null;
+    }
+
+    $feedbackcompletion = new mod_feedback_completion(null, $cm, 0, false, null, null, $userid);
 
     if (!empty($cm->customdata['timeclose']) && $cm->customdata['timeclose'] < time()) {
         // Feedback is already closed, do not display it even if it was never submitted.
         return null;
     }
 
+    if (!$feedbackcompletion->can_complete()) {
+        // The user can't complete the feedback so there is no action for them.
+        return null;
+    }
+
     // The feedback is actionable if it does not have timeopen or timeopen is in the past.
     $actionable = $feedbackcompletion->is_open();
 
-    if ($actionable && $feedbackcompletion->is_already_submitted()) {
+    if ($actionable && $feedbackcompletion->is_already_submitted(false)) {
         // There is no need to display anything if the user has already submitted the feedback.
         return null;
     }
@@ -3544,4 +3560,118 @@ function mod_feedback_get_completion_active_rule_descriptions($cm) {
         }
     }
     return $descriptions;
+}
+
+/**
+ * This function calculates the minimum and maximum cutoff values for the timestart of
+ * the given event.
+ *
+ * It will return an array with two values, the first being the minimum cutoff value and
+ * the second being the maximum cutoff value. Either or both values can be null, which
+ * indicates there is no minimum or maximum, respectively.
+ *
+ * If a cutoff is required then the function must return an array containing the cutoff
+ * timestamp and error string to display to the user if the cutoff value is violated.
+ *
+ * A minimum and maximum cutoff return value will look like:
+ * [
+ *     [1505704373, 'The due date must be after the sbumission start date'],
+ *     [1506741172, 'The due date must be before the cutoff date']
+ * ]
+ *
+ * @param calendar_event $event The calendar event to get the time range for
+ * @param stdClass $instance The module instance to get the range from
+ * @return array
+ */
+function mod_feedback_core_calendar_get_valid_event_timestart_range(\calendar_event $event, \stdClass $instance) {
+    $mindate = null;
+    $maxdate = null;
+
+    if ($event->eventtype == FEEDBACK_EVENT_TYPE_OPEN) {
+        // The start time of the open event can't be equal to or after the
+        // close time of the choice activity.
+        if (!empty($instance->timeclose)) {
+            $maxdate = [
+                $instance->timeclose,
+                get_string('openafterclose', 'feedback')
+            ];
+        }
+    } else if ($event->eventtype == FEEDBACK_EVENT_TYPE_CLOSE) {
+        // The start time of the close event can't be equal to or earlier than the
+        // open time of the choice activity.
+        if (!empty($instance->timeopen)) {
+            $mindate = [
+                $instance->timeopen,
+                get_string('closebeforeopen', 'feedback')
+            ];
+        }
+    }
+
+    return [$mindate, $maxdate];
+}
+
+/**
+ * This function will update the feedback module according to the
+ * event that has been modified.
+ *
+ * It will set the timeopen or timeclose value of the feedback instance
+ * according to the type of event provided.
+ *
+ * @throws \moodle_exception
+ * @param \calendar_event $event
+ * @param stdClass $feedback The module instance to get the range from
+ */
+function mod_feedback_core_calendar_event_timestart_updated(\calendar_event $event, \stdClass $feedback) {
+    global $CFG, $DB;
+
+    if (empty($event->instance) || $event->modulename != 'feedback') {
+        return;
+    }
+
+    if ($event->instance != $feedback->id) {
+        return;
+    }
+
+    if (!in_array($event->eventtype, [FEEDBACK_EVENT_TYPE_OPEN, FEEDBACK_EVENT_TYPE_CLOSE])) {
+        return;
+    }
+
+    $courseid = $event->courseid;
+    $modulename = $event->modulename;
+    $instanceid = $event->instance;
+    $modified = false;
+
+    $coursemodule = get_fast_modinfo($courseid)->instances[$modulename][$instanceid];
+    $context = context_module::instance($coursemodule->id);
+
+    // The user does not have the capability to modify this activity.
+    if (!has_capability('moodle/course:manageactivities', $context)) {
+        return;
+    }
+
+    if ($event->eventtype == FEEDBACK_EVENT_TYPE_OPEN) {
+        // If the event is for the feedback activity opening then we should
+        // set the start time of the feedback activity to be the new start
+        // time of the event.
+        if ($feedback->timeopen != $event->timestart) {
+            $feedback->timeopen = $event->timestart;
+            $feedback->timemodified = time();
+            $modified = true;
+        }
+    } else if ($event->eventtype == FEEDBACK_EVENT_TYPE_CLOSE) {
+        // If the event is for the feedback activity closing then we should
+        // set the end time of the feedback activity to be the new start
+        // time of the event.
+        if ($feedback->timeclose != $event->timestart) {
+            $feedback->timeclose = $event->timestart;
+            $modified = true;
+        }
+    }
+
+    if ($modified) {
+        $feedback->timemodified = time();
+        $DB->update_record('feedback', $feedback);
+        $event = \core\event\course_module_updated::create_from_cm($coursemodule, $context);
+        $event->trigger();
+    }
 }

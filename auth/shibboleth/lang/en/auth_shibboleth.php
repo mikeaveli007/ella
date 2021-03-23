@@ -32,10 +32,11 @@ $string['auth_shibboleth_login'] = 'Shibboleth login';
 $string['auth_shibboleth_login_long'] = 'Login to Moodle via Shibboleth';
 $string['auth_shibboleth_manual_login'] = 'Manual login';
 $string['auth_shibboleth_select_member'] = 'I\'m a member of ...';
-$string['auth_shibboleth_select_organization'] = 'For authentication via Shibboleth, please select your organization from the drop down list:';
+$string['auth_shibboleth_select_organization'] = 'For authentication via Shibboleth, please select your organisation from the drop-down menu:';
 $string['auth_shib_convert_data'] = 'Data modification API';
 $string['auth_shib_convert_data_description'] = 'You can use this API to further modify the data provided by Shibboleth. Read the <a href="../auth/shibboleth/README.txt">README</a> for further instructions.';
 $string['auth_shib_convert_data_warning'] = 'The file does not exist or is not readable by the webserver process!';
+$string['auth_shib_convert_data_filepath_warning'] = 'You cannot use a file that is located within the current site data directory ($CFG->dataroot) as the data modification API.';
 $string['auth_shib_changepasswordurl'] = 'Password-change URL';
 $string['auth_shib_idp_list'] = 'Identity providers';
 $string['auth_shib_idp_list_description'] = 'Provide a list of Identity Provider entityIDs to let the user choose from on the login page.<br />On each line there must be a comma-separated tuple for entityID of the IdP (see the Shibboleth metadata file) and Name of IdP as it shall be displayed in the drop-down list.<br />As an optional third parameter you can add the location of a Shibboleth session initiator that shall be used in case your Moodle installation is part of a multi federation setup.';
@@ -57,3 +58,4 @@ $string['shib_no_attributes_error'] = 'You seem to be Shibboleth authenticated b
 $string['shib_not_all_attributes_error'] = 'Moodle needs certain Shibboleth attributes which are not present in your case. The attributes are: {$a}<br />Please contact the webmaster of this server or your Identity Provider.';
 $string['shib_not_set_up_error'] = 'Shibboleth authentication doesn\'t seem to be set up correctly because no Shibboleth environment variables are present for this page. Please consult the <a href="README.txt">README</a> for further instructions on how to set up Shibboleth authentication or contact the webmaster of this Moodle installation.';
 $string['pluginname'] = 'Shibboleth';
+$string['privacy:metadata'] = 'The Shibboleth authentication plugin does not store any personal data.';

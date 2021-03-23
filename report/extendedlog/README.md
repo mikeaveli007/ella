@@ -3,7 +3,7 @@ Moodle plugin for extended log searching
 
 Requirements
 ------------
-- Moodle 2.9 (build 2015051100) or later.
+- Moodle 3.5 (build 2018051700) or later.
 
 Installation
 ------------
@@ -14,6 +14,7 @@ Usage
 This report is intended to be used only by the site administrator for investigation in number of cases, 
 when standard log report does not allow to find the desired events. With this report you can easily do
 following:
+
 - Find out, who have granted role to user in some category a month ago
 - List changes that were done on site by users from some IP or subnet
 - Get events that happened in all courses in some category in one list
@@ -41,3 +42,12 @@ Changes
 - Release 1.1 (build 2020061300):
     - Privacy API support.
     - Fixes for deprecated coursecatlib
+- Release 1.1.1 (build 2021010700):
+    - Improvements for long queries. Raise memory limit, do not query logs twice to fetch user names.
+- Release 1.1.2 (build 2021010701):
+    - Privacy provider fix.
+- Release 2.0 (build 2021011000):
+    - Autocomplete elements for user, relateduser, course, category, event and objectable.
+    - Ability to select multiple values for user, relateduser, course, event and objectable.
+- Release 2.0.1 (build 2021022400):
+    - Fixed bug with missing core events in eventname filter.

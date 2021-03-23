@@ -24,8 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once(dirname(__FILE__) . '/../locallib.php');
-
+global $CFG;
+require_once($CFG->dirroot . '/report/customsql/locallib.php');
 
 /**
  * Unit tests for (parts of) the custom SQL report.
@@ -33,19 +33,70 @@ require_once(dirname(__FILE__) . '/../locallib.php');
  * @copyright 2009 The Open University
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class report_customsql_test extends advanced_testcase {
-    public function test_get_week_starts_test() {
-        $this->assertEquals(array(
-                strtotime('00:00 7 November 2009'), strtotime('00:00 31 October 2009')),
-                report_customsql_get_week_starts(strtotime('12:36 10 November 2009')));
+class report_customsql_report_testcase extends advanced_testcase {
 
-        $this->assertEquals(array(
-                strtotime('00:00 7 November 2009'), strtotime('00:00 31 October 2009')),
-                report_customsql_get_week_starts(strtotime('00:00 7 November 2009')));
+    /**
+     * Data provider for test_get_week_starts
+     *
+     * @return array
+     */
+    public function get_week_starts_provider() {
+        return [
+            // Start weekday is Sunday.
+            [0, '12:36 11 November 2009', '00:00 8 November 2009', '00:00 1 November 2009'],
+            [0, '00:00 8 November 2009', '00:00 8 November 2009', '00:00 1 November 2009'],
+            [0, '23:59 14 November 2009', '00:00 8 November 2009', '00:00 1 November 2009'],
+            // Start weekday is Monday.
+            [1, '12:36 6 November 2009', '00:00 2 November 2009', '00:00 26 October 2009'],
+            [1, '00:00 2 November 2009', '00:00 2 November 2009', '00:00 26 October 2009'],
+            [1, '23:59 8 November 2009', '00:00 2 November 2009', '00:00 26 October 2009'],
+            // Start weekday is Saturday.
+            [6, '12:36 10 November 2009', '00:00 7 November 2009', '00:00 31 October 2009'],
+            [6, '00:00 7 November 2009', '00:00 7 November 2009', '00:00 31 October 2009'],
+            [6, '23:59 13 November 2009', '00:00 7 November 2009', '00:00 31 October 2009'],
+        ];
+    }
 
-        $this->assertEquals(array(
-                strtotime('00:00 7 November 2009'), strtotime('00:00 31 October 2009')),
-                report_customsql_get_week_starts(strtotime('23:59 13 November 2009')));
+    /**
+     * Tests plugin get_week_starts method
+     *
+     * @param int $startwday
+     * @param string $datestr
+     * @param string $currentweek
+     * @param string $lastweek
+     * @return void
+     *
+     * @dataProvider get_week_starts_provider
+     */
+    public function test_get_week_starts($startwday, $datestr, $currentweek, $lastweek) {
+        $this->resetAfterTest(true);
+
+        set_config('startwday', $startwday, 'report_customsql');
+
+        $expected = [strtotime($currentweek), strtotime($lastweek)];
+        $this->assertEquals($expected, report_customsql_get_week_starts(strtotime($datestr)));
+    }
+
+    /**
+     * Tests plugin get_week_starts method when using the calendar start of week default
+     *
+     * @param int $startwday
+     * @param string $datestr
+     * @param string $currentweek
+     * @param string $lastweek
+     * @return void
+     *
+     * @dataProvider get_week_starts_provider
+     */
+    public function test_get_week_starts_use_calendar_default($startwday, $datestr, $currentweek, $lastweek) {
+        $this->resetAfterTest(true);
+
+        // Setting this option to -1 will use the value from the site calendar.
+        set_config('startwday', -1, 'report_customsql');
+        set_config('calendar_startwday', $startwday);
+
+        $expected = [strtotime($currentweek), strtotime($lastweek)];
+        $this->assertEquals($expected, report_customsql_get_week_starts(strtotime($datestr)));
     }
 
     public function test_get_month_starts_test() {
@@ -254,6 +305,46 @@ class report_customsql_test extends advanced_testcase {
 
     }
 
+    public function test_report_customsql_pretify_column_names_same_name_diff_capitialisation() {
+        $row = new stdClass();
+        $row->course = 'B747-19B';
+        $query = "SELECT t.course AS Course
+                    FROM table";
+        $this->assertEquals(['Course'],
+                report_customsql_pretify_column_names($row, $query));
+
+    }
+
+    public function test_report_customsql_pretify_column_names_issue() {
+        $row = new stdClass();
+        $row->website = 'B747-19B';
+        $row->website_link_url = '%%WWWROOT%%/course/view.php%%Q%%id=123';
+        $row->subpage = 'Self-referential nightmare';
+        $row->subpage_link_url = '%%WWWROOT%%/mod/subpage/view.php%%Q%%id=4567';
+
+        $query = "
+                SELECT c.shortname AS Website,
+                       '%%WWWROOT%%/course/view.php%%Q%%id=' || c.id AS Website_link_url,
+                       s.name AS Subpage,
+                       '%%WWWROOT%%/mod/subpage/view.php%%Q%%id=' || cm.id AS Subpage_link_url
+
+                  FROM {subpage_sections} ss
+                  JOIN {subpage} s ON s.id = ss.subpageid
+                  JOIN {course_sections} cs ON cs.id = ss.sectionid
+                  JOIN {course_modules} cm ON cm.instance = s.id
+                  JOIN {modules} mod ON mod.id = cm.module
+                  JOIN {course} c ON c.id = cm.course
+
+                 WHERE mod.name = 'subpage'
+                   AND ',' || cs.sequence || ',' LIKE '%,' || cm.id || ',%'
+
+              ORDER BY website, subpage";
+
+        $this->assertEquals(['Website', 'Website link url', 'Subpage', 'Subpage link url'],
+                report_customsql_pretify_column_names($row, $query));
+
+    }
+
     public function test_report_customsql_display_row() {
         $rawdata = [
                 'Not a date',
@@ -276,6 +367,62 @@ class report_customsql_test extends advanced_testcase {
                 'Non-link, invalid URL',
                 '<a href="http://example.com/3">http://example.com/3</a>',
                 '&lt;b&gt;Raw HTML&lt;/b&gt;'], report_customsql_display_row($rawdata, $linkcolumns));
+    }
+
+    /**
+     * Test plugin emailing of reports
+     *
+     * @return void
+     */
+    public function test_report_customsql_email_report() {
+        global $CFG, $DB;
+
+        $this->resetAfterTest(true);
+
+        $user = $this->getDataGenerator()->create_user();
+
+        $id = $this->create_a_database_row('daily', 2, 1, $user->username);
+        $report = $DB->get_record('report_customsql_queries', ['id' => $id]);
+
+        // Give our test user the capability to view the report.
+        $userrole = $DB->get_record('role', ['shortname' => 'user']);
+        role_change_permission($userrole->id, context_system::instance(), $report->capability, CAP_ALLOW);
+
+        // Send the report, catch everything sent through message_send API.
+        $sink = $this->redirectMessages();
+
+        report_customsql_email_report($report);
+
+        $messages = $sink->get_messages();
+        $this->assertCount(1, $messages);
+
+        $message = reset($messages);
+        $this->assertEquals(\core_user::get_support_user()->id, $message->useridfrom);
+        $this->assertEquals($user->id, $message->useridto);
+
+        $expectedsubject = get_string('emailsubjectnodata', 'report_customsql',
+            report_customsql_plain_text_report_name($report));
+        $this->assertEquals($expectedsubject, $message->subject);
+
+        // Now check subject if the report has one row.
+        $cvsfilename = $CFG->tempdir . '/res.cvs';
+        file_put_contents($cvsfilename, "Col1,Col2\r\nFrog,Toad");
+
+        report_customsql_email_report($report, $cvsfilename);
+        $messages = $sink->get_messages();
+        $message = end($messages);
+        $this->assertEquals('Query all users on this test [1 row]', $message->subject);
+
+        // And more rows.
+        $cvsfilename = $CFG->tempdir . '/res.cvs';
+        file_put_contents($cvsfilename, "Col1,Col2\r\nFrog,Tadpole\r\nCat,Kitten\r\nDog,Puppy");
+
+        report_customsql_email_report($report, $cvsfilename);
+        $messages = $sink->get_messages();
+        $message = end($messages);
+        $this->assertEquals('Query all users on this test [3 rows]', $message->subject);
+
+        $sink->close();
     }
 
     /**

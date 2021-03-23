@@ -63,7 +63,9 @@ class courses_view implements renderable, templatable {
      * @return array
      */
     public function export_for_template(renderer_base $output) {
-        $today = time();
+        global $CFG;
+        require_once($CFG->dirroot.'/course/lib.php');
+        require_once($CFG->dirroot.'/lib/coursecatlib.php');
 
         // Build courses view data structure.
         $coursesview = [
@@ -73,8 +75,6 @@ class courses_view implements renderable, templatable {
         // How many courses we have per status?
         $coursesbystatus = ['past' => 0, 'inprogress' => 0, 'future' => 0];
         foreach ($this->courses as $course) {
-            $startdate = $course->startdate;
-            $enddate = $course->enddate;
             $courseid = $course->id;
             $context = \context_course::instance($courseid);
             $exporter = new course_summary_exporter($course, [
@@ -84,14 +84,43 @@ class courses_view implements renderable, templatable {
             // Convert summary to plain text.
             $exportedcourse->summary = content_to_text($exportedcourse->summary, $exportedcourse->summaryformat);
 
+            $course = new \course_in_list($course);
+            foreach ($course->get_course_overviewfiles() as $file) {
+                $isimage = $file->is_valid_image();
+                if ($isimage) {
+                    $url = file_encode_url("$CFG->wwwroot/pluginfile.php",
+                        '/'. $file->get_contextid(). '/'. $file->get_component(). '/'.
+                        $file->get_filearea(). $file->get_filepath(). $file->get_filename(), !$isimage);
+                    $exportedcourse->courseimage = $url;
+                    $exportedcourse->classes = 'courseimage';
+                    break;
+                }
+            }
+
+            $exportedcourse->color = $this->coursecolor($course->id);
+
+            if (!isset($exportedcourse->courseimage)) {
+                $pattern = new \core_geopattern();
+                $pattern->setColor($exportedcourse->color);
+                $pattern->patternbyid($courseid);
+                $exportedcourse->classes = 'coursepattern';
+                $exportedcourse->courseimage = $pattern->datauri();
+            }
+
+            // Include course visibility.
+            $exportedcourse->visible = (bool)$course->visible;
+
+            $courseprogress = null;
+
+            $classified = course_classify_for_timeline($course);
+
             if (isset($this->coursesprogress[$courseid])) {
-                $coursecompleted = $this->coursesprogress[$courseid]['completed'];
                 $courseprogress = $this->coursesprogress[$courseid]['progress'];
                 $exportedcourse->hasprogress = !is_null($courseprogress);
                 $exportedcourse->progress = $courseprogress;
             }
 
-            if ((isset($coursecompleted) && $coursecompleted) || (!empty($enddate) && $enddate < $today)) {
+            if ($classified == COURSE_TIMELINE_PAST) {
                 // Courses that have already ended.
                 $pastpages = floor($coursesbystatus['past'] / $this::COURSES_PER_PAGE);
 
@@ -100,7 +129,7 @@ class courses_view implements renderable, templatable {
                 $coursesview['past']['pages'][$pastpages]['page'] = $pastpages + 1;
                 $coursesview['past']['haspages'] = true;
                 $coursesbystatus['past']++;
-            } else if ($startdate > $today) {
+            } else if ($classified == COURSE_TIMELINE_FUTURE) {
                 // Courses that have not started yet.
                 $futurepages = floor($coursesbystatus['future'] / $this::COURSES_PER_PAGE);
 
@@ -142,5 +171,20 @@ class courses_view implements renderable, templatable {
         }
 
         return $coursesview;
+    }
+
+    /**
+     * Generate a semi-random color based on the courseid number (so it will always return
+     * the same color for a course)
+     *
+     * @param int $courseid
+     * @return string $color, hexvalue color code.
+     */
+    protected function coursecolor($courseid) {
+        // The colour palette is hardcoded for now. It would make sense to combine it with theme settings.
+        $basecolors = ['#81ecec', '#74b9ff', '#a29bfe', '#dfe6e9', '#00b894', '#0984e3', '#b2bec3', '#fdcb6e', '#fd79a8', '#6c5ce7'];
+
+        $color = $basecolors[$courseid % 10];
+        return $color;
     }
 }

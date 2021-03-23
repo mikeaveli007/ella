@@ -206,7 +206,8 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/str'
          */
         var findNextFocusable = function(mainElement) {
             var tabables = $("a:visible");
-            var isInside = false, foundElement = null;
+            var isInside = false;
+            var foundElement = null;
             tabables.each(function() {
                 if ($.contains(mainElement[0], this)) {
                     isInside = true;
@@ -351,30 +352,26 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/str'
          * @param {String} image new image name ("i/show", "i/hide", etc.)
          * @param {String} stringname new string for the action menu item
          * @param {String} stringcomponent
-         * @param {String} titlestr string for "title" attribute (if different from stringname)
-         * @param {String} titlecomponent
+         * @param {String} titlestr not used
+         * @param {String} titlecomponent not used
          * @param {String} newaction new value for data-action attribute of the link
+         * @return {Promise} promise which is resolved when the replacement has completed
          */
         var replaceActionItem = function(actionitem, image, stringname,
                                            stringcomponent, titlestr, titlecomponent, newaction) {
 
-            str.get_string(stringname, stringcomponent).done(function(newstring) {
-                actionitem.find('span.menu-action-text').html(newstring);
-                actionitem.attr('title', newstring);
-            });
-            if (titlestr) {
-                str.get_string(titlestr, titlecomponent).then(function(newtitle) {
-                    templates.renderPix(image, 'core', newtitle).then(function(html) {
-                        actionitem.find('.icon').replaceWith(html);
-                    });
-                    actionitem.attr('title', newtitle);
-                });
-            } else {
-                templates.renderPix(image, 'core', '').then(function(html) {
-                    actionitem.find('.icon').replaceWith(html);
-                });
-            }
-            actionitem.attr('data-action', newaction);
+            var stringRequests = [{key: stringname, component: stringcomponent}];
+            // Do not provide an icon with duplicate, different text to the menu item.
+
+            return str.get_strings(stringRequests).then(function(strings) {
+                actionitem.find('span.menu-action-text').html(strings[0]);
+
+                return templates.renderPix(image, 'core');
+            }).then(function(pixhtml) {
+                actionitem.find('.icon').replaceWith(pixhtml);
+                actionitem.attr('data-action', newaction);
+                return;
+            }).catch(notification.exception);
         };
 
         /**
@@ -582,9 +579,10 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/str'
                 // Add a handler for "Add sections" link to ask for a number of sections to add.
                 str.get_string('numberweeks').done(function(strNumberSections) {
                     var trigger = $(SELECTOR.ADDSECTIONS),
-                        modalTitle = trigger.attr('data-add-sections');
+                        modalTitle = trigger.attr('data-add-sections'),
+                        newSections = trigger.attr('new-sections');
                     var modalBody = $('<div><label for="add_section_numsections"></label> ' +
-                        '<input id="add_section_numsections" type="number" min="1" value="1"></div>');
+                        '<input id="add_section_numsections" type="number" min="1" max="' + newSections + '" value="1"></div>');
                     modalBody.find('label').html(strNumberSections);
                     ModalFactory.create({
                         title: modalTitle,

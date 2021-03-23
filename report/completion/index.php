@@ -157,7 +157,7 @@ if ($csv) {
     echo $OUTPUT->header();
 
     // Handle groups (if enabled)
-    groups_print_course_menu($course, $CFG->wwwroot.'/report/completion/?course='.$course->id);
+    groups_print_course_menu($course, $CFG->wwwroot.'/report/completion/index.php?course='.$course->id);
 }
 
 if ($sifirst !== 'all') {
@@ -184,12 +184,12 @@ $where = array();
 $where_params = array();
 
 if ($sifirst !== 'all') {
-    $where[] = $DB->sql_like('u.firstname', ':sifirst', false);
+    $where[] = $DB->sql_like('u.firstname', ':sifirst', false, false);
     $where_params['sifirst'] = $sifirst.'%';
 }
 
 if ($silast !== 'all') {
-    $where[] = $DB->sql_like('u.lastname', ':silast', false);
+    $where[] = $DB->sql_like('u.lastname', ':silast', false, false);
     $where_params['silast'] = $silast.'%';
 }
 
@@ -222,7 +222,7 @@ if ($total) {
 }
 
 // Build link for paging
-$link = $CFG->wwwroot.'/report/completion/?course='.$course->id;
+$link = $CFG->wwwroot.'/report/completion/index.php?course='.$course->id;
 if (strlen($sort)) {
     $link .= '&amp;sort='.$sort;
 }
@@ -428,10 +428,10 @@ if (!$csv) {
 
     if ($firstnamesort) {
         print
-            get_string('firstname')." / <a href=\"./?course={$course->id}{$sistring}\">".
+            get_string('firstname')." / <a href=\"./index.php?course={$course->id}{$sistring}\">".
             get_string('lastname').'</a>';
     } else {
-        print "<a href=\"./?course={$course->id}&amp;sort=firstname{$sistring}\">".
+        print "<a href=\"./index.php?course={$course->id}&amp;sort=firstname{$sistring}\">".
             get_string('firstname').'</a> / '.
             get_string('lastname');
     }
@@ -724,7 +724,6 @@ if ($csv) {
 }
 
 print '</table>';
-print $pagingbar;
 
 $csvurl = new moodle_url('/report/completion/index.php', array('course' => $course->id, 'format' => 'csv'));
 $excelurl = new moodle_url('/report/completion/index.php', array('course' => $course->id, 'format' => 'excelcsv'));

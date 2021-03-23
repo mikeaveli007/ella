@@ -40,7 +40,10 @@ then cut and paste the address into the address
 line at the top of your web browser window.
 
 If you need help, please contact the site administrator,
-{$a->admin}';
+{$a->admin}
+
+If you did not do this, someone else could be trying to compromise your account.
+Please contact the site administrator immediately.';
 $string['confirmaccountemailsubject'] = '{$a}: account confirmation';
 $string['confirmationinvalid'] = 'The confirmation link is either invalid, or has expired. Please start the login process again to generate a new confirmation email.';
 $string['confirmationpending'] = 'This account is pending email confirmation.';
@@ -60,7 +63,10 @@ then cut and paste the address into the address
 line at the top of your web browser window.
 
 If you need help, please contact the site administrator,
-{$a->admin}';
+{$a->admin}
+
+If you did not do this, someone else could be trying to compromise your account.
+Please contact the site administrator immediately.';
 $string['confirmlinkedloginemailsubject'] = '{$a}: linked login confirmation';
 $string['createaccountswarning'] = 'This authentication plugin allows users to create accounts on your site. You may want to enable the setting "authpreventaccountcreation" if you use this plugin.';
 $string['createnewlinkedlogin'] = 'Link a new account ({$a})';
@@ -88,3 +94,15 @@ $string['notenabled'] = 'Sorry, OAuth 2 authentication plugin is not enabled';
 $string['plugindescription'] = 'This authentication plugin displays a list of the configured identity providers on the login page. Selecting an identity provider allows users to login with their credentials from an OAuth 2 provider.';
 $string['pluginname'] = 'OAuth 2';
 $string['alreadylinked'] = 'This external account is already linked to an account on this site';
+$string['privacy:metadata:auth_oauth2'] = 'OAuth 2 authentication';
+$string['privacy:metadata:auth_oauth2:authsubsystem'] = 'This plugin is connected to the authentication subsystem.';
+$string['privacy:metadata:auth_oauth2:confirmtoken'] = 'The confirmation token.';
+$string['privacy:metadata:auth_oauth2:confirmtokenexpires'] = 'The timestamp when the confirmation token expires.';
+$string['privacy:metadata:auth_oauth2:email'] = 'The external email that maps to this account.';
+$string['privacy:metadata:auth_oauth2:issuerid'] = 'The ID of the OAuth 2 issuer for this OAuth 2 login';
+$string['privacy:metadata:auth_oauth2:tableexplanation'] = 'OAuth 2 accounts linked to a user\'s Moodle account.';
+$string['privacy:metadata:auth_oauth2:timecreated'] = 'The timestamp when the user account was linked to the OAuth 2 login.';
+$string['privacy:metadata:auth_oauth2:timemodified'] = 'The timestamp when this record was modified.';
+$string['privacy:metadata:auth_oauth2:userid'] = 'The ID of the user account which the OAuth 2 login is linked to.';
+$string['privacy:metadata:auth_oauth2:usermodified'] = 'The ID of the user who modified this account.';
+$string['privacy:metadata:auth_oauth2:username'] = 'The external username that maps to this account.';

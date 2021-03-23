@@ -357,7 +357,6 @@ class core_setuplib_testcase extends advanced_testcase {
     public function test_get_exception_info_link() {
         global $CFG, $SESSION;
 
-        $initialloginhttps = $CFG->loginhttps;
         $httpswwwroot = str_replace('http:', 'https:', $CFG->wwwroot);
 
         // Simple local URL.
@@ -372,8 +371,7 @@ class core_setuplib_testcase extends advanced_testcase {
         $infos = $this->get_exception_info($exception);
         $this->assertSame($CFG->wwwroot . '/', $infos->link);
 
-        // HTTPS URL when login HTTPS is not enabled and site is HTTP.
-        $CFG->loginhttps = false;
+        // HTTPS URL when login HTTPS is not enabled (default) and site is HTTP.
         $CFG->wwwroot = str_replace('https:', 'http:', $CFG->wwwroot);
         $url = $httpswwwroot . '/something/here?really=yes';
         $exception = new moodle_exception('none', 'error', $url);
@@ -381,21 +379,6 @@ class core_setuplib_testcase extends advanced_testcase {
         $this->assertSame($CFG->wwwroot . '/', $infos->link);
 
         // HTTPS URL when login HTTPS is not enabled and site is HTTPS.
-        $CFG->wwwroot = str_replace('http:', 'https:', $CFG->wwwroot);
-        $url = $httpswwwroot . '/something/here?really=yes';
-        $exception = new moodle_exception('none', 'error', $url);
-        $infos = $this->get_exception_info($exception);
-        $this->assertSame($url, $infos->link);
-
-        // HTTPS URL when login HTTPS enabled and site is HTTP.
-        $CFG->loginhttps = true;
-        $CFG->wwwroot = str_replace('https:', 'http:', $CFG->wwwroot);
-        $url = $httpswwwroot . '/something/here?really=yes';
-        $exception = new moodle_exception('none', 'error', $url);
-        $infos = $this->get_exception_info($exception);
-        $this->assertSame($url, $infos->link);
-
-        // HTTPS URL when login HTTPS enabled and site is HTTPS.
         $CFG->wwwroot = str_replace('http:', 'https:', $CFG->wwwroot);
         $url = $httpswwwroot . '/something/here?really=yes';
         $exception = new moodle_exception('none', 'error', $url);
@@ -444,14 +427,6 @@ class core_setuplib_testcase extends advanced_testcase {
         $infos = $this->get_exception_info($exception);
         $this->assertSame($CFG->wwwroot . '/', $infos->link);
 
-        // External HTTPS link from fromurl with login HTTPS.
-        $CFG->loginhttps = true;
-        $SESSION->fromurl = 'https://moodle.org/something/here?really=yes';
-        $exception = new moodle_exception('none');
-        $infos = $this->get_exception_info($exception);
-        $this->assertSame($CFG->wwwroot . '/', $infos->link);
-
-        $CFG->loginhttps = $initialloginhttps;
         $SESSION->fromurl = '';
     }
 
@@ -467,12 +442,6 @@ class core_setuplib_testcase extends advanced_testcase {
         } catch (moodle_exception $e) {
             return get_exception_info($e);
         }
-    }
-
-    public function test_object() {
-        $obj = new object();
-        $this->assertDebuggingCalled("'object' class has been deprecated, please use stdClass instead.");
-        $this->assertInstanceOf('stdClass', $obj);
     }
 
     /**
@@ -506,5 +475,31 @@ class core_setuplib_testcase extends advanced_testcase {
      */
     public function test_get_real_size($input, $expectedbytes) {
         $this->assertEquals($expectedbytes, get_real_size($input));
+    }
+
+    /**
+     * Validate the given V4 UUID.
+     *
+     * @param string $value The candidate V4 UUID
+     * @return bool True if valid; otherwise, false.
+     */
+    protected static function is_valid_uuid_v4($value) {
+        // Version 4 UUIDs have the form xxxxxxxx-xxxx-4xxx-Yxxx-xxxxxxxxxxxx
+        // where x is any hexadecimal digit and Y is one of 8, 9, aA, or bB.
+        // First, the size is 36 (32 + 4 dashes).
+        if (strlen($value) != 36) {
+            return false;
+        }
+        // Finally, check the format.
+        $uuidv4pattern = '/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i';
+        return (preg_match($uuidv4pattern, $value) === 1);
+    }
+
+    /**
+     * Test the generate_uuid() function.
+     */
+    public function test_generate_uuid() {
+        $uuid = generate_uuid();
+        $this->assertTrue(self::is_valid_uuid_v4($uuid), "Invalid v4 UUID: '$uuid'");
     }
 }

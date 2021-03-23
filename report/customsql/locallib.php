@@ -27,14 +27,22 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->libdir . '/validateurlsyntax.php');
 
-define('REPORT_CUSTOMSQL_MAX_RECORDS', 5000);
-define('REPORT_CUSTOMSQL_START_OF_WEEK', 6); // Saturday.
+define('REPORT_CUSTOMSQL_LIMIT_EXCEEDED_MARKER', '-- ROW LIMIT EXCEEDED --');
 
-function report_customsql_execute_query($sql, $params = null,
-        $limitnum = REPORT_CUSTOMSQL_MAX_RECORDS) {
+function report_customsql_execute_query($sql, $params = null, $limitnum = null) {
     global $CFG, $DB;
 
+    if ($limitnum === null) {
+        $limitnum = get_config('report_customsql', 'querylimitdefault');
+    }
+
     $sql = preg_replace('/\bprefix_(?=\w+)/i', $CFG->prefix, $sql);
+
+    foreach ($params as $name => $value) {
+        if (((string) (int) $value) === ((string) $value)) {
+            $params[$name] = (int) $value;
+        }
+    }
 
     // Note: throws Exception if there is an error.
     return $DB->get_recordset_sql($sql, $params, 0, $limitnum);
@@ -54,11 +62,25 @@ function report_customsql_prepare_sql($report, $timenow) {
 /**
  * Extract all the placeholder names from the SQL.
  * @param string $sql The sql.
- * @return array placeholder names
+ * @return array placeholder names including the leading colon.
  */
 function report_customsql_get_query_placeholders($sql) {
     preg_match_all('/(?<!:):[a-z][a-z0-9_]*/', $sql, $matches);
     return $matches[0];
+}
+
+/**
+ * Extract all the placeholder names from the SQL, and work out the corresponding form field names.
+ *
+ * @param string $querysql The sql.
+ * @return string[] placeholder name => form field name.
+ */
+function report_customsql_get_query_placeholders_and_field_names(string $querysql): array {
+    $queryparams = [];
+    foreach (report_customsql_get_query_placeholders($querysql) as $queryparam) {
+        $queryparams[substr($queryparam, 1)] = 'queryparam' . substr($queryparam, 1);
+    }
+    return $queryparams;
 }
 
 /**
@@ -81,11 +103,13 @@ function report_customsql_generate_csv($report, $timenow) {
     $sql = report_customsql_prepare_sql($report, $timenow);
 
     $queryparams = !empty($report->queryparams) ? unserialize($report->queryparams) : array();
-    $querylimit  = !empty($report->querylimit) ? $report->querylimit : REPORT_CUSTOMSQL_MAX_RECORDS;
-    $rs = report_customsql_execute_query($sql, $queryparams, $querylimit);
+    $querylimit  = $report->querylimit ?? get_config('report_customsql', 'querylimitdefault');
+    // Query one extra row, so we can tell if we hit the limit.
+    $rs = report_customsql_execute_query($sql, $queryparams, $querylimit + 1);
 
     $csvfilenames = array();
     $csvtimestamp = null;
+    $count = 0;
     foreach ($rs as $row) {
         if (!$csvtimestamp) {
             list($csvfilename, $csvtimestamp) = report_customsql_csv_filename($report, $timenow);
@@ -110,15 +134,20 @@ function report_customsql_generate_csv($report, $timenow) {
             array_unshift($data, strftime('%Y-%m-%d', $timenow));
         }
         report_customsql_write_csv_row($handle, $data);
+        $count += 1;
     }
     $rs->close();
 
     if (!empty($handle)) {
+        if ($count > $querylimit) {
+            report_customsql_write_csv_row($handle, [REPORT_CUSTOMSQL_LIMIT_EXCEEDED_MARKER]);
+        }
+
         fclose($handle);
     }
 
     // Update the execution time in the DB.
-    $updaterecord = new stdClass;
+    $updaterecord = new stdClass();
     $updaterecord->id = $report->id;
     $updaterecord->lastrun = time();
     $updaterecord->lastexecutiontime = round((microtime(true) - $starttime) * 1000);
@@ -332,10 +361,10 @@ function report_customsql_print_reports_for($reports, $type) {
                                       $capabilities[$report->capability]),
                                       array('class' => 'admin_note')).' '.
                  html_writer::tag('a', $imgedit,
-                            array('title' => get_string('editthisreport', 'report_customsql'),
-                                  'href' => report_customsql_url('edit.php?id='.$report->id))).' '.
+                         ['title' => get_string('editreportx', 'report_customsql', format_string($report->displayname)),
+                          'href' => report_customsql_url('edit.php?id='.$report->id)]) . ' ' .
                  html_writer::tag('a', $imgdelete,
-                            array('title' => get_string('deletethisreport', 'report_customsql'),
+                            array('title' => get_string('deletereportx', 'report_customsql', format_string($report->displayname)),
                                   'href' => report_customsql_url('delete.php?id='.$report->id)));
         }
         echo html_writer::end_tag('p');
@@ -426,7 +455,7 @@ function report_customsql_pretify_column_names($row, $querysql) {
     foreach (get_object_vars($row) as $colname => $ignored) {
         // Databases tend to return the columns lower-cased.
         // Try to get the original case from the query.
-        if (preg_match('~SELECT.*\b(' . preg_quote($colname, '~') . ')\b.*(FROM|$)~is',
+        if (preg_match('~SELECT.*?\s(' . preg_quote($colname, '~') . ')\b~is',
                 $querysql, $matches)) {
             $colname = $matches[1];
         }
@@ -483,7 +512,13 @@ function report_customsql_get_daily_time_starts($timenow, $at) {
 
 function report_customsql_get_week_starts($timenow) {
     $dateparts = getdate($timenow);
-    $daysafterweekstart = ($dateparts['wday'] - REPORT_CUSTOMSQL_START_OF_WEEK + 7) % 7;
+
+    // Get configured start of week value. If -1 then use the value from the site calendar.
+    $startofweek = get_config('report_customsql', 'startwday');
+    if ($startofweek == -1) {
+        $startofweek = \core_calendar\type_factory::get_calendar_instance()->get_starting_weekday();
+    }
+    $daysafterweekstart = ($dateparts['wday'] - $startofweek + 7) % 7;
 
     return array(
         mktime(0, 0, 0, $dateparts['mon'], $dateparts['mday'] - $daysafterweekstart,
@@ -565,7 +600,7 @@ function report_customsql_validate_users($userstring, $capability) {
 
 function report_customsql_get_message_no_data($report) {
     // Construct subject.
-    $subject = get_string('emailsubject', 'report_customsql',
+    $subject = get_string('emailsubjectnodata', 'report_customsql',
             report_customsql_plain_text_report_name($report));
     $url = new moodle_url('/report/customsql/view.php', array('id' => $report->id));
     $link = get_string('emailink', 'report_customsql', html_writer::tag('a', $url, array('href' => $url)));
@@ -598,8 +633,16 @@ function report_customsql_get_message($report, $csvfilename) {
     fclose($handle);
 
     // Construct subject.
-    $subject = get_string('emailsubject', 'report_customsql',
-            report_customsql_plain_text_report_name($report));
+    if ($countrows == 0) {
+        $subject = get_string('emailsubjectnodata', 'report_customsql',
+                report_customsql_plain_text_report_name($report));
+    } else if ($countrows == 1) {
+        $subject = get_string('emailsubject1row', 'report_customsql',
+                report_customsql_plain_text_report_name($report));
+    } else {
+        $subject = get_string('emailsubjectxrows', 'report_customsql',
+                ['name' => report_customsql_plain_text_report_name($report), 'rows' => $countrows]);
+    }
 
     // Construct message without the table.
     $fullmessage = '';
@@ -635,7 +678,7 @@ function report_customsql_get_message($report, $csvfilename) {
 }
 
 function report_customsql_email_report($report, $csvfilename = null) {
-    global $CFG, $DB, $OUTPUT;
+    global $DB;
 
     // If there are no recipients return.
     if (!$report->emailto) {
@@ -692,18 +735,19 @@ function report_customsql_get_ready_to_run_daily_reports($timenow) {
 /**
  * Sends a notification message to the reciepients.
  *
- * @param object $recepient, the message recipient.
- * @param object $message, the message objectr.
+ * @param object $recipient the message recipient.
+ * @param object $message the message object.
+ * @return mixed result of {@link message_send()}.
  */
 function report_customsql_send_email_notification($recipient, $message) {
 
     // Prepare the message.
-    $eventdata = new stdClass();
+    $eventdata = new \core\message\message();
     $eventdata->component         = 'report_customsql';
     $eventdata->name              = 'notification';
     $eventdata->notification      = 1;
-
-    $eventdata->userfrom          = get_admin();
+    $eventdata->courseid          = SITEID;
+    $eventdata->userfrom          = \core_user::get_support_user();
     $eventdata->userto            = $recipient;
     $eventdata->subject           = $message->subject;
     $eventdata->fullmessage       = $message->fullmessage;
@@ -716,7 +760,9 @@ function report_customsql_send_email_notification($recipient, $message) {
 
 /**
  * Check if the report is ready to run.
+ *
  * @param object $report
+ * @param int $timenow
  * @return boolean
  */
 function report_customsql_is_daily_report_ready($report, $timenow) {
@@ -774,8 +820,9 @@ function report_customsql_copy_csv_to_customdir($report, $timenow, $csvfilename 
  * Get a report name as plain text, for use in places like cron output and email subject lines.
  *
  * @param object $report report settings from the database.
+ * @return string the usable version of the name.
  */
-function report_customsql_plain_text_report_name($report) {
+function report_customsql_plain_text_report_name($report): string {
     return format_string($report->displayname, true,
-            ['context' => \context_system::instance()]);
+            ['context' => context_system::instance()]);
 }

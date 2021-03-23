@@ -156,7 +156,7 @@ class core_test_generator_testcase extends advanced_testcase {
         $this->assertEquals(context_system::instance()->id, $cohort->contextid);
         $this->assertRegExp('/^Cohort \d/', $cohort->name);
         $this->assertSame('', $cohort->idnumber);
-        $this->assertRegExp('/^Test cohort \d/', $cohort->description);
+        $this->assertRegExp("/^Description for '{$cohort->name}' \\n/", $cohort->description);
         $this->assertSame(FORMAT_MOODLE, $cohort->descriptionformat);
         $this->assertSame('', $cohort->component);
         $this->assertLessThanOrEqual(time(), $cohort->timecreated);
@@ -186,6 +186,9 @@ class core_test_generator_testcase extends advanced_testcase {
 
     public function test_create_module() {
         global $CFG, $SITE, $DB;
+
+        $this->setAdminUser();
+
         if (!file_exists("$CFG->dirroot/mod/page/")) {
             $this->markTestSkipped('Can not find standard Page module');
         }

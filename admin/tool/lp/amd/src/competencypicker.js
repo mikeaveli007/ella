@@ -31,8 +31,10 @@ define(['jquery',
         'core/templates',
         'tool_lp/dialogue',
         'core/str',
-        'tool_lp/tree'],
-        function($, Notification, Ajax, Templates, Dialogue, Str, Tree) {
+        'tool_lp/tree',
+        'core/pending'
+        ],
+        function($, Notification, Ajax, Templates, Dialogue, Str, Tree, Pending) {
 
     /**
      * Competency picker class.
@@ -134,7 +136,7 @@ define(['jquery',
         if (!self._singleFramework) {
             self._find('[data-action="chooseframework"]').change(function(e) {
                 self._frameworkId = $(e.target).val();
-                self._loadCompetencies().then(self._refresh.bind(self));
+                self._loadCompetencies().then(self._refresh.bind(self)).catch(Notification.exception);
             });
         }
 
@@ -157,6 +159,7 @@ define(['jquery',
         // Add listener for add.
         self._find('[data-region="competencylinktree"] [data-action="add"]').click(function(e) {
             e.preventDefault();
+            var pendingPromise = new Pending();
             if (!self._selectedCompetencies.length) {
                 return;
             }
@@ -168,7 +171,10 @@ define(['jquery',
                 self._trigger('save', {competencyId: self._selectedCompetencies[0]});
             }
 
+            // The dialogue here is a YUI dialogue and doesn't support Promises at all.
+            // However, it is typically synchronous so this shoudl suffice.
             self.close();
+            pendingPromise.resolve();
         });
 
         // The list of selected competencies will be modified while looping (because of the listeners above).
@@ -203,15 +209,15 @@ define(['jquery',
      */
     Picker.prototype.display = function() {
         var self = this;
-        return self._render().then(function(html) {
-            return Str.get_string('competencypicker', 'tool_lp').then(function(title) {
-                self._popup = new Dialogue(
-                    title,
-                    html,
-                    self._afterRender.bind(self)
-                );
-            });
-        }).fail(Notification.exception);
+        return $.when(Str.get_string('competencypicker', 'tool_lp'), self._render())
+        .then(function(title, render) {
+            self._popup = new Dialogue(
+                title,
+                render[0],
+                self._afterRender.bind(self)
+            );
+            return;
+        }).catch(Notification.exception);
     };
 
     /**
@@ -388,6 +394,7 @@ define(['jquery',
         return self._render().then(function(html) {
             self._find('[data-region="competencylinktree"]').replaceWith(html);
             self._afterRender();
+            return;
         });
     };
 

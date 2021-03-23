@@ -57,6 +57,13 @@ interface event_interface {
     public function get_description();
 
     /**
+     * Get the category object associated with the event.
+     *
+     * @return proxy_interface
+     */
+    public function get_category();
+
+    /**
      * Get the course object associated with the event.
      *
      * @return proxy_interface
@@ -99,9 +106,10 @@ interface event_interface {
     public function get_times();
 
     /**
-     * Get repeats of this event.
+     * Get repeats of this event or null if the event has no
+     * repeats.
      *
-     * @return event_collection_interface
+     * @return event_collection_interface|null
      */
     public function get_repeats();
 

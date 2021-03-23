@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2017051500;
-$plugin->requires  = 2017050500;
+$plugin->version   = 2018051400;
+$plugin->requires  = 2018050800;
 $plugin->component = 'assignfeedback_file';
 

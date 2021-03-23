@@ -114,12 +114,8 @@ class behat_block_social_activities extends behat_base {
     protected function get_social_block_activity_element($element, $selectortype, $activityname) {
         $activitynode = $this->get_social_block_activity_node($activityname);
 
-        // Transforming to Behat selector/locator.
-        list($selector, $locator) = $this->transform_selector($selectortype, $element);
-        $exception = new ElementNotFoundException($this->getSession(), '"' . $element . '" "' .
-            $selectortype . '" in "' . $activityname . '" ');
-
-        return $this->find($selector, $locator, $exception, $activitynode);
+        $exception = new ElementNotFoundException($this->getSession(), "'{$element}' '{$selectortype}' in '${activityname}'");
+        return $this->find($selectortype, $element, $exception, $activitynode);
     }
 
     /**
@@ -153,5 +149,18 @@ class behat_block_social_activities extends behat_base {
         $activityname = behat_context_helper::escape($activityname);
         $xpath = "//*[contains(concat(' ',normalize-space(@class),' '),' block_social_activities ')]//li[contains(., $activityname)]";
         $this->execute('behat_action_menu::i_open_the_action_menu_in', [$xpath, 'xpath_element']);
+    }
+
+    /**
+     * Return the list of partial named selectors.
+     *
+     * @return array
+     */
+    public static function get_partial_named_selectors(): array {
+        return [
+            new behat_component_named_selector('Activity', [
+                "//*[contains(concat(' ',normalize-space(@class),' '),' block_social_activities ')]//li[contains(., %locator%)]",
+            ]),
+        ];
     }
 }

@@ -54,7 +54,6 @@ Feature: Managers can create courses
       | id_enddate_year | 2016 |
     And I press "Save and return"
     Then I should see the "Course categories and courses" management page
-    And I click on "Sort courses" "link"
     And I click on "Sort by Course time created ascending" "link" in the ".course-listing-actions" "css_element"
     And I should see course listing "Course 1" before "Course 2"
     And I click on "Course 2" "link" in the "region-main" "region"
@@ -69,3 +68,31 @@ Feature: Managers can create courses
       | id_enddate_day | 24 |
       | id_enddate_month | October |
       | id_enddate_year | 2016 |
+
+  Scenario: Create a course as a custom course creator
+    Given the following "users" exist:
+      | username  | firstname | lastname | email          |
+      | kevin  | Kevin   | the        | kevin@example.com |
+    And the following "roles" exist:
+      | shortname | name    | archetype |
+      | creator   | Creator |           |
+    And the following "system role assigns" exist:
+      | user   | role    | contextlevel |
+      | kevin  | creator | System       |
+    And I log in as "admin"
+    And I set the following system permissions of "Creator" role:
+      | capability | permission |
+      | moodle/course:create | Allow |
+      | moodle/course:manageactivities | Allow |
+      | moodle/course:viewparticipants | Allow |
+    And I log out
+    And I log in as "kevin"
+    And I am on site homepage
+    When I press "Add a new course"
+    And I set the following fields to these values:
+      | Course full name  | My first course |
+      | Course short name | myfirstcourse |
+    And I press "Save and display"
+    And I follow "Participants"
+    Then I should see "Kevin the"
+    And I should see "Teacher"

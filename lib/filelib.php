@@ -237,6 +237,9 @@ function file_postupdate_standard_editor($data, $field, array $options, $context
     if (!isset($options['maxbytes'])) {
         $options['maxbytes'] = 0; // unlimited
     }
+    if (!isset($options['removeorphaneddrafts'])) {
+        $options['removeorphaneddrafts'] = false; // Don't remove orphaned draft files by default.
+    }
 
     if ($options['trusttext']) {
         $data->{$field.'trust'} = trusttext_trusted($context);
@@ -249,6 +252,10 @@ function file_postupdate_standard_editor($data, $field, array $options, $context
     if ($options['maxfiles'] == 0 or is_null($filearea) or is_null($itemid) or empty($editor['itemid'])) {
         $data->{$field} = $editor['text'];
     } else {
+        // Clean the user drafts area of any files not referenced in the editor text.
+        if ($options['removeorphaneddrafts']) {
+            file_remove_editor_orphaned_files($editor);
+        }
         $data->{$field} = file_save_draft_area_files($editor['itemid'], $context->id, $component, $filearea, $itemid, $options, $editor['text'], $options['forcehttps']);
     }
     $data->{$field.'format'} = $editor['format'];
@@ -429,7 +436,7 @@ function file_prepare_draft_area(&$draftitemid, $contextid, $component, $fileare
             // at this point there should not be any draftfile links yet,
             // because this is a new text from database that should still contain the @@pluginfile@@ links
             // this happens when developers forget to post process the text
-            $text = str_replace("\"$CFG->httpswwwroot/draftfile.php", "\"$CFG->httpswwwroot/brokenfile.php#", $text);
+            $text = str_replace("\"$CFG->wwwroot/draftfile.php", "\"$CFG->wwwroot/brokenfile.php#", $text);
         }
     } else {
         // nothing to do
@@ -503,9 +510,29 @@ function file_rewrite_pluginfile_urls($text, $file, $contextid, $component, $fil
  * (more information will be added as needed).
  */
 function file_get_draft_area_info($draftitemid, $filepath = '/') {
-    global $CFG, $USER;
+    global $USER;
 
     $usercontext = context_user::instance($USER->id);
+    return file_get_file_area_info($usercontext->id, 'user', 'draft', $draftitemid, $filepath);
+}
+
+/**
+ * Returns information about files in an area.
+ *
+ * @param int $contextid context id
+ * @param string $component component
+ * @param string $filearea file area name
+ * @param int $itemid item id or all files if not specified
+ * @param string $filepath path to the directory from which the information have to be retrieved.
+ * @return array with the following entries:
+ *      'filecount' => number of files in the area.
+ *      'filesize' => total size of the files in the area.
+ *      'foldercount' => number of folders in the area.
+ *      'filesize_without_references' => total size of the area excluding file references.
+ * @since Moodle 3.4
+ */
+function file_get_file_area_info($contextid, $component, $filearea, $itemid = 0, $filepath = '/') {
+
     $fs = get_file_storage();
 
     $results = array(
@@ -515,11 +542,8 @@ function file_get_draft_area_info($draftitemid, $filepath = '/') {
         'filesize_without_references' => 0
     );
 
-    if ($filepath != '/') {
-        $draftfiles = $fs->get_directory_files($usercontext->id, 'user', 'draft', $draftitemid, $filepath, true, true);
-    } else {
-        $draftfiles = $fs->get_area_files($usercontext->id, 'user', 'draft', $draftitemid, 'id', true);
-    }
+    $draftfiles = $fs->get_directory_files($contextid, $component, $filearea, $itemid, $filepath, true, true);
+
     foreach ($draftfiles as $file) {
         if ($file->is_directory()) {
             $results['foldercount'] += 1;
@@ -707,11 +731,22 @@ function file_get_drafarea_files($draftitemid, $filepath = '/') {
                 $item->url = $itemurl->out();
                 $item->icon = $OUTPUT->image_url(file_file_icon($file, 24))->out(false);
                 $item->thumbnail = $OUTPUT->image_url(file_file_icon($file, 90))->out(false);
-                if ($imageinfo = $file->get_imageinfo()) {
-                    $item->realthumbnail = $itemurl->out(false, array('preview' => 'thumb', 'oid' => $file->get_timemodified()));
-                    $item->realicon = $itemurl->out(false, array('preview' => 'tinyicon', 'oid' => $file->get_timemodified()));
-                    $item->image_width = $imageinfo['width'];
-                    $item->image_height = $imageinfo['height'];
+
+                // The call to $file->get_imageinfo() fails with an exception if the file can't be read on the file system.
+                // We still want to add such files to the list, so the owner can view and delete them if needed. So, we only call
+                // get_imageinfo() on files that can be read, and we also spoof the file status based on whether it was found.
+                // We'll use the same status types used by stored_file->get_status(), where 0 = OK. 1 = problem, as these will be
+                // used by the widget to display a warning about the problem files.
+                // The value of stored_file->get_status(), and the file record are unaffected by this. It's only superficially set.
+                $item->status = $fs->get_file_system()->is_file_readable_remotely_by_storedfile($file) ? 0 : 1;
+                if ($item->status == 0) {
+                    if ($imageinfo = $file->get_imageinfo()) {
+                        $item->realthumbnail = $itemurl->out(false, array('preview' => 'thumb',
+                            'oid' => $file->get_timemodified()));
+                        $item->realicon = $itemurl->out(false, array('preview' => 'tinyicon', 'oid' => $file->get_timemodified()));
+                        $item->image_width = $imageinfo['width'];
+                        $item->image_height = $imageinfo['height'];
+                    }
                 }
             }
             $list[] = $item;
@@ -720,6 +755,34 @@ function file_get_drafarea_files($draftitemid, $filepath = '/') {
     $data->itemid = $draftitemid;
     $data->list = $list;
     return $data;
+}
+
+/**
+ * Returns all of the files in the draftarea.
+ *
+ * @param  int $draftitemid The draft item ID
+ * @param  string $filepath path for the uploaded files.
+ * @return array An array of files associated with this draft item id.
+ */
+function file_get_all_files_in_draftarea(int $draftitemid, string $filepath = '/') : array {
+    $files = [];
+    $draftfiles = file_get_drafarea_files($draftitemid, $filepath);
+    file_get_drafarea_folders($draftitemid, $filepath, $draftfiles);
+
+    if (!empty($draftfiles)) {
+        foreach ($draftfiles->list as $draftfile) {
+            if ($draftfile->type == 'file') {
+                $files[] = $draftfile;
+            }
+        }
+
+        if (isset($draftfiles->children)) {
+            foreach ($draftfiles->children as $draftfile) {
+                $files = array_merge($files, file_get_all_files_in_draftarea($draftitemid, $draftfile->filepath));
+            }
+        }
+    }
+    return $files;
 }
 
 /**
@@ -775,6 +838,38 @@ function file_restore_source_field_from_draft_file($storedfile) {
     }
     return $storedfile;
 }
+
+/**
+ * Removes those files from the user drafts filearea which are not referenced in the editor text.
+ *
+ * @param stdClass $editor The online text editor element from the submitted form data.
+ */
+function file_remove_editor_orphaned_files($editor) {
+    global $CFG, $USER;
+
+    // Find those draft files included in the text, and generate their hashes.
+    $context = context_user::instance($USER->id);
+    $baseurl = $CFG->wwwroot . '/draftfile.php/' . $context->id . '/user/draft/' . $editor['itemid'] . '/';
+    $pattern = "/" . preg_quote($baseurl, '/') . "(.+?)[\?\"']/";
+    preg_match_all($pattern, $editor['text'], $matches);
+    $usedfilehashes = [];
+    foreach ($matches[1] as $matchedfilename) {
+        $matchedfilename = urldecode($matchedfilename);
+        $usedfilehashes[] = \file_storage::get_pathname_hash($context->id, 'user', 'draft', $editor['itemid'], '/',
+                                                             $matchedfilename);
+    }
+
+    // Now, compare the hashes of all draft files, and remove those which don't match used files.
+    $fs = get_file_storage();
+    $files = $fs->get_area_files($context->id, 'user', 'draft', $editor['itemid'], 'id', false);
+    foreach ($files as $file) {
+        $tmphash = $file->get_pathnamehash();
+        if (!in_array($tmphash, $usedfilehashes)) {
+            $file->delete();
+        }
+    }
+}
+
 /**
  * Saves files from a draft file area to a real one (merging the list of files).
  * Can rewrite URLs in some content at the same time if desired.
@@ -837,6 +932,7 @@ function file_save_draft_area_files($draftitemid, $contextid, $component, $filea
 
         $newhashes = array();
         $filecount = 0;
+        $context = context::instance_by_id($contextid, MUST_EXIST);
         foreach ($draftfiles as $file) {
             if (!$options['subdirs'] && $file->get_filepath() !== '/') {
                 continue;
@@ -845,8 +941,11 @@ function file_save_draft_area_files($draftitemid, $contextid, $component, $filea
                 continue;
             }
             if (!$file->is_directory()) {
-                if ($options['maxbytes'] and $options['maxbytes'] < $file->get_filesize()) {
-                    // oversized file - should not get here at all
+                // Check to see if this file was uploaded by someone who can ignore the file size limits.
+                $fileusermaxbytes = get_user_max_upload_file_size($context, $options['maxbytes'], 0, 0, $file->get_userid());
+                if ($fileusermaxbytes != USER_CAN_IGNORE_FILE_SIZE_LIMITS
+                        && ($options['maxbytes'] and $options['maxbytes'] < $file->get_filesize())) {
+                    // Oversized file.
                     continue;
                 }
                 if ($options['maxfiles'] != -1 and $options['maxfiles'] <= $filecount) {
@@ -955,7 +1054,9 @@ function file_save_draft_area_files($draftitemid, $contextid, $component, $filea
                 if (!empty($repoid)) {
                     $context = context::instance_by_id($contextid, MUST_EXIST);
                     $repo = repository::get_repository_by_id($repoid, $context);
-
+                    if (!empty($options)) {
+                        $repo->options = $options;
+                    }
                     $file_record['repositoryid'] = $repoid;
                     // This hook gives the repo a place to do some house cleaning, and update the $reference before it's saved
                     // to the file store. E.g. transfer ownership of the file to a system account etc.
@@ -2042,7 +2143,7 @@ function send_temp_file($path, $filename, $pathisstring=false) {
     }
 
     // if user is using IE, urlencode the filename so that multibyte file name will show up correctly on popup
-    if (core_useragent::is_ie()) {
+    if (core_useragent::is_ie() || core_useragent::is_edge()) {
         $filename = urlencode($filename);
     }
 
@@ -2191,7 +2292,7 @@ function send_file($path, $filename, $lifetime = null , $filter=0, $pathisstring
     }
 
     // if user is using IE, urlencode the filename so that multibyte file name will show up correctly on popup
-    if (core_useragent::is_ie()) {
+    if (core_useragent::is_ie() || core_useragent::is_edge()) {
         $filename = rawurlencode($filename);
     }
 
@@ -2356,7 +2457,7 @@ function send_stored_file($stored_file, $lifetime=null, $filter=0, $forcedownloa
                 $size = 256;
             }
             $fileicon = file_file_icon($stored_file, $size);
-            send_file($CFG->dirroot.'/pix/'.$fileicon.'.svg', basename($fileicon).'.svg');
+            send_file($CFG->dirroot.'/pix/'.$fileicon.'.png', basename($fileicon).'.png');
         } else {
             // preview images have fixed cache lifetime and they ignore forced download
             // (they are generated by GD and therefore they are considered reasonably safe).
@@ -2958,7 +3059,6 @@ class curl {
      * Set HTTP Request Header
      *
      * @param array $header
-     * @param bool $replace If true, will remove any existing headers before appending the new one.
      */
     public function setHeader($header) {
         if (is_array($header)) {
@@ -2967,7 +3067,10 @@ class curl {
             }
         } else {
             // Remove newlines, they are not allowed in headers.
-            $this->header[] = preg_replace('/[\r\n]/', '', $header);
+            $newvalue = preg_replace('/[\r\n]/', '', $header);
+            if (!in_array($newvalue, $this->header)) {
+                $this->header[] = $newvalue;
+            }
         }
     }
 
@@ -3283,7 +3386,7 @@ class curl {
         if ((defined('PHPUNIT_TEST') && PHPUNIT_TEST)) {
             array_push(self::$mockresponses, $response);
         } else {
-            throw new coding_excpetion('mock_response function is only available for unit tests.');
+            throw new coding_exception('mock_response function is only available for unit tests.');
         }
     }
 
@@ -3869,9 +3972,10 @@ class curl_cache {
  * @param null|string $preview the preview mode, defaults to serving the original file
  * @param boolean $offline If offline is requested - don't serve a redirect to an external file, return a file suitable for viewing
  *                         offline (e.g. mobile app).
+ * @param bool $embed Whether this file will be served embed into an iframe.
  * @todo MDL-31088 file serving improments
  */
-function file_pluginfile($relativepath, $forcedownload, $preview = null, $offline = false) {
+function file_pluginfile($relativepath, $forcedownload, $preview = null, $offline = false, $embed = false) {
     global $DB, $CFG, $USER;
     // relative path must start with '/'
     if (!$relativepath) {
@@ -3895,7 +3999,7 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
 
     $fs = get_file_storage();
 
-    $sendfileoptions = ['preview' => $preview, 'offline' => $offline];
+    $sendfileoptions = ['preview' => $preview, 'offline' => $offline, 'embed' => $embed];
 
     // ========================================================================================================================
     if ($component === 'blog') {
@@ -4018,7 +4122,7 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
         $filename = array_pop($args);
 
         if ($filearea === 'badgeimage') {
-            if ($filename !== 'f1' && $filename !== 'f2') {
+            if ($filename !== 'f1' && $filename !== 'f2' && $filename !== 'f3') {
                 send_file_not_found();
             }
             if (!$file = $fs->get_file($context->id, 'badges', 'badgeimage', $badge->id, '/', $filename.'.png')) {
@@ -4553,7 +4657,8 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
             // Backup files that were generated by the automated backup systems.
 
             require_login($course);
-            require_capability('moodle/site:config', $context);
+            require_capability('moodle/backup:downloadfile', $context);
+            require_capability('moodle/restore:userinfo', $context);
 
             $filename = array_pop($args);
             $filepath = $args ? '/'.implode('/', $args).'/' : '/';
@@ -4630,7 +4735,18 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
             if (!plugin_supports('mod', $modname, FEATURE_MOD_INTRO, true)) {
                 send_file_not_found();
             }
-            require_course_login($course, true, $cm);
+
+            // Require login to the course first (without login to the module).
+            require_course_login($course, true);
+
+            // Now check if module is available OR it is restricted but the intro is shown on the course page.
+            $cminfo = cm_info::create($cm);
+            if (!$cminfo->uservisible) {
+                if (!$cm->showdescription || !$cminfo->is_visible_on_course_page()) {
+                    // Module intro is not visible on the course page and module is not available, show access error.
+                    require_course_login($course, true, $cminfo);
+                }
+            }
 
             // all users may access it
             $filename = array_pop($args);

@@ -1,5 +1,10 @@
 /* core.less */
 
+// When we upgrade boostrap to v4 release, we will need to change this to be used by the text-white class.
+// Because a primary colour that is both AA accessible on grey (footer) and white is not possible, we always
+// want white default colour.
+$bg-inverse-link-color: #fff !default;
+
 #region-main > .card {
     overflow-x: auto;
     overflow-y: visible;
@@ -235,14 +240,7 @@ img.resize {
     white-space: nowrap;
 }
 
-.action-menu .userpicture {
-    width: auto;
-    height: auto;
-    margin-left: 1rem;
-}
-
-.block img.resize,
-.breadcrumb img.resize {
+.block img.resize {
     height: 0.9em;
     width: 0.8em;
 }
@@ -288,17 +286,18 @@ form.popupform div {
     overflow: auto;
 }
 
+// Minimum height required for a menu in a table inside a scrollable div.
+// Position required for table sizing inside a flex container.
 .no-overflow > .generaltable {
+    position: relative;
     margin-bottom: 0;
+    min-height: 10em;
 }
 // Accessibility features
 
 // Accessibility: text 'seen' by screen readers but not visual users.
 .accesshide {
-    position: absolute;
-    left: -10000px;
-    font-weight: normal;
-    font-size: 1em;
+    @include sr-only();
 }
 
 span.hide,
@@ -346,9 +345,6 @@ a.skip:active {
     margin-left: 43px;
 }
 // Group
-#page-group-index #groupeditform {
-    text-align: center;
-}
 
 #doc-contents h1 {
     margin: 1em 0 0 0;
@@ -1092,84 +1088,21 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
     text-align: center;
 }
 
-.initialbar {
-
-    overflow: auto;
-
-    .initialbarlabel {
-        display: inline-block;
-        width: 6em;
-        float: left;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .initialbarall {
-        float: left;
-        width: 4em;
-        margin-bottom: 2px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .initialbargroups {
-        float: left;
-    }
-
-    .initialbargroup {
-        float: left;
-        display: inline-block;
-        white-space: nowrap;
-        margin: 0;
-        padding: 0;
-
-        li {
-            float: left;
-            list-style: none;
-        }
-    }
-
-    .letter {
-        display: inline-block;
-        height: 1.5em;
-        min-width: 1.5em;
-        text-align: center;
-
-        color: $pagination-color;
-        border-width: $pagination-border-width;
-        border-color: $pagination-border-color;
-        border-style: solid;
-        background-color: $pagination-bg;
-    }
-    .letter:hover {
-        color: $pagination-hover-color;
-        border-color: $pagination-hover-border;
-        background-color: $pagination-hover-bg;
-    }
-
-    .letter.active {
-        color: $pagination-active-color;
-        border-color: $pagination-active-border;
-        background-color: $pagination-active-bg;
-    }
-
-}
-
-@media (max-width: 400px) {
-    .initialbar {
-        .letter {
-            /* This is chosen so that 23 letter at 320px just fits */
-            font-size: 11.5px;
-        }
-    }
-}
-
-
 /* Moodle Dialogue Settings (moodle-core-dialogue)  */
 .moodle-dialogue-base .moodle-dialogue-lightbox {
     background-color: $gray;
+}
+
+// Prevent adding backdrops to popups in popups.
+.pagelayout-popup {
+    .moodle-dialogue-base {
+        .moodle-dialogue-lightbox {
+            background-color: transparent;
+        }
+        .moodle-dialogue {
+            box-shadow: $popover-box-shadow;
+        }
+    }
 }
 
 .moodle-dialogue-base .hidden,
@@ -1229,6 +1162,7 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
 
 .moodle-dialogue-base .moodle-dialogue-wrap .moodle-dialogue-hd h1 {
     @extend .modal-title;
+    font-size: 1.5rem;
 }
 
 .moodle-dialogue-base .moodle-dialogue-wrap .moodle-dialogue-hd .yui3-widget-buttons {
@@ -1248,7 +1182,7 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
 }
 
 .moodle-dialogue-base .moodle-dialogue .moodle-dialogue-bd {
-    @extend .modal-body;
+    padding: 0.5rem;
 }
 
 .moodle-dialogue-base .moodle-dialogue-fullscreen .moodle-dialogue-content {
@@ -1307,10 +1241,7 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
 }
 
 .moodle-dialogue-confirm .confirmation-message {
-    margin: 0.5em 1em;
-}
-.moodle-dialogue-confirm .confirmation-buttons {
-    text-align: right;
+    margin: 0.5rem 0;
 }
 
 .moodle-dialogue-confirm .confirmation-dialogue input {
@@ -1813,18 +1744,6 @@ img#persona_signin {
     border-width: 0;
 }
 
-.breadcrumb-nav {
-    float: left;
-}
-
-.breadcrumb-button .singlebutton div {
-    margin-right: 0;
-}
-
-.breadcrumb-nav .breadcrumb {
-    margin: 0;
-}
-
 /** Page header */
 #page-header {
     .logo {
@@ -1835,16 +1754,9 @@ img#persona_signin {
     }
 }
 
-/** Header. */
-header {
-    .logo img {
-        max-height: 35px;
-    }
-    .collapse.in,
-    .collapsing {
-        display: block;
-        clear: both;
-    }
+/** Navbar logo. */
+nav.navbar .logo img {
+    max-height: 35px;
 }
 
 /** Header-bar styles **/
@@ -1974,6 +1886,10 @@ dd:after {
     &.inplaceeditable-toggle .quickediticon {
         display: none;
     }
+
+    &.inplaceeditable-autocomplete {
+        display: block;
+    }
 }
 
 h3.sectionname .inplaceeditable.inplaceeditingon .editinstructions {
@@ -2101,9 +2017,24 @@ ul {
     }
 }
 
-$footer-link-color: $brand-primary !default;
+// Footer link colour was added to allow the colour of footer links to be changed,
+// but really in bootstrap we want the colour of links on .bg-inverse to be changed
+// rather than being specific to the footer. This is kept for backwards compatibility.
+$footer-link-color: $bg-inverse-link-color !default;
 #page-footer a {
     color: $footer-link-color;
+    text-decoration: underline;
+    .icon {
+        color: $footer-link-color;
+    }
+}
+
+.bg-inverse a {
+    color: $bg-inverse-link-color;
+    text-decoration: underline;
+    .icon {
+        color: $bg-inverse-link-color;
+    }
 }
 
 .sitelink {
@@ -2117,6 +2048,9 @@ $footer-link-color: $brand-primary !default;
     display: block;
     width: 100%;
     color: $body-color;
+}
+.dropdown-item:active a {
+    color: $dropdown-link-active-color;
 }
 
 .competency-tree {
@@ -2136,3 +2070,44 @@ $footer-link-color: $brand-primary !default;
         top: 0;
     }
 }
+
+[data-drag-type="move"] {
+    cursor: move;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.overlay-icon-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.6);
+
+    .loading-icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+
+        .icon {
+            height: 30px;
+            width: 30px;
+            font-size: 30px;
+        }
+    }
+}
+
+.open.atto_menu > .dropdown-menu {
+    display: block;
+}
+div.editor_atto_toolbar button .icon {
+    color: $gray-700;
+}
+.w-auto {
+    width: auto;
+}
+

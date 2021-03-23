@@ -229,6 +229,7 @@ class admin_uploaduser_form2 extends moodleform {
         $choices = array(0 => get_string('emaildisplayno'), 1 => get_string('emaildisplayyes'), 2 => get_string('emaildisplaycourse'));
         $mform->addElement('select', 'maildisplay', get_string('emaildisplay'), $choices);
         $mform->setDefault('maildisplay', core_user::get_property_default('maildisplay'));
+        $mform->addHelpButton('maildisplay', 'emaildisplay');
 
         $choices = array(0 => get_string('textformat'), 1 => get_string('htmlformat'));
         $mform->addElement('select', 'mailformat', get_string('emailformat'), $choices);
@@ -282,7 +283,7 @@ class admin_uploaduser_form2 extends moodleform {
         $mform->setAdvanced('url');
 
         $mform->addElement('text', 'idnumber', get_string('idnumber'), 'maxlength="255" size="25"');
-        $mform->setType('idnumber', PARAM_NOTAGS);
+        $mform->setType('idnumber', core_user::get_property_type('idnumber'));
         $mform->setForceLtr('idnumber');
 
         $mform->addElement('text', 'institution', get_string('institution'), 'maxlength="255" size="25"');

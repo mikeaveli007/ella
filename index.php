@@ -38,7 +38,6 @@ if (!empty($CFG->defaulthomepage) && ($CFG->defaulthomepage == HOMEPAGE_MY) && o
     $urlparams['redirect'] = 0;
 }
 $PAGE->set_url('/', $urlparams);
-$PAGE->set_course($SITE);
 $PAGE->set_pagelayout('frontpage');
 $PAGE->set_other_editing_capability('moodle/course:update');
 $PAGE->set_other_editing_capability('moodle/course:manageactivities');
@@ -47,11 +46,7 @@ $PAGE->set_other_editing_capability('moodle/course:activityvisibility');
 // Prevent caching of this page to stop confusion when changing page after making AJAX changes.
 $PAGE->set_cacheable(false);
 
-if ($CFG->forcelogin) {
-    require_login();
-} else {
-    user_accesstime_log();
-}
+require_course_login($SITE);
 
 $hasmaintenanceaccess = has_capability('moodle/site:maintenanceaccess', context_system::instance());
 
@@ -65,6 +60,9 @@ $hassiteconfig = has_capability('moodle/site:config', context_system::instance()
 if ($hassiteconfig && moodle_needs_upgrading()) {
     redirect($CFG->wwwroot .'/'. $CFG->admin .'/index.php');
 }
+
+// If site registration needs updating, redirect.
+\core\hub\registration::registration_reminder('/index.php');
 
 if (get_home_page() != HOMEPAGE_SITE) {
     // Redirect logged-in users to My Moodle overview if required.
@@ -190,7 +188,8 @@ if (isloggedin() and !isguestuser() and isset($CFG->frontpageloggedin)) {
     $frontpagelayout = $CFG->frontpage;
 }
 
-foreach (explode(',', $frontpagelayout) as $v) {
+$frontpageoptions = explode(',', $frontpagelayout);
+foreach ($frontpageoptions as $v) {
     switch ($v) {
         // Display the main part of the front page.
         case FRONTPAGENEWS:
@@ -258,8 +257,13 @@ foreach (explode(',', $frontpagelayout) as $v) {
 
                 echo html_writer::tag('span', '', array('class' => 'skip-block-to', 'id' => 'skipmycourses'));
                 break;
+            } else {
+                // Temp fix/fallback in order to display available courses when enrolled courses should be shown,
+                // but user is not enrolled in any course.
+                if (array_search(FRONTPAGEALLCOURSELIST, $frontpageoptions)) {
+                    break;
+                }
             }
-            // No "break" here. If there are no enrolled courses - continue to 'Available courses'.
 
         case FRONTPAGEALLCOURSELIST:
             $availablecourseshtml = $courserenderer->frontpage_available_courses();

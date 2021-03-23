@@ -1,6 +1,5 @@
 <?php
-
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
  * Automatically generated strings for Moodle installer
@@ -40,3 +39,4 @@ $string['cliunknowoption'] = 'Neatpažintos parinktys: {$a} naudokite --žinyno 
 $string['cliyesnoprompt'] = 'įveskite t (taip) arba n (ne)';
 $string['environmentrequireinstall'] = 'turi būti įdiegta ir įjungta';
 $string['environmentrequireversion'] = 'būtina naudoti versiją {$a->needed}, o jūs naudojate {$a->current}';
+$string['upgradekeyset'] = 'Naujovinimo raktas (palikite tuščią, jei nenorite nustatyti)';

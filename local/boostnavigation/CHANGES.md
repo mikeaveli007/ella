@@ -4,6 +4,94 @@ moodle-local_boostnavigation
 Changes
 -------
 
+### v3.5-r8
+
+* 2019-03-12 - Allow participants node to be removed from the course navigation.
+* 2019-03-12 - Allow grade node to be removed from the course navigation - Credits to Dan Marsden.
+* 2019-03-12 - Add support for setting the node id attribute.
+* 2019-03-12 - Announce undocumented parameters for custom nodes for admins.  
+* 2019-03-12 - Add logical combination operator for the cohort, role and system role settings - Credits to Adrian Perez for the idea.
+* 2019-03-11 - Add node with icon to example section.
+* 2019-03-11 - Target link to FontAwesome icon list to FontAwesome 4.7.0 which is still used by Moodle core.
+
+### v3.5-r7
+
+* 2019-02-06 - Add the new custom node definition fields to the settings description.
+
+### v3.5-r6
+
+* 2019-02-06 - Bugfix: Get rid of a debug message which appeared when there wasn't an icon defined for a custom node.
+
+### v3.5-r5
+
+* 2019-02-06 - Add support for icons in custom nodes.
+* 2019-02-06 - Improve processing of the language parameter - Credits to Adrian Perez.
+* 2019-02-06 - Add support for system roles and site-admin on custom course nodes - Credits to Adrian Perez.
+* 2019-02-05 - Improve the accessibility of the collapsible nodes, let users open / close the MyCourses node with the keyboard.
+
+### v3.5-r4
+
+* 2019-02-04 - Fix a flaw in the language pack for the node title placeholders.
+
+### v3.5-r3
+
+* 2019-02-04 - Improvement: Add placeholders for node titles.
+* 2019-02-04 - Improvement: Add editingtoggle placeholder for custom nodes.
+* 2019-02-04 - Improvement: Make sure that the right custom node with parameters is active and highlighted.
+* 2018-12-05 - Changed travis.yml due to upstream changes.
+* 2018-07-23 - Remove deprecated strings file as the strings were fully depreated before.
+
+### v3.5-r2
+
+* 2018-07-19 - Adapt the mechanism to de-activate collapsible custom parent nodes.
+* 2018-07-19 - Cleanup: Remove a PHP notice in a forgotten edge case.
+* 2018-07-19 - Split settings onto multiple settings pages.
+* 2018-07-19 - Change collapse node icon to FontAwesome.
+
+### v3.5-r1
+
+* 2018-07-18 - Some changes after navdrawer icons have landed in core.
+* 2018-07-18 - Check compatibility for Moodle 3.5, no functionality change.
+
+### v3.4-r7
+
+* 2018-07-18 - Support guest and non-logged-in users for role specific custom nodes.
+
+### v3.4-r6
+
+* 2018-06-20 - Bugfix: {pagecontextid} placeholder in custom node URLs was broken.
+
+### v3.4-r5
+
+* 2018-06-20 - Bugfix: Display custom nodes for multiple cohorts did not work
+* 2018-06-20 - Add support for role specific custom nodes. With warm greetings from Moodle-DACH18-DevCamp - Cheers Jonathan and Christian
+* 2018-06-19 - Add support for placeholders in custom node URLs.
+
+### v3.4-r4
+
+* 2018-05-16 - Implement Privacy API.
+
+### v3.4-r3
+
+* 2018-02-27 - Change the icon for custom nodes based on early adopter feedback.
+
+### v3.4-r2
+
+* 2018-02-27 - Fix a note in the language pack.
+
+### v3.4-r1
+
+* 2018-02-26 - Always set the data-isexpandable attribute of the mycourses child nodes.
+* 2018-02-22 - Add icons to custom nodes to be displayed in theme_boost_campus
+* 2018-02-21 - Change the icons which were added to the activity nodes to a simple indent. This will simplify our work with theme_boost_campus, thanks for understanding.
+* 2018-02-21 - Bugfix: Collapsing only custom nodes did not work.
+* 2018-02-21 - Fix collapsing of mycourses node in theme_boost_campus.
+* 2018-02-20 - Don't highlight active collapsible custom nodes.
+* 2018-02-20 - Remove all notes about the requirement for MDL-59425 for collapsing nodes as this is now part of Moodle 3.4.
+* 2018-02-20 - Remove fallback for missing node key of competencies files navigation node.
+* 2018-02-20 - Remove fallback for missing node key of private files navigation node.
+* 2018-02-20 - Prepare compatibility for Moodle 3.4, no functionality change.
+
 ### v3.3-r1
 
 * 2018-02-20 - Prepare compatibility for Moodle 3.3, no functionality change.

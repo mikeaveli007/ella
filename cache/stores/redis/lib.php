@@ -150,7 +150,8 @@ class cachestore_redis extends cache_store implements cache_is_key_aware, cache_
      */
     protected function new_redis($server, $prefix = '', $password = '') {
         $redis = new Redis();
-        $port = null;
+        // Check if it isn't a Unix socket to set default port.
+        $port = ($server[0] === '/') ? null : 6379;
         if (strpos($server, ':')) {
             $serverconf = explode(':', $server);
             $server = $serverconf[0];
@@ -325,7 +326,7 @@ class cachestore_redis extends cache_store implements cache_is_key_aware, cache_
      * @return bool True if the key exists, false if it does not.
      */
     public function has($key) {
-        return $this->redis->hExists($this->hash, $key);
+        return !empty($this->redis->hExists($this->hash, $key));
     }
 
     /**

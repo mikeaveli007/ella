@@ -43,6 +43,9 @@ if ($hassiteconfig) {
                 new lang_string('configenablemobilewebservice', 'admin', $enablemobiledoclink), $default));
     }
 
+    $temp->add(new admin_setting_configtext('tool_mobile/apppolicy', new lang_string('apppolicy', 'tool_mobile'),
+        new lang_string('apppolicy_help', 'tool_mobile'), '', PARAM_URL));
+
     $ADMIN->add('mobileapp', $temp);
 
     // Show only mobile settings if the mobile service is enabled.
@@ -60,7 +63,7 @@ if ($hassiteconfig) {
 
         $temp->add(new admin_setting_configtext('tool_mobile/forcedurlscheme',
                     new lang_string('forcedurlscheme_key', 'tool_mobile'),
-                    new lang_string('forcedurlscheme', 'tool_mobile'), '', PARAM_NOTAGS));
+                    new lang_string('forcedurlscheme', 'tool_mobile'), '', PARAM_ALPHANUM));
 
         $ADMIN->add('mobileapp', $temp);
 
@@ -82,6 +85,9 @@ if ($hassiteconfig) {
 
         $temp->add(new admin_setting_configtext('tool_mobile/androidappid', new lang_string('androidappid', 'tool_mobile'),
                     new lang_string('androidappid_desc', 'tool_mobile'), 'com.moodle.moodlemobile', PARAM_NOTAGS));
+
+        $temp->add(new admin_setting_configtext('tool_mobile/setuplink', new lang_string('setuplink', 'tool_mobile'),
+            new lang_string('setuplink_desc', 'tool_mobile'), 'https://download.moodle.org/mobile', PARAM_URL));
 
         $ADMIN->add('mobileapp', $temp);
 
