@@ -2,29 +2,22 @@
 # process (which uses our internal CI system) this file is here for the benefit
 # of community developers git clones - see MDL-51458.
 
-sudo: required
-
 notifications:
   email:
     if: env(MOODLE_EMAIL) != no
 
 language: php
 
-dist: trusty
+os: linux
+
+dist: xenial
 
 services:
+    - mysql
     - docker
 
 addons:
   postgresql: "9.6"
-  packages:
-    - mysql-server-5.6
-    - mysql-client-core-5.6
-    - mysql-client-5.6
-
-# Redis tests are currently failing on php 7.2 due to https://bugs.php.net/bug.php?id=75628
-# services:
-#     - redis-server
 
 jobs:
     # Enable fast finish.
@@ -33,33 +26,34 @@ jobs:
     fast_finish: true
 
     include:
-        # First all the lowest php ones (7.0)
-        - php: 7.0
+        # First all the lowest php ones (7.2)
+        - php: 7.2
           env: DB=none     TASK=CITEST
-        - php: 7.0
+        - php: 7.2
           env: DB=none     TASK=GRUNT    NVM_VERSION='lts/carbon'
 
         - if: env(MOODLE_DATABASE) = "pgsql" OR env(MOODLE_DATABASE) = "all" OR env(MOODLE_DATABASE) IS NOT present
-          php: 7.0
+          php: 7.2
           env: DB=pgsql    TASK=PHPUNIT
 
         - if: env(MOODLE_DATABASE) = "mysqli" OR env(MOODLE_DATABASE) = "all"
-          php: 7.0
+          php: 7.2
           env: DB=mysqli   TASK=PHPUNIT
 
+        # Then, conditionally, all the highest php ones (7.4)
         - if: env(MOODLE_PHP) = "all"
-          php: 7.2
+          php: 7.4
           env: DB=none     TASK=CITEST
         - if: env(MOODLE_PHP) = "all"
-          php: 7.2
+          php: 7.4
           env: DB=none     TASK=GRUNT    NVM_VERSION='lts/carbon'
 
         - if: env(MOODLE_PHP) = "all" AND (env(MOODLE_DATABASE) = "pgsql" OR env(MOODLE_DATABASE) = "all" OR env(MOODLE_DATABASE) IS NOT present)
-          php: 7.2
+          php: 7.4
           env: DB=pgsql    TASK=PHPUNIT
 
         - if: env(MOODLE_PHP) = "all" AND (env(MOODLE_DATABASE) = "mysqli" OR env(MOODLE_DATABASE) = "all")
-          php: 7.2
+          php: 7.4
           env: DB=mysqli   TASK=PHPUNIT
 
 cache:
@@ -69,6 +63,8 @@ cache:
 
 before_install:
     - docker run -d -p 127.0.0.1:8080:80 --name exttests moodlehq/moodle-exttests
+    # Avoid IPv6 default binding as service (causes redis not to start).
+    - sudo service redis-server start --bind 127.0.0.1
 
 install:
     - >
@@ -76,10 +72,10 @@ install:
         then
             sudo mkdir /mnt/ramdisk
             sudo mount -t tmpfs -o size=1024m tmpfs /mnt/ramdisk
-            sudo stop mysql
+            sudo service mysql stop
             sudo mv /var/lib/mysql /mnt/ramdisk
             sudo ln -s /mnt/ramdisk/mysql /var/lib/mysql
-            sudo start mysql
+            sudo service mysql restart
         fi
     - >
         if [ "$DB" = 'pgsql' ];
@@ -99,10 +95,8 @@ install:
                 echo 'auth.json' >> .git/info/exclude
             fi
 
-            # Enable Redis.
-            # Redis tests are currently failing on php 7.2 due to https://bugs.php.net/bug.php?id=75628
-            # echo 'extension="redis.so"' > /tmp/redis.ini
-            # phpenv config-add /tmp/redis.ini
+            echo 'extension="redis.so"' > /tmp/redis.ini
+            phpenv config-add /tmp/redis.ini
 
             # Install composer dependencies.
             # We need --no-interaction in case we hit API limits for composer. This causes it to fall back to a standard clone.
@@ -173,8 +167,6 @@ before_script:
         mkdir -p "$HOME"/roots/phpunit
 
         # The phpunit dataroot and prefix..
-        # Redis tests are currently failing on php 7.2 due to https://bugs.php.net/bug.php?id=75628
-        # -e "/require_once/i \\define('TEST_SESSION_REDIS_HOST', '127.0.0.1');" \
         sed -i \
           -e "/require_once/i \\\$CFG->phpunit_dataroot = '\/home\/travis\/roots\/phpunit';" \
           -e "/require_once/i \\\$CFG->phpunit_prefix = 'p_';" \
@@ -183,6 +175,16 @@ before_script:
         sed -i \
           -e "/require_once/i \\define('TEST_EXTERNAL_FILES_HTTP_URL', 'http://127.0.0.1:8080');" \
           -e "/require_once/i \\define('TEST_EXTERNAL_FILES_HTTPS_URL', 'http://127.0.0.1:8080');" \
+          config.php ;
+
+        # Redis cache store tests
+        sed -i \
+          -e "/require_once/i \\define('TEST_CACHESTORE_REDIS_TESTSERVERS', '127.0.0.1');" \
+          config.php ;
+        # Redis session tests, but not for PHP 7.2 and up. See MDL-60978 for more info.
+        redissession="define('TEST_SESSION_REDIS_HOST', '127.0.0.1');"
+        sed -i \
+          -e "/require_once/i \\${redissession}" \
           config.php ;
 
         # Initialise PHPUnit for Moodle.
@@ -212,7 +214,7 @@ before_script:
         # We need the official upstream for comparison
         git remote add upstream https://github.com/moodle/moodle.git;
 
-        git fetch upstream MOODLE_35_STABLE;
+        git fetch upstream MOODLE_39_STABLE;
         export GIT_PREVIOUS_COMMIT="`git merge-base FETCH_HEAD $TRAVIS_COMMIT`";
         export GIT_COMMIT="$TRAVIS_COMMIT";
         export UPSTREAM_FETCH_HEAD=`git rev-parse FETCH_HEAD`

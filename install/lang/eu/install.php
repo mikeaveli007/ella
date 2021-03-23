@@ -50,7 +50,7 @@ $string['installation'] = 'Instalazioa';
 $string['langdownloaderror'] = 'Zoritxarrez "{$a}" hizkuntza ezin izan da jaitsi. Instalazio-prozesuak ingelesez jarraituko du.';
 $string['memorylimithelp'] = '<p>Zure zerbitzarian PHP memoria-muga {$a} da une honetan.</p>
 
-<p>Aurrerago honek Moodle-ri arazoak sor diezaizkioke,
+<p>Aurrerago honek Moodleri arazoak sor diezaizkioke,
 bereziki modulu edo/eta erabiltzaile asko badituzu.</p>
 
 <p>PHP memoria-muga ahal bezain altu konfiguratzea aholkatzen dizugu, ad. 40M.
@@ -66,10 +66,10 @@ Horrek Moodle-k berak memoria-muga ezartzea ahalbidetzen du.</li>
 (orriak ikustean erroreak ere ikusiko dituzu). Kasu horretan, .htaccess fitxategia ezabatu beharko duzu.</p></li>
 </ol>';
 $string['paths'] = 'Bideak';
-$string['pathserrcreatedataroot'] = 'Instalatzaileak ezin du datu-karpeta ({$a->dataroot}) sortu.';
+$string['pathserrcreatedataroot'] = 'Instalatzaileak ezin du datu-direktorioa ({$a->dataroot}) sortu.';
 $string['pathshead'] = 'Egiaztatu bideak';
 $string['pathsrodataroot'] = 'Dataroot direktorioa ez da idazteko modukoa.';
-$string['pathsroparentdataroot'] = 'Goragoko karpeta ({$a->parent}) ez da idazteko modukoa. Instalatzaileak ezin du datu-karpeta ({$a->dataroot}) sortu.';
+$string['pathsroparentdataroot'] = 'Goragoko direktorioa ({$a->parent}) ez da idazteko modukoa. Instalatzaileak ezin du datu-direktorioa ({$a->dataroot}) sortu.';
 $string['pathssubadmindir'] = 'Web ostalari gutxi batzuk /admin URL berezi gisa erabiltzen dute kontrol-panel edo antzekora sarbidea emateko. Zoritxarrez, honek Moodleren kudeatze-orrien lehenetsitako kokapenarekin gatazka sortzen du. Hau konpondu dezakezu zure instalazioko admin direktorioa berrizendatuz, eta izen berria hemen sartuta. Adibidez <em>moodleadmin</em>. Honek Moodleko admin estekak konponduko du.';
 $string['pathssubdataroot'] = '<p>Moodlek erabiltzaileek igotako fitxategien edukiak bilduko dituen direktorio bat.</p>
 <p>Direktorio honetan web-zerbitzariaren erabiltzaileak irakurtzeko eta idazteko baimena izan beharko ditu (normalean \'www-data\', \'nobody\', edo \'apache\').</p>
@@ -92,10 +92,7 @@ $string['welcomep20'] = 'Orri hau ikusten baduzu <strong>{$a->packname} {$a->pac
 $string['welcomep30'] = '<strong>{$a->installername}</strong>ren bertsio honek <strong>Moodle</strong>-k
 zure ordenagailuan funtzionatzeko behar diren aplikazioak dauzka, zehazki hurrengoak:';
 $string['welcomep40'] = 'Paketeak ere zera dauka: <strong>Moodle {$a->moodlerelease} ({$a->moodleversion})</strong>.';
-$string['welcomep50'] = 'Paketeko aplikazio guztien erabilpena dagozkien lizentziek
-    arautzen dute. <strong>{$a->installername}</strong> aplikazioak
-    <a href="http://www.opensource.org/docs/definition_plain.html">kode irekia</a> dauka eta
-   <a href="http://www.gnu.org/copyleft/gpl.html">GPL</a> lizentziapean banatzen da.';
-$string['welcomep60'] = 'Datozen orriek urrats erraz batzuen bidez gidatuko zaituzte <strong>Moodle</strong> zure ordenagailuan instalatu eta konfiguratzeko. Aholkatzen diren lehentsitako balioak mantendu edo, nahi izanez gero, alda ditzakezu zure beharrei erantzun diezaieten.';
+$string['welcomep50'] = 'Paketeko aplikazio guztien erabilpena dagozkien lizentziek arautzen dute. <strong>{$a->installername}</strong> aplikazioak <a href="https://www.opensource.org/docs/definition_plain.html">kode irekia</a> dauka eta <a href="https://www.gnu.org/copyleft/gpl.html">GPL</a> lizentziapean banatzen da.';
+$string['welcomep60'] = 'Datozen orriek urrats erraz batzuen bidez gidatuko zaituzte <strong>Moodle</strong> zure ordenagailuan instalatu eta konfiguratzeko. Aholkatzen diren lehenetsitako balioak mantendu edo, nahi izanez gero, alda ditzakezu zure beharrei erantzun diezaieten.';
 $string['welcomep70'] = 'Egin klik "Hurrengoa" botoian <strong>Moodle</strong>ren konfigurazioarekin jarraitzeko.';
 $string['wwwroot'] = 'Web helbidea';

@@ -74,7 +74,7 @@ $string['welcomep10'] = '{$a->installername} ({$a->installerversion})';
 $string['welcomep20'] = 'Azért látja ezt az oldalt, mert sikeresen telepítette és futtatja a(z) {$a->packname} {$a->packversion} csomagot számítógépén. Gratulálunk!';
 $string['welcomep30'] = 'A(z) {$a->installername} tartalmazza azokat az alkalmazásokat, amelyekkel a Moodle számára kialakítható a működési környezet, azaz:';
 $string['welcomep40'] = 'A csomag tartalmazza a Moodle {$a->moodlerelease} ({$a->moodleversion})-t is.';
-$string['welcomep50'] = 'A csomagban lévő alkalmazások használatára a vonatkozó engedélyek érvényesek. A teljes {$a->installername} csomag <a href="http://www.opensource.org/docs/definition_plain.html">nyílt forráskódú</a>, közreadása pedig a <a href="http://www.gnu.org/copyleft/gpl.html">GPL</a>-licenc alapján történik.';
+$string['welcomep50'] = 'A csomagban lévő alkalmazások használatára a vonatkozó engedélyek érvényesek. A teljes {$a->installername} csomag <a href="https://www.opensource.org/docs/definition_plain.html">nyílt forráskódú</a>, közreadása pedig a <a href="https://www.gnu.org/copyleft/gpl.html">GPL</a>-licenc alapján történik.';
 $string['welcomep60'] = 'A következő oldalak segítségével számítógépén egyszerűen telepítheti és állíthatja be a <strong>Moodle</strong>-t. Elfogadhatja az alapbeállításokat, de igényeinek megfelelően módosíthatja is őket.';
 $string['welcomep70'] = 'Kattintson az alábbi "Következő" gombra és folytassa a Moodle telepítését.';
 $string['wwwroot'] = 'Webcím';

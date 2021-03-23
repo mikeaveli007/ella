@@ -173,6 +173,22 @@ class grade_grade extends grade_object {
     public $aggregationweight = null;
 
     /**
+     * Feedback files to copy.
+     *
+     * Example -
+     *
+     * [
+     *     'contextid' => 1,
+     *     'component' => 'mod_xyz',
+     *     'filearea' => 'mod_xyz_feedback',
+     *     'itemid' => 2
+     * ];
+     *
+     * @var array
+     */
+    public $feedbackfiles = [];
+
+    /**
      * Returns array of grades for given grade_item+users
      *
      * @param grade_item $grade_item
@@ -234,6 +250,10 @@ class grade_grade extends grade_object {
         } else if ($this->grade_item->id != $this->itemid) {
             debugging('Itemid mismatch');
             $this->grade_item = grade_item::fetch(array('id'=>$this->itemid));
+        }
+
+        if (empty($this->grade_item)) {
+            debugging("Missing grade item id $this->itemid", DEBUG_DEVELOPER);
         }
 
         return $this->grade_item;
@@ -760,13 +780,15 @@ class grade_grade extends grade_object {
             $dependson[$grade_grade->itemid] = $grade_items[$grade_grade->itemid]->depends_on();
             if ($grade_grade->is_excluded()) {
                 //nothing to do, aggregation is ok
+                continue;
             } else if ($grade_grade->is_hidden()) {
                 $hiddenfound = true;
                 $altered[$grade_grade->itemid] = null;
                 $alteredaggregationstatus[$grade_grade->itemid] = 'dropped';
                 $alteredaggregationweight[$grade_grade->itemid] = 0;
-            } else if ($grade_grade->is_locked() or $grade_grade->is_overridden()) {
-                // no need to recalculate locked or overridden grades
+            } else if ($grade_grade->is_overridden()) {
+                // No need to recalculate overridden grades.
+                continue;
             } else {
                 if (!empty($dependson[$grade_grade->itemid])) {
                     $dependencydepth[$grade_grade->itemid] = 1;
@@ -826,9 +848,11 @@ class grade_grade extends grade_object {
                     } else {
                         // depends on altered grades - we should try to recalculate if possible
                         if ($grade_items[$do]->is_calculated() or
-                            (!$grade_items[$do]->is_category_item() and !$grade_items[$do]->is_course_item())
+                            (!$grade_items[$do]->is_category_item() and !$grade_items[$do]->is_course_item()) or
+                            ($grade_items[$do]->is_category_item() and $grade_items[$do]->is_locked())
                         ) {
                             // This is a grade item that is not a category or course and has been affected by grade hiding.
+                            // Or a grade item that is a category and it is locked.
                             // I guess this means it is a calculation that needs to be recalculated.
                             $unknown[$do] = $grade_grades[$do]->finalgrade;
                             unset($todo[$key]);
@@ -1017,11 +1041,75 @@ class grade_grade extends grade_object {
      * @return bool success
      */
     public function update($source=null) {
-        $this->rawgrade    = grade_floatval($this->rawgrade);
-        $this->finalgrade  = grade_floatval($this->finalgrade);
+        $this->rawgrade = grade_floatval($this->rawgrade);
+        $this->finalgrade = grade_floatval($this->finalgrade);
         $this->rawgrademin = grade_floatval($this->rawgrademin);
         $this->rawgrademax = grade_floatval($this->rawgrademax);
         return parent::update($source);
+    }
+
+
+    /**
+     * Handles adding feedback files in the gradebook.
+     *
+     * @param int|null $historyid
+     */
+    protected function add_feedback_files(int $historyid = null) {
+        global $CFG;
+
+        // We only support feedback files for modules atm.
+        if ($this->grade_item && $this->grade_item->is_external_item()) {
+            $context = $this->get_context();
+            $this->copy_feedback_files($context, GRADE_FEEDBACK_FILEAREA, $this->id);
+
+            if (empty($CFG->disablegradehistory) && $historyid) {
+                $this->copy_feedback_files($context, GRADE_HISTORY_FEEDBACK_FILEAREA, $historyid);
+            }
+        }
+
+        return $this->id;
+    }
+
+    /**
+     * Handles updating feedback files in the gradebook.
+     *
+     * @param int|null $historyid
+     */
+    protected function update_feedback_files(int $historyid = null) {
+        global $CFG;
+
+        // We only support feedback files for modules atm.
+        if ($this->grade_item && $this->grade_item->is_external_item()) {
+            $context = $this->get_context();
+
+            $fs = new file_storage();
+            $fs->delete_area_files($context->id, GRADE_FILE_COMPONENT, GRADE_FEEDBACK_FILEAREA, $this->id);
+
+            $this->copy_feedback_files($context, GRADE_FEEDBACK_FILEAREA, $this->id);
+
+            if (empty($CFG->disablegradehistory) && $historyid) {
+                $this->copy_feedback_files($context, GRADE_HISTORY_FEEDBACK_FILEAREA, $historyid);
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Handles deleting feedback files in the gradebook.
+     */
+    protected function delete_feedback_files() {
+        // We only support feedback files for modules atm.
+        if ($this->grade_item && $this->grade_item->is_external_item()) {
+            $context = $this->get_context();
+
+            $fs = new file_storage();
+            $fs->delete_area_files($context->id, GRADE_FILE_COMPONENT, GRADE_FEEDBACK_FILEAREA, $this->id);
+
+            // Grade history only gets deleted when we delete the whole grade item.
+        }
+
+        return true;
     }
 
     /**
@@ -1031,14 +1119,17 @@ class grade_grade extends grade_object {
      * @return bool Returns true if the deletion was successful, false otherwise.
      */
     public function delete($source = null) {
+        global $DB;
+
+        $transaction = $DB->start_delegated_transaction();
         $success = parent::delete($source);
 
         // If the grade was deleted successfully trigger a grade_deleted event.
-        if ($success) {
-            $this->load_grade_item();
+        if ($success && !empty($this->grade_item)) {
             \core\event\grade_deleted::create_from_grade($this)->trigger();
         }
 
+        $transaction->allow_commit();
         return $success;
     }
 
@@ -1073,8 +1164,10 @@ class grade_grade extends grade_object {
             return;
         }
 
-        // Load information about grade item
-        $this->load_grade_item();
+        // Load information about grade item, exit if the grade item is missing.
+        if (!$this->load_grade_item()) {
+            return;
+        }
 
         // Only course-modules have completion data
         if ($this->grade_item->itemtype!='mod') {
@@ -1120,5 +1213,45 @@ class grade_grade extends grade_object {
     function get_aggregation_hint() {
         return array('status' => $this->get_aggregationstatus(),
                      'weight' => $this->get_aggregationweight());
+    }
+
+    /**
+     * Handles copying feedback files to a specified gradebook file area.
+     *
+     * @param context $context
+     * @param string $filearea
+     * @param int $itemid
+     */
+    private function copy_feedback_files(context $context, string $filearea, int $itemid) {
+        if ($this->feedbackfiles) {
+            $filestocopycontextid = $this->feedbackfiles['contextid'];
+            $filestocopycomponent = $this->feedbackfiles['component'];
+            $filestocopyfilearea = $this->feedbackfiles['filearea'];
+            $filestocopyitemid = $this->feedbackfiles['itemid'];
+
+            $fs = new file_storage();
+            if ($filestocopy = $fs->get_area_files($filestocopycontextid, $filestocopycomponent, $filestocopyfilearea,
+                    $filestocopyitemid)) {
+                foreach ($filestocopy as $filetocopy) {
+                    $destination = [
+                        'contextid' => $context->id,
+                        'component' => GRADE_FILE_COMPONENT,
+                        'filearea' => $filearea,
+                        'itemid' => $itemid
+                    ];
+                    $fs->create_file_from_storedfile($destination, $filetocopy);
+                }
+            }
+        }
+    }
+
+    /**
+     * Determine the correct context for this grade_grade.
+     *
+     * @return context
+     */
+    public function get_context() {
+        $this->load_grade_item();
+        return $this->grade_item->get_context();
     }
 }

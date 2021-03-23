@@ -57,7 +57,7 @@ $string['auth_ldap_ldap_encoding'] = 'Encoding used by the LDAP server, most lik
 $string['auth_ldap_ldap_encoding_key'] = 'LDAP encoding';
 $string['auth_ldap_login_settings'] = 'Login settings';
 $string['auth_ldap_memberattribute'] = 'Optional: Overrides user member attribute, when users belongs to a group. Usually \'member\'';
-$string['auth_ldap_memberattribute_isdn'] = 'Optional: Overrides handling of member attribute values, either 0 or 1';
+$string['auth_ldap_memberattribute_isdn'] = 'Overrides handling of member attribute values';
 $string['auth_ldap_memberattribute_isdn_key'] = 'Member attribute uses dn';
 $string['auth_ldap_memberattribute_key'] = 'Member attribute';
 $string['auth_ldap_noconnect'] = 'LDAP-module cannot connect to server: {$a}';
@@ -94,7 +94,7 @@ $string['auth_ldap_usertypeundefined2'] = 'config.user_type not defined or funct
 $string['auth_ldap_version'] = 'The version of the LDAP protocol your server is using.';
 $string['auth_ldap_version_key'] = 'Version';
 $string['auth_ntlmsso'] = 'NTLM SSO';
-$string['auth_ntlmsso_enabled'] = 'Set to yes to attempt Single Sign On with the NTLM domain. <strong>Note:</strong> this requires additional setup on the webserver to work, see <a href="http://docs.moodle.org/en/NTLM_authentication">http://docs.moodle.org/en/NTLM_authentication</a>';
+$string['auth_ntlmsso_enabled'] = 'Set to yes to attempt Single Sign On with the NTLM domain. Note that this requires additional setup on the server to work. For further details, see the documentation <a href="https://docs.moodle.org/en/NTLM_authentication">NTLM authentication</a>.';
 $string['auth_ntlmsso_enabled_key'] = 'Enable';
 $string['auth_ntlmsso_ie_fastpath'] = 'Set to enable the NTLM SSO fast path (bypasses certain steps if the client\'s browser is MS Internet Explorer).';
 $string['auth_ntlmsso_ie_fastpath_key'] = 'MS IE fast path?';
@@ -159,7 +159,9 @@ $string['userentriestoupdate'] = "User entries to be updated: {\$a}\n";
 $string['usernotfound'] = 'User not found in LDAP';
 $string['useracctctrlerror'] = 'Error getting userAccountControl for {$a}';
 
-// Deprecated since Moodle 3.4.
-$string['auth_ldap_creators'] = 'List of groups or contexts whose members are allowed to create new courses. Separate multiple groups with \';\'. Usually something like \'cn=teachers,ou=staff,o=myorg\'';
-$string['auth_ldap_creators_key'] = 'Creators';
+$string['diag_genericerror'] = 'LDAP error {$a->code} reading {$a->subject}: {$a->message}.';
+$string['diag_toooldversion'] = 'It is very unlikely a modern LDAP server uses LDAPv2 protocol. Wrong settings can corrupt values in user fields. Check with your LDAP administrator.';
+$string['diag_emptycontext'] = 'Empty context found.';
+$string['diag_contextnotfound'] = 'Context {$a} doesn\'t exist or can\'t be read by bind DN.';
+$string['diag_rolegroupnotfound'] = 'Group {$a->group} for role {$a->localname} doesn\'t exist or can\'t be read by bind DN.';
 $string['privacy:metadata'] = 'The LDAP server authentication plugin does not store any personal data.';

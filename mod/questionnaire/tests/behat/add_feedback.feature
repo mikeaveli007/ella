@@ -46,7 +46,8 @@ Feature: In questionnaire, personality tests can be constructed using feedback o
       | Nb of scale items | 4 |
       | Type of rate scale | Normal |
       | Question Text | Rate these |
-      | Possible answers | 1=One,2=Two,3=Three,4=Four,Cheese,Bread,Meat,Fruit |
+      | Possible answers | Cheese,Bread,Meat,Fruit |
+      | Named degrees    | 1=One,2=Two,3=Three,4=Four |
     Then I should see "[Rate (scale 1..5)] (Q3)"
     And I add a "Yes/No" question and I fill the form with:
       | Question Name | Q4 |
@@ -85,7 +86,7 @@ Feature: In questionnaire, personality tests can be constructed using feedback o
     And I click on "Yes" "radio"
     And I press "Submit questionnaire"
     Then I should see "Thank you for completing this Questionnaire."
-    And I follow "Continue"
+    And I press "Continue"
     Then I should see "Your response"
     And I should see "These are the main Feedback notes"
     And I should see "Global feedback label"
@@ -108,7 +109,7 @@ Feature: In questionnaire, personality tests can be constructed using feedback o
     And I click on "Yes" "radio"
     And I press "Submit questionnaire"
     Then I should see "Thank you for completing this Questionnaire."
-    And I follow "Continue"
+    And I press "Continue"
     Then I should see "Your response"
     And I should see "These are the main Feedback notes"
     And I should see "Global feedback label"

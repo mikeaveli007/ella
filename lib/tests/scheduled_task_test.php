@@ -148,7 +148,7 @@ class core_scheduled_task_testcase extends advanced_testcase {
         $this->assertContains('2:15 AM', core_text::strtoupper($userdate));
     }
 
-    public function test_reset_scheduled_tasks_for_component_customised() {
+    public function test_reset_scheduled_tasks_for_component_customised(): void {
         $this->resetAfterTest(true);
 
         $tasks = \core\task\manager::load_scheduled_tasks_for_component('moodle');
@@ -173,7 +173,7 @@ class core_scheduled_task_testcase extends advanced_testcase {
         $this->assertTaskEquals($task, $taskafterreset);
     }
 
-    public function test_reset_scheduled_tasks_for_component_deleted()  {
+    public function test_reset_scheduled_tasks_for_component_deleted(): void {
         global $DB;
         $this->resetAfterTest(true);
 
@@ -197,7 +197,7 @@ class core_scheduled_task_testcase extends advanced_testcase {
         $this->assertCount(count($tasklist), \core\task\manager::load_scheduled_tasks_for_component('moodle'));
     }
 
-    public function test_reset_scheduled_tasks_for_component_changed_in_source()  {
+    public function test_reset_scheduled_tasks_for_component_changed_in_source(): void {
         $this->resetAfterTest(true);
 
         // Delete a task to simulate the fact that its new.
@@ -523,7 +523,7 @@ class core_scheduled_task_testcase extends advanced_testcase {
      * @param   \core\task\task_base $task
      * @param   \core\task\task_base $comparisontask
      */
-    public function assertTaskEquals(\core\task\task_base $task, \core\task\task_base $comparisontask)  {
+    public function assertTaskEquals(\core\task\task_base $task, \core\task\task_base $comparisontask): void {
         // Convert both to an object.
         $task = \core\task\manager::record_from_scheduled_task($task);
         $comparisontask = \core\task\manager::record_from_scheduled_task($comparisontask);
@@ -549,7 +549,7 @@ class core_scheduled_task_testcase extends advanced_testcase {
      * @param   \core\task\task_base $task
      * @param   \core\task\task_base $comparisontask
      */
-    public function assertTaskNotEquals(\core\task\task_base $task, \core\task\task_base $comparisontask)  {
+    public function assertTaskNotEquals(\core\task\task_base $task, \core\task\task_base $comparisontask): void {
         // Convert both to an object.
         $task = \core\task\manager::record_from_scheduled_task($task);
         $comparisontask = \core\task\manager::record_from_scheduled_task($comparisontask);
@@ -567,5 +567,25 @@ class core_scheduled_task_testcase extends advanced_testcase {
         );
 
         call_user_func_array([$this, 'assertNotEquals'], $args);
+    }
+
+    /**
+     * Assert that the lastruntime column holds an original value after a scheduled task is reset.
+     */
+    public function test_reset_scheduled_tasks_for_component_keeps_original_lastruntime(): void {
+        global $DB;
+        $this->resetAfterTest(true);
+
+        // Set lastruntime for the scheduled task.
+        $DB->set_field('task_scheduled', 'lastruntime', 123456789, ['classname' => '\core\task\session_cleanup_task']);
+
+        // Reset the task.
+        \core\task\manager::reset_scheduled_tasks_for_component('moodle');
+
+        // Fetch the task again.
+        $taskafterreset = \core\task\manager::get_scheduled_task(core\task\session_cleanup_task::class);
+
+        // Confirm, that lastruntime is still in place.
+        $this->assertEquals(123456789, $taskafterreset->get_last_run_time());
     }
 }

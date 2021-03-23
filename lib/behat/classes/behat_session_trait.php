@@ -23,21 +23,24 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use Behat\Mink\Element\NodeElement;
+use Behat\Mink\Element\Element;
 use Behat\Mink\Exception\DriverException;
 use Behat\Mink\Exception\ExpectationException;
 use Behat\Mink\Exception\ElementNotFoundException;
-use Behat\Mink\Element\NodeElement;
-use Behat\Mink\Element\Element;
+use Behat\Mink\Exception\NoSuchWindowException;
 use Behat\Mink\Session;
+use Facebook\WebDriver\Exception\ScriptTimeoutException;
+use Facebook\WebDriver\WebDriverBy;
+use Facebook\WebDriver\WebDriverElement;
 
 // NOTE: no MOODLE_INTERNAL test here, this file may be required by behat before including /config.php.
 
 require_once(__DIR__ . '/component_named_replacement.php');
 require_once(__DIR__ . '/component_named_selector.php');
 
-// Alias the WebDriver\Key  class to behat_keys to make future transition to a different WebDriver implementation
-// easier.
-class_alias('WebDriver\\Key', 'behat_keys');
+// Alias the Facebook\WebDriver\WebDriverKeys class to behat_keys for better b/c with the older Instaclick driver.
+class_alias('Facebook\WebDriver\WebDriverKeys', 'behat_keys');
 
 /**
  * A trait containing functionality used by the behat base context, and form fields.
@@ -142,14 +145,11 @@ trait behat_session_trait {
         }
 
         // Normalise the values in order to perform the search.
-        $normalised = $this->normalise_selector($selector, $locator, $container ?: $this->getSession()->getPage());
-        $selector = $normalised['selector'];
-        $locator = $normalised['locator'];
-        $container = $normalised['container'];
-
-        if (empty($container)) {
-            $container = $this->getSession()->getPage();
-        }
+        [
+            'selector' => $selector,
+            'locator' => $locator,
+            'container' => $container,
+        ] = $this->normalise_selector($selector, $locator, $container ?: $this->getSession()->getPage());
 
         // Waits for the node to appear if it exists, otherwise will timeout and throw the provided exception.
         return $this->spin(
@@ -173,10 +173,11 @@ trait behat_session_trait {
         if (method_exists('behat_selectors', $transformfunction)) {
             // A selector-specific transformation exists.
             // Perform initial transformation of the selector within the current container.
-            $normalised = behat_selectors::{$transformfunction}($this, $locator, $container ?: $this->getSession()->getPage());
-            $selector = $normalised['selector'];
-            $locator = $normalised['locator'];
-            $container = $normalised['container'];
+            [
+                'selector' => $selector,
+                'locator' => $locator,
+                'container' => $container,
+            ] = behat_selectors::{$transformfunction}($this, $locator, $container);
         }
 
         // Normalise the css and xpath selector types.
@@ -254,10 +255,8 @@ trait behat_session_trait {
      * @param Session $session
      * @param string[] $keys
      */
-    public static function type_keys(Session $session, array $keys) {
-        $session->getDriver()->getWebDriverSession()->keys([
-            'value' => $keys,
-        ]);
+    public static function type_keys(Session $session, array $keys): void {
+        $session->getDriver()->getWebDriver()->getKeyboard()->sendKeys($keys);
     }
 
     /**
@@ -458,8 +457,12 @@ trait behat_session_trait {
             throw new ExpectationException('The "' . $selectortype . '" selector type does not exist', $this->getSession());
         }
 
-        $normalised = $this->normalise_selector($selectortype, $element, $this->getSession()->getPage());
-        return [$normalised['selector'], $normalised['locator']];
+        [
+            'selector' => $selector,
+            'locator' => $locator,
+        ] = $this->normalise_selector($selectortype, $element, $this->getSession()->getPage());
+
+        return [$selector, $locator];
     }
 
     /**
@@ -517,12 +520,27 @@ trait behat_session_trait {
      * @param Session $session
      * @throws DriverException
      */
-    protected static function require_javascript_in_session(Session $session) {
+    protected static function require_javascript_in_session(Session $session): void {
         if (self::running_javascript_in_session($session)) {
             return;
         }
 
         throw new DriverException('Javascript is required');
+    }
+
+    /**
+     * Checks if the current page is part of the mobile app.
+     *
+     * @return bool True if it's in the app
+     */
+    protected function is_in_app() : bool {
+        // Cannot be in the app if there's no @app tag on scenario.
+        if (!$this->has_tag('app')) {
+            return false;
+        }
+
+        // Check on page to see if it's an app page. Safest way is to look for added JavaScript.
+        return $this->evaluate_script('return typeof window.behat') === 'object';
     }
 
     /**
@@ -539,10 +557,11 @@ trait behat_session_trait {
         $exception = new ExpectationException($msg, $this->getSession());
 
         // Normalise the values in order to perform the search.
-        $normalised = $this->normalise_selector($selectortype, $locator, $this->getSession()->getPage());
-        $selector = $normalised['selector'];
-        $locator = $normalised['locator'];
-        $container = $normalised['container'];
+        [
+            'selector' => $selector,
+            'locator' => $locator,
+            'container' => $container,
+        ] = $this->normalise_selector($selectortype, $locator, $this->getSession()->getPage());
 
         // It will stop spinning once the find() method returns true.
         $this->spin(
@@ -573,10 +592,11 @@ trait behat_session_trait {
         $exception = new ExpectationException($msg, $this->getSession());
 
         // Normalise the values in order to perform the search.
-        $normalised = $this->normalise_selector($selectortype, $locator, $this->getSession()->getPage());
-        $selector = $normalised['selector'];
-        $locator = $normalised['locator'];
-        $container = $normalised['container'];
+        [
+            'selector' => $selector,
+            'locator' => $locator,
+            'container' => $container,
+        ] = $this->normalise_selector($selectortype, $locator, $this->getSession()->getPage());
 
         // It will stop spinning once the find() method returns false.
         $this->spin(
@@ -702,6 +722,16 @@ trait behat_session_trait {
     }
 
     /**
+     * Checks if the current scenario, or its feature, has a specified tag.
+     *
+     * @param string $tag Tag to check
+     * @return bool True if the tag exists in scenario or feature
+     */
+    public function has_tag(string $tag) : bool {
+        return array_key_exists($tag, behat_hooks::get_tags_for_scenario());
+    }
+
+    /**
      * Change browser window size.
      *   - small: 640x480
      *   - medium: 1024x768
@@ -804,7 +834,7 @@ EOF;
                         return M.util.pending_js.join(":");
                     })()'));
                 $pending = self::evaluate_script_in_session($session, $jscode);
-            } catch (NoSuchWindow $nsw) {
+            } catch (NoSuchWindowException $nsw) {
                 // We catch an exception here, in case we just closed the window we were interacting with.
                 // No javascript is running if there is no window right?
                 $pending = '';
@@ -830,8 +860,8 @@ EOF;
         // number of JS pending code and JS completed code will not match and we will reach this point.
         throw new \Exception('Javascript code and/or AJAX requests are not ready after ' .
                 self::get_extended_timeout() .
-                ' seconds. There is a Javascript error or the code is extremely slow. ' .
-                'If you are using a slow machine, consider setting $CFG->behat_increasetimeout.');
+                ' seconds. There is a Javascript error or the code is extremely slow (' . $pending .
+                '). If you are using a slow machine, consider setting $CFG->behat_increasetimeout.');
     }
 
     /**
@@ -944,7 +974,7 @@ EOF;
                 }
             }
 
-        } catch (NoSuchWindow $e) {
+        } catch (NoSuchWindowException $e) {
             // If we were interacting with a popup window it will not exists after closing it.
         } catch (DriverException $e) {
             // Same reason as above.
@@ -1011,6 +1041,34 @@ EOF;
     }
 
     /**
+     * Set current $USER, reset access cache.
+     *
+     * In some cases, behat will execute the code as admin but in many cases we need to set an specific user as some
+     * API's might rely on the logged user to take some action.
+     *
+     * @param null|int|stdClass $user user record, null or 0 means non-logged-in, positive integer means userid
+     */
+    public static function set_user($user = null) {
+        global $DB;
+
+        if (is_object($user)) {
+            $user = clone($user);
+        } else if (!$user) {
+            // Assign valid data to admin user (some generator-related code needs a valid user).
+            $user = $DB->get_record('user', array('username' => 'admin'));
+        } else {
+            $user = $DB->get_record('user', array('id' => $user));
+        }
+        unset($user->description);
+        unset($user->access);
+        unset($user->preference);
+
+        // Ensure session is empty, as it may contain caches and user specific info.
+        \core\session\manager::init_empty_session();
+
+        \core\session\manager::set_user($user);
+    }
+    /**
      * Trigger click on node via javascript instead of actually clicking on it via pointer.
      *
      * This function resolves the issue of nested elements with click listeners or links - in these cases clicking via
@@ -1022,15 +1080,60 @@ EOF;
         if (!$this->running_javascript()) {
             $node->click();
         }
-        $this->ensure_node_is_visible($node); // Ensures hidden elements can't be clicked.
-        $xpath = $node->getXpath();
         $driver = $this->getSession()->getDriver();
-        if ($driver instanceof \Moodle\BehatExtension\Driver\MoodleSelenium2Driver) {
-            $script = "Syn.click({{ELEMENT}})";
-            $driver->triggerSynScript($xpath, $script);
+        if ($driver instanceof \Moodle\BehatExtension\Driver\WebDriver) {
+            $this->execute_js_on_node($node, '{{ELEMENT}}.click();');
         } else {
-            $driver->click($xpath);
+            $this->ensure_node_is_visible($node); // Ensures hidden elements can't be clicked.
+            $driver->click($node->getXpath());
         }
+    }
+
+    /**
+     * Execute JS on the specified NodeElement.
+     *
+     * @param NodeElement $node
+     * @param string $script
+     * @param bool $async
+     */
+    protected function execute_js_on_node(NodeElement $node, string $script, bool $async = false): void {
+        $driver = $this->getSession()->getDriver();
+        if (!($driver instanceof \Moodle\BehatExtension\Driver\WebDriver)) {
+            throw new \coding_exception('Unknown driver');
+        }
+
+        if (preg_match('/^function[\s\(]/', $script)) {
+            $script = preg_replace('/;$/', '', $script);
+            $script = '(' . $script . ')';
+        }
+
+        $script = str_replace('{{ELEMENT}}', 'arguments[0]', $script);
+
+        $webdriver = $driver->getWebDriver();
+
+        $element = $this->get_webdriver_element_from_node_element($node);
+        if ($async) {
+            try {
+                $webdriver->executeAsyncScript($script, [$element]);
+            } catch (ScriptTimeoutException $e) {
+                throw new DriverException($e->getMessage(), $e->getCode(), $e);
+            }
+        } else {
+            $webdriver->executeScript($script, [$element]);
+        }
+    }
+
+    /**
+     * Translate a Mink NodeElement into a WebDriver Element.
+     *
+     * @param NodeElement $node
+     * @return WebDriverElement
+     */
+    protected function get_webdriver_element_from_node_element(NodeElement $node): WebDriverElement {
+        return $this->getSession()
+            ->getDriver()
+            ->getWebDriver()
+            ->findElement(WebDriverBy::xpath($node->getXpath()));
     }
 
     /**
@@ -1217,7 +1320,7 @@ EOF;
      *
      * @param string $script
      */
-    public function execute_script(string $script) {
+    public function execute_script(string $script): void {
         self::execute_script_in_session($this->getSession(), $script);
     }
 
@@ -1229,7 +1332,7 @@ EOF;
      * @param Session $session
      * @param string $script
      */
-    public static function execute_script_in_session(Session $session, string $script) {
+    public static function execute_script_in_session(Session $session, string $script): void {
         self::require_javascript_in_session($session);
 
         $session->executeScript($script);
@@ -1251,5 +1354,24 @@ return '';
 EOF;
 
         return $this->evaluate_script($script);
+    }
+
+    /**
+     * Set the timeout factor for the remaining lifetime of the session.
+     *
+     * @param   int $factor A multiplication factor to use when calculating the timeout
+     */
+    public function set_test_timeout_factor(int $factor = 1): void {
+        $driver = $this->getSession()->getDriver();
+
+        if (!$driver instanceof \OAndreyev\Mink\Driver\WebDriver) {
+            // This is a feature of the OAndreyev MinkWebDriver.
+            return;
+        }
+
+        // The standard curl timeout is 30 seconds.
+        // Use get_real_timeout and multiply by the timeout factor to get the final timeout.
+        $timeout = self::get_real_timeout(30) * 1000 * $factor;
+        $driver->getWebDriver()->getCommandExecutor()->setRequestTimeout($timeout);
     }
 }

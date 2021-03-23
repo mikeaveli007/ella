@@ -1,15 +1,12 @@
 language: php
 
-sudo: required
-
 addons:
-  firefox: "47.0.1"
-  postgresql: "9.4"
-  mysql: "8.0.2"
-  apt:
-    packages:
-      - oracle-java9-installer
-      - oracle-java9-set-default
+  postgresql: "9.6"
+
+services:
+  - mysql
+  - postgresql
+  - docker
 
 cache:
   directories:
@@ -17,63 +14,79 @@ cache:
     - $HOME/.npm
 
 php:
- - 5.6
  - 7.1
  - 7.2
-
-env:
-  - MOODLE_BRANCH=MOODLE_36_STABLE DB=pgsql
-  - MOODLE_BRANCH=MOODLE_36_STABLE DB=mysqli
-  - MOODLE_BRANCH=MOODLE_35_STABLE DB=pgsql
-  - MOODLE_BRANCH=MOODLE_35_STABLE DB=mysqli
-  - MOODLE_BRANCH=MOODLE_34_STABLE DB=pgsql
-  - MOODLE_BRANCH=MOODLE_34_STABLE DB=mysqli
-  - MOODLE_BRANCH=MOODLE_33_STABLE DB=pgsql
-  - MOODLE_BRANCH=MOODLE_33_STABLE DB=mysqli
+ - 7.3
+ - 7.4
 
 matrix:
   exclude:
-  - php: 7.1
-    env: MOODLE_BRANCH=MOODLE_33_STABLE DB=mysqli
-  - php: 7.1
-    env: MOODLE_BRANCH=MOODLE_33_STABLE DB=pgsql
-  - php: 7.2
-    env: MOODLE_BRANCH=MOODLE_33_STABLE DB=mysqli
-  - php: 7.2
-    env: MOODLE_BRANCH=MOODLE_33_STABLE DB=pgsql
-  - php: 5.6
-    env: MOODLE_BRANCH=MOODLE_34_STABLE DB=mysqli
-  - php: 5.6
-    env: MOODLE_BRANCH=MOODLE_34_STABLE DB=pgsql
-  - php: 7.2
-    env: MOODLE_BRANCH=MOODLE_34_STABLE DB=mysqli
-  - php: 7.2
-    env: MOODLE_BRANCH=MOODLE_34_STABLE DB=pgsql
-  - php: 5.6
-    env: MOODLE_BRANCH=MOODLE_35_STABLE DB=mysqli
-  - php: 5.6
-    env: MOODLE_BRANCH=MOODLE_35_STABLE DB=pgsql
-  - php: 7.2
-    env: MOODLE_BRANCH=MOODLE_35_STABLE DB=mysqli
-  - php: 7.2
-    env: MOODLE_BRANCH=MOODLE_35_STABLE DB=pgsql
-  - php: 5.6
-    env: MOODLE_BRANCH=MOODLE_36_STABLE DB=mysqli
-  - php: 5.6
-    env: MOODLE_BRANCH=MOODLE_36_STABLE DB=pgsql
-  - php: 7.1
-    env: MOODLE_BRANCH=MOODLE_36_STABLE DB=mysqli
-  - php: 7.1
-    env: MOODLE_BRANCH=MOODLE_36_STABLE DB=pgsql
+    - php: 7.3
+      env: MOODLE_BRANCH=MOODLE_310_STABLE DB=mysqli
+    - php: 7.3
+      env: MOODLE_BRANCH=MOODLE_310_STABLE DB=pgsql
+    - php: 7.2
+      env: MOODLE_BRANCH=MOODLE_310_STABLE DB=mysqli
+    - php: 7.2
+      env: MOODLE_BRANCH=MOODLE_310_STABLE DB=pgsql
+    - php: 7.1
+      env: MOODLE_BRANCH=MOODLE_310_STABLE DB=mysqli
+    - php: 7.1
+      env: MOODLE_BRANCH=MOODLE_310_STABLE DB=pgsql
+    - php: 7.4
+      env: MOODLE_BRANCH=MOODLE_39_STABLE DB=mysqli
+    - php: 7.4
+      env: MOODLE_BRANCH=MOODLE_39_STABLE DB=pgsql
+    - php: 7.2
+      env: MOODLE_BRANCH=MOODLE_39_STABLE DB=mysqli
+    - php: 7.2
+      env: MOODLE_BRANCH=MOODLE_39_STABLE DB=pgsql
+    - php: 7.1
+      env: MOODLE_BRANCH=MOODLE_39_STABLE DB=mysqli
+    - php: 7.1
+      env: MOODLE_BRANCH=MOODLE_39_STABLE DB=pgsql
+    - php: 7.4
+      env: MOODLE_BRANCH=MOODLE_38_STABLE DB=mysqli
+    - php: 7.4
+      env: MOODLE_BRANCH=MOODLE_38_STABLE DB=pgsql
+    - php: 7.3
+      env: MOODLE_BRANCH=MOODLE_38_STABLE DB=mysqli
+    - php: 7.3
+      env: MOODLE_BRANCH=MOODLE_38_STABLE DB=pgsql
+    - php: 7.1
+      env: MOODLE_BRANCH=MOODLE_38_STABLE DB=mysqli
+    - php: 7.1
+      env: MOODLE_BRANCH=MOODLE_38_STABLE DB=pgsql
+    - php: 7.4
+      env: MOODLE_BRANCH=MOODLE_37_STABLE DB=mysqli
+    - php: 7.4
+      env: MOODLE_BRANCH=MOODLE_37_STABLE DB=pgsql
+    - php: 7.3
+      env: MOODLE_BRANCH=MOODLE_37_STABLE DB=mysqli
+    - php: 7.3
+      env: MOODLE_BRANCH=MOODLE_37_STABLE DB=pgsql
+    - php: 7.2
+      env: MOODLE_BRANCH=MOODLE_37_STABLE DB=mysqli
+    - php: 7.2
+      env: MOODLE_BRANCH=MOODLE_37_STABLE DB=pgsql
+
+env:
+  global:
+    - IGNORE_NAMES=mobile_*.mustache
+  matrix:
+    - MOODLE_BRANCH=MOODLE_310_STABLE DB=pgsql
+    - MOODLE_BRANCH=MOODLE_310_STABLE DB=mysqli
+    - MOODLE_BRANCH=MOODLE_39_STABLE DB=pgsql
+    - MOODLE_BRANCH=MOODLE_39_STABLE DB=mysqli
+    - MOODLE_BRANCH=MOODLE_38_STABLE DB=pgsql
+    - MOODLE_BRANCH=MOODLE_38_STABLE DB=mysqli
+    - MOODLE_BRANCH=MOODLE_37_STABLE DB=pgsql
+    - MOODLE_BRANCH=MOODLE_37_STABLE DB=mysqli
 
 before_install:
   - phpenv config-rm xdebug.ini
-  - nvm install node
-  - nvm install 8.9
-  - nvm use 8.9
   - cd ../..
-  - composer selfupdate
-  - composer create-project -n --no-dev --prefer-dist moodlerooms/moodle-plugin-ci ci ^2
+  - composer create-project -n --no-dev --prefer-dist moodlehq/moodle-plugin-ci ci ^3
   - export PATH="$(cd ci/bin; pwd):$(cd ci/vendor/bin; pwd):$PATH"
 
 install:
@@ -88,6 +101,6 @@ script:
   - moodle-plugin-ci savepoints
   - moodle-plugin-ci mustache
   - moodle-plugin-ci grunt
+  # moodle-plugin-ci phpdoc
   - moodle-plugin-ci phpunit
   - moodle-plugin-ci behat
-  - moodle-plugin-ci phpunit --coverage-text

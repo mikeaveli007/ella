@@ -273,7 +273,7 @@ if (($mode == 'new') && (!empty($newtype)) && confirm_sesskey()) {          /// 
             get_string('fielddescription', 'data'),
             get_string('action', 'data'),
         );
-        $table->align = array('left','left','left', 'center');
+        $table->align = array('left', 'left', 'left', 'left');
         $table->wrap = array(false,false,false,false);
 
         if ($fff = $DB->get_records('data_fields', array('dataid'=>$data->id),'id')){
@@ -360,7 +360,7 @@ if (($mode == 'new') && (!empty($newtype)) && confirm_sesskey()) {          /// 
                      1 => get_string('descending', 'data'));
     echo html_writer::label(get_string('sortby'), 'menudefaultsortdir', false, array('class' => 'accesshide'));
     echo html_writer::select($options, 'defaultsortdir', $data->defaultsortdir, false, array('class' => 'custom-select'));
-    echo '<input type="submit" class="btn btn-secondary m-l-1" value="'.get_string('save', 'data').'" />';
+    echo '<input type="submit" class="btn btn-secondary ml-1" value="'.get_string('save', 'data').'" />';
     echo '</div>';
     echo '</form>';
     echo '</div>';

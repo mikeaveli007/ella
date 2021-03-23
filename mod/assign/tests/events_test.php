@@ -278,20 +278,27 @@ class assign_events_testcase extends advanced_testcase {
         $assign->reveal_identities();
 
         $events = $sink->get_events();
-        $this->assertCount(1, $events);
-        $event = reset($events);
-        $this->assertInstanceOf('\mod_assign\event\identities_revealed', $event);
-        $this->assertEquals($assign->get_context(), $event->get_context());
-        $this->assertEquals($assign->get_instance()->id, $event->objectid);
-        $expected = array(
-            $assign->get_course()->id,
-            'assign',
-            'reveal identities',
-            'view.php?id=' . $assign->get_course_module()->id,
-            get_string('revealidentities', 'assign'),
-            $assign->get_course_module()->id
-        );
-        $this->assertEventLegacyLogData($expected, $event);
+        $eventscount = 0;
+
+        foreach ($events as $event) {
+            if ($event instanceof \mod_assign\event\identities_revealed) {
+                $eventscount++;
+                $this->assertInstanceOf('\mod_assign\event\identities_revealed', $event);
+                $this->assertEquals($assign->get_context(), $event->get_context());
+                $this->assertEquals($assign->get_instance()->id, $event->objectid);
+                $expected = array(
+                    $assign->get_course()->id,
+                    'assign',
+                    'reveal identities',
+                    'view.php?id=' . $assign->get_course_module()->id,
+                    get_string('revealidentities', 'assign'),
+                    $assign->get_course_module()->id
+                );
+                $this->assertEventLegacyLogData($expected, $event);
+            }
+        }
+
+        $this->assertEquals(1, $eventscount);
         $sink->close();
     }
 
@@ -426,24 +433,34 @@ class assign_events_testcase extends advanced_testcase {
         $assign->testable_process_set_batch_marking_workflow_state($student->id, ASSIGN_MARKING_WORKFLOW_STATE_INREVIEW);
 
         $events = $sink->get_events();
-        $this->assertCount(1, $events);
-        $event = reset($events);
-        $this->assertInstanceOf('\mod_assign\event\workflow_state_updated', $event);
-        $this->assertEquals($assign->get_context(), $event->get_context());
-        $this->assertEquals($assign->get_instance()->id, $event->objectid);
-        $this->assertEquals($student->id, $event->relateduserid);
-        $this->assertEquals($teacher->id, $event->userid);
-        $this->assertEquals(ASSIGN_MARKING_WORKFLOW_STATE_INREVIEW, $event->other['newstate']);
-        $expected = array(
-            $assign->get_course()->id,
-            'assign',
-            'set marking workflow state',
-            'view.php?id=' . $assign->get_course_module()->id,
-            get_string('setmarkingworkflowstateforlog', 'assign', array('id' => $student->id,
-                'fullname' => fullname($student), 'state' => ASSIGN_MARKING_WORKFLOW_STATE_INREVIEW)),
-            $assign->get_course_module()->id
-        );
-        $this->assertEventLegacyLogData($expected, $event);
+        $eventcount = 0;
+        foreach ($events as $event) {
+            if ($event instanceof \mod_assign\event\submission_graded) {
+                $eventcount++;
+                $this->assertInstanceOf('\mod_assign\event\submission_graded', $event);
+                $this->assertEquals($assign->get_context(), $event->get_context());
+            }
+            if ($event instanceof \mod_assign\event\workflow_state_updated) {
+                $eventcount++;
+                $this->assertInstanceOf('\mod_assign\event\workflow_state_updated', $event);
+                $this->assertEquals($assign->get_context(), $event->get_context());
+                $this->assertEquals($assign->get_instance()->id, $event->objectid);
+                $this->assertEquals($student->id, $event->relateduserid);
+                $this->assertEquals($teacher->id, $event->userid);
+                $this->assertEquals(ASSIGN_MARKING_WORKFLOW_STATE_INREVIEW, $event->other['newstate']);
+                $expected = array(
+                    $assign->get_course()->id,
+                    'assign',
+                    'set marking workflow state',
+                    'view.php?id=' . $assign->get_course_module()->id,
+                    get_string('setmarkingworkflowstateforlog', 'assign', array('id' => $student->id,
+                        'fullname' => fullname($student), 'state' => ASSIGN_MARKING_WORKFLOW_STATE_INREVIEW)),
+                    $assign->get_course_module()->id
+                );
+                $this->assertEventLegacyLogData($expected, $event);
+            }
+        }
+        $this->assertEquals(2, $eventcount);
         $sink->close();
 
         // Test setting workflow state in apply_grade_to_user.
@@ -629,7 +646,7 @@ class assign_events_testcase extends advanced_testcase {
         );
         $assign->testable_process_save_quick_grades($data);
         $grade = $assign->get_user_grade($student->id, false);
-        $this->assertEquals('60.0', $grade->grade);
+        $this->assertEquals(60.0, $grade->grade);
 
         $events = $sink->get_events();
         $this->assertCount(3, $events);
@@ -655,7 +672,7 @@ class assign_events_testcase extends advanced_testcase {
         $data->grade = '50.0';
         $assign->update_grade($data);
         $grade = $assign->get_user_grade($student->id, false, 0);
-        $this->assertEquals('50.0', $grade->grade);
+        $this->assertEquals(50.0, $grade->grade);
         $events = $sink->get_events();
 
         $this->assertCount(3, $events);
@@ -1325,6 +1342,36 @@ class assign_events_testcase extends advanced_testcase {
     }
 
     /**
+     * Test the course module viewed event.
+     */
+    public function test_course_module_viewed() {
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $assign = $this->create_instance($course);
+
+        $context = $assign->get_context();
+
+        $params = array(
+            'context' => $context,
+            'objectid' => $assign->get_instance()->id
+        );
+
+        $event = \mod_assign\event\course_module_viewed::create($params);
+
+        // Trigger and capture the event.
+        $sink = $this->redirectEvents();
+        $event->trigger();
+        $events = $sink->get_events();
+        $this->assertCount(1, $events);
+        $event = reset($events);
+
+        // Check that the event contains the expected values.
+        $this->assertInstanceOf('\mod_assign\event\course_module_viewed', $event);
+        $this->assertEquals($context, $event->get_context());
+    }
+
+    /**
      * Test that all events generated with blindmarking enabled are anonymous
      */
     public function test_anonymous_events() {
@@ -1361,4 +1408,5 @@ class assign_events_testcase extends advanced_testcase {
 
         $this->assertFalse((bool)$event->anonymous);
     }
+
 }

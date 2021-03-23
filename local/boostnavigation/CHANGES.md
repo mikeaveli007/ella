@@ -4,6 +4,129 @@ moodle-local_boostnavigation
 Changes
 -------
 
+### v3.9-r6
+
+* 2021-02-05 - Make codechecker fully happy
+* 2021-02-05 - Move Moodle Plugin CI from Travis CI to Github actions
+
+### v3.9-r5
+
+* 2021-01-05 - Feature: Move the content bank node from the root nodes section to the course nodes section.
+* 2021-01-05 - Bugfix: Collapsing custom course nodes had side effects to the my courses list.
+
+### v3.9-r4
+
+* 2020-12-07 - Change in Moodle release support:
+               For the time being, this plugin is maintained for the most recent LTS release of Moodle as well as the most recent major release of Moodle.
+               Bugfixes are backported to the LTS release. However, new features and improvements are not necessarily backported to the LTS release.
+* 2020-12-07 - Improvement: Declare which major stable version of Moodle this plugin supports (see MDL-59562 for details).
+
+### v3.9-r3
+
+* 2020-11-18 - Improvement: Show the value of the selected custom field in the filter hint node
+
+### v3.9-r2
+
+* 2020-11-15 - Feature: Use individual activity icons for activity course nodes.
+* 2020-11-14 - Feature: Support custom CSS classes when creating custom nodes.
+* 2020-11-14 - Improvement: Improve performance of the check if badges exist in the course before removing the badges course node.
+* 2020-11-13 - Update README.md to reflect the latest structure of the plugin's settings.
+* 2020-11-11 - Feature: Adopt the features to modify the My courses nodes list from the plugin local_boostcoc to local_boostnavigation.
+               This allows admins to align the My courses list in the nav drawer with the (filteres) course list in the My Overview block on the Dashboard.
+               Please don't enable these new features when you still have local_boostcoc in production.
+
+### v3.9-r1
+
+* 2020-11-09 - Feature: Add admin setting to remove the content bank nodes which are part of Moodle 3.9 - Credits to tblacker7 for the first draft.
+* 2020-11-09 - Fix Behat tests which broke with Moodle 3.9.
+* 2020-11-09 - Prepare compatibility for Moodle 3.9.
+
+### v3.8-r2
+
+* 2020-08-04 - Bugfix: User logs can't be viewed anymore if the participants node was set to be removed - Credits to zpottie.
+
+### v3.8-r1
+
+* 2020-08-03 - Improvement: Recreate the PNG + SVG fallback icons for the activities and resources nodes.
+* 2020-08-03 - Feature: Add admin settings to control how to display icons within collapsible parent nodes - Credits to Adrian Perez.
+               Please note: This change also makes sure that the information 'After installing the plugin, it does not do anything to Moodle yet' which is given in the README file is correct again. Up to now, the plugin removed the icon from the MyCourses parent node and changed the indent of the MyCourses child nodes even if the node was not set to be collapsed. This misbehaviour is now reverted.
+               Please also note: This change also adds an icon to the section and activities parent node and a small indent to their children in non-collapsible mode which wasn't the case before but which aligns with the MyCourses node having an icon again with this plugin and having a slight indent in Moodle core for some time now.
+               Please also note: This change also adds an icon to the custom parent nodes and a small indent to their children in non-collapsible mode which wasn't the case before but which aligns with MyCourses, sections and activities nodes then.
+* 2020-08-03 - Bugfix: New / changed custom node icons were not shown anymore after upstream change in MDL-69109.
+* 2020-06-20 - Bugfix: Collapsible nodes did not collapse under Moodle 3.8 anymore. This was fixed based on the work which was integrated into Moodle core in MDL-58964. That's why this patch raises the minimum Moodle core version to 3.8.2+ and not just 3.8.0.
+               As this bugfix also replaces the practice of abusing Moodle core navigation node attributes, this solves some minor side effects of the plugin on the navigation tree and breadcrumb on-the-fly.
+* 2020-06-20 - Release: Fix a Behat test which broke with changes in Moodle 3.8.
+* 2020-06-20 - Prepare compatibility for Moodle 3.8.
+
+### v3.7-r6
+
+* 2020-04-01 - Bugfix: Prevent a fatal error when adding activity course nodes.
+
+### v3.7-r5
+
+* 2020-02-12 - Added Behat tests to cover the individual features of the plugin.
+* 2020-02-10 - Improvement: The ID attribute for custom nodes is in fact a data-key attribute. This is now fixed in the language pack.
+
+### v3.7-r4
+
+* 2020-02-04 - Improvement: Support multilang strings in custom node titles - Thanks to Jean-Roch.
+* 2020-02-04 - Bugfix: A fatal error could have appeared during login as sessions - Credits to Adrian Perez.
+* 2019-09-04 - Fix flaws in the settings page regarding a link to other settings.
+
+### v3.7-r3
+
+* 2019-08-26 - Bugfix: After refactoring the language pack in v3.7-r1, the section node and activities node could not be checked / unchecked anymore in new and existing installations - Thanks to Ralf Krause.
+
+### v3.7-r2
+
+* 2019-06-16 - Fix flaws in the english language pack.
+
+### v3.7-r1
+
+* 2019-06-15 - Improvement: Make multiple usages of placeholders in custom nodes slightly more efficient.
+* 2019-06-15 - Refactor, modularize and parametrize the language pack.
+               This was done to ease future additions and translations and to get rid of the existing duplicated substrings.
+               Unfortunately, this refactoring means that existing translations have to be done mostly by copy & paste in AMOS.
+               Thanks in advance to all translators for your support and understanding.
+* 2019-06-14 - Improvement: Split the mix of core and custom nodes settings onto separate settings pages.
+* 2019-06-14 - Improvement: Leverage the possibility to hide admin settings based on other admin settings' values from Moodle 3.7 on.
+* 2019-06-14 - Prepare compatibility for Moodle 3.7.
+
+### v3.6-r7
+
+* 2019-06-15 - Bugfix: Two more strings in language pack didn't work for Moodle installed in subdirectories - Credits to Tim Schroeder.
+
+### v3.6-r6
+
+* 2019-06-14 - Bugfix: Using calendar and privatefiles as beforenode key broke subsequent lines using beforenode keys.
+
+### v3.6-r5
+
+* 2019-06-13 - Improvement: Enable custom nodes positioning for some more beforenodes - Credits to Jean-Roch.
+* 2019-06-13 - Bugfix: The competencies node which is added to the cog menu didn't have an icon - Credits to Sarah Cotton.
+* 2019-06-13 - Bugfix: String in language pack didn't work for Moodle installed in subdirectories - Credits to Tim Schroeder.
+
+### v3.6-r4
+
+* 2019-04-30 - Bugfix: If you added an ID attribute to the first bottom node, the bottom nodes did not get a margin-top anymore - Credits to Jean-Roch. 
+* 2019-04-30 - Add support for collapsing other custom nodes when a collapsible custom node is expanded (to produce an accordion).
+* 2019-04-17 - Bugfix: Collapse nodes didn't work on IE11.
+* 2019-04-12 - Add the possibility to remember the collapse status only for the current session.
+* 2019-04-12 - Add option to position custom nodes - Credits to Jean-Roch.
+* 2019-04-12 - Fix a wrong node example in the language pack.
+
+### v3.6-r3
+
+* 2019-03-29 - Bugfix: Remove debugging notices about undefined properties when running unit tests - Credits to G El-Zoghbi.
+
+### v3.6-r2
+
+* 2019-03-28 - Remove user preferences when being uninstalled.
+
+### v3.6-r1
+
+* 2019-03-13 - Check compatibility for Moodle 3.6, no functionality change.
+
 ### v3.5-r8
 
 * 2019-03-12 - Allow participants node to be removed from the course navigation.

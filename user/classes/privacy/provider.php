@@ -104,7 +104,8 @@ class provider implements
             'lastnamephonetic' => 'privacy:metadata:lastnamephonetic',
             'firstnamephonetic' => 'privacy:metadata:firstnamephonetic',
             'middlename' => 'privacy:metadata:middlename',
-            'alternatename' => 'privacy:metadata:alternatename'
+            'alternatename' => 'privacy:metadata:alternatename',
+            'moodlenetprofile' => 'privacy:metadata:moodlenetprofile'
         ];
 
         $passwordhistory = [
@@ -213,16 +214,7 @@ class provider implements
             return;
         }
 
-        $params = [
-            'contextid' => $context->id,
-            'contextuser' => CONTEXT_USER,
-        ];
-
-        $sql = "SELECT instanceid as userid
-                  FROM {context}
-                 WHERE id = :contextid and contextlevel = :contextuser";
-
-        $userlist->add_from_sql('userid', $sql, $params);
+        $userlist->add_user($context->instanceid);
     }
 
     /**
@@ -394,10 +386,10 @@ class provider implements
             'calendartype' => $user->calendartype,
             'theme' => $user->theme,
             'timezone' => $user->timezone,
-            'firstaccess' => transform::datetime($user->firstaccess),
-            'lastaccess' => transform::datetime($user->lastaccess),
-            'lastlogin' => transform::datetime($user->lastlogin),
-            'currentlogin' => $user->currentlogin,
+            'firstaccess' => $user->firstaccess ? transform::datetime($user->firstaccess) : null,
+            'lastaccess' => $user->lastaccess ? transform::datetime($user->lastaccess) : null,
+            'lastlogin' => $user->lastlogin ? transform::datetime($user->lastlogin) : null,
+            'currentlogin' => $user->currentlogin ? transform::datetime($user->currentlogin) : null,
             'lastip' => $user->lastip,
             'secret' => $user->secret,
             'picture' => $user->picture,

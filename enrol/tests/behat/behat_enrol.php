@@ -48,9 +48,9 @@ class behat_enrol extends behat_base {
      */
     public function i_add_enrolment_method_with($enrolmethod, TableNode $table) {
         // Navigate to enrolment method page.
-        $parentnodes = get_string('courseadministration') . ' > ' . get_string('users', 'admin');
-        $this->execute("behat_navigation::i_navigate_to_node_in",
-            array(get_string('type_enrol_plural', 'plugin'), $parentnodes)
+        $parentnodes = get_string('users', 'admin');
+        $this->execute("behat_navigation::i_navigate_to_in_current_page_administration",
+            array($parentnodes .' > '. get_string('type_enrol_plural', 'plugin'))
         );
 
         // Select enrolment method.
@@ -66,7 +66,7 @@ class behat_enrol extends behat_base {
 
         // Ensure we get button in focus, before pressing button.
         if ($this->running_javascript()) {
-            $this->execute("behat_general::i_take_focus_off_field", array(get_string('addinstance', 'enrol'), "button"));
+            $this->execute('behat_general::i_press_named_key', ['', 'tab']);
         }
 
         // Save changes.
@@ -87,9 +87,9 @@ class behat_enrol extends behat_base {
     public function i_enrol_user_as($userfullname, $rolename) {
 
         // Navigate to enrolment page.
-        $parentnodes = get_string('courseadministration') . ' > ' . get_string('users', 'admin');
-        $this->execute("behat_navigation::i_navigate_to_node_in",
-            array(get_string('enrolledusers', 'enrol'), $parentnodes)
+        $parentnodes = get_string('users', 'admin');
+        $this->execute("behat_navigation::i_navigate_to_in_current_page_administration",
+            array($parentnodes . ' > '. get_string('enrolledusers', 'enrol'))
         );
 
         $this->execute("behat_forms::press_button", get_string('enrolusers', 'enrol'));

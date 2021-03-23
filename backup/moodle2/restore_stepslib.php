@@ -122,7 +122,7 @@ class restore_gradebook_structure_step extends restore_structure_step {
         }
 
         // Identify the backup we're dealing with.
-        $backuprelease = floatval($this->get_task()->get_info()->backup_release); // The major version: 2.9, 3.0, ...
+        $backuprelease = $this->get_task()->get_info()->backup_release; // The major version: 2.9, 3.0, 3.10...
         $backupbuild = 0;
         preg_match('/(\d{8})/', $this->get_task()->get_info()->moodle_release, $matches);
         if (!empty($matches[1])) {
@@ -132,7 +132,7 @@ class restore_gradebook_structure_step extends restore_structure_step {
         // On older versions the freeze value has to be converted.
         // We do this from here as it is happening right before the file is read.
         // This only targets the backup files that can contain the legacy freeze.
-        if ($backupbuild > 20150618 && ($backuprelease < 3.0 || $backupbuild < 20160527)) {
+        if ($backupbuild > 20150618 && (version_compare($backuprelease, '3.0', '<') || $backupbuild < 20160527)) {
             $this->rewrite_step_backup_file_for_legacy_freeze($fullpath);
         }
 
@@ -245,6 +245,9 @@ class restore_gradebook_structure_step extends restore_structure_step {
             }
 
             $newitemid = $DB->insert_record('grade_items', $data);
+            $data->id = $newitemid;
+            $gradeitem = new grade_item($data);
+            core\event\grade_item_created::create_from_grade_item($gradeitem)->trigger();
         }
         $this->set_mapping('grade_item', $oldid, $newitemid);
     }
@@ -485,6 +488,9 @@ class restore_gradebook_structure_step extends restore_structure_step {
         // Freeze gradebook calculations if needed.
         $this->gradebook_calculation_freeze();
 
+        // Ensure the module cache is current when recalculating grades.
+        rebuild_course_cache($this->get_courseid(), true);
+
         // Restore marks items as needing update. Update everything now.
         grade_regrade_final_grades($this->get_courseid());
     }
@@ -499,8 +505,7 @@ class restore_gradebook_structure_step extends restore_structure_step {
         $gradebookcalculationsfreeze = get_config('core', 'gradebook_calculations_freeze_' . $this->get_courseid());
         preg_match('/(\d{8})/', $this->get_task()->get_info()->moodle_release, $matches);
         $backupbuild = (int)$matches[1];
-        // The function floatval will return a float even if there is text mixed with the release number.
-        $backuprelease = floatval($this->get_task()->get_info()->backup_release);
+        $backuprelease = $this->get_task()->get_info()->backup_release; // The major version: 2.9, 3.0, 3.10...
 
         // Extra credits need adjustments only for backups made between 2.8 release (20141110) and the fix release (20150619).
         if (!$gradebookcalculationsfreeze && $backupbuild >= 20141110 && $backupbuild < 20150619) {
@@ -515,7 +520,7 @@ class restore_gradebook_structure_step extends restore_structure_step {
         // Courses from before 3.1 (20160518) may have a letter boundary problem and should be checked for this issue.
         // Backups from before and including 2.9 could have a build number that is greater than 20160518 and should
         // be checked for this problem.
-        if (!$gradebookcalculationsfreeze && ($backupbuild < 20160518 || $backuprelease <= 2.9)) {
+        if (!$gradebookcalculationsfreeze && ($backupbuild < 20160518 || version_compare($backuprelease, '2.9', '<='))) {
             require_once($CFG->libdir . '/db/upgradelib.php');
             upgrade_course_letter_boundary($this->get_courseid());
         }
@@ -1785,6 +1790,7 @@ class restore_course_structure_step extends restore_structure_step {
         $course = new restore_path_element('course', '/course');
         $category = new restore_path_element('category', '/course/category');
         $tag = new restore_path_element('tag', '/course/tags/tag');
+        $customfield = new restore_path_element('customfield', '/course/customfields/customfield');
         $allowed_module = new restore_path_element('allowed_module', '/course/allowed_modules/module');
 
         // Apply for 'format' plugins optional paths at course level
@@ -1808,7 +1814,7 @@ class restore_course_structure_step extends restore_structure_step {
         // Apply for admin tool plugins optional paths at course level.
         $this->add_plugin_structure('tool', $course);
 
-        return array($course, $category, $tag, $allowed_module);
+        return array($course, $category, $tag, $customfield, $allowed_module);
     }
 
     /**
@@ -1932,6 +1938,16 @@ class restore_course_structure_step extends restore_structure_step {
                 context_course::instance($this->get_courseid()), $data->rawname);
     }
 
+    /**
+     * Process custom fields
+     *
+     * @param array $data
+     */
+    public function process_customfield($data) {
+        $handler = core_course\customfield\course_handler::create();
+        $handler->restore_instance_data_from_backup($this->task, $data);
+    }
+
     public function process_allowed_module($data) {
         $data = (object)$data;
 
@@ -1966,6 +1982,12 @@ class restore_course_structure_step extends restore_structure_step {
                 }
 
                 $capability = 'mod/' . $modname . ':addinstance';
+
+                if (!get_capability_info($capability)) {
+                    $this->log("Capability '{$capability}' was not found!", backup::LOG_WARNING);
+                    continue;
+                }
+
                 foreach ($roleids as $roleid) {
                     assign_capability($capability, CAP_PREVENT, $roleid, $context);
                 }
@@ -2091,7 +2113,7 @@ class restore_ras_and_caps_structure_step extends restore_structure_step {
 
         // Check roleid is one of the mapped ones
         $newrole = $this->get_mapping('role', $data->roleid);
-        $newroleid = isset($newrole->newitemid) ? $newrole->newitemid : false;
+        $newroleid = $newrole->newitemid ?? false;
         $userid = $this->task->get_userid();
 
         // If newroleid and context are valid assign it via API (it handles dupes and so on)
@@ -2532,6 +2554,9 @@ class restore_badges_structure_step extends restore_structure_step {
         $paths[] = new restore_path_element('badge', '/badges/badge');
         $paths[] = new restore_path_element('criterion', '/badges/badge/criteria/criterion');
         $paths[] = new restore_path_element('parameter', '/badges/badge/criteria/criterion/parameters/parameter');
+        $paths[] = new restore_path_element('endorsement', '/badges/badge/endorsement');
+        $paths[] = new restore_path_element('alignment', '/badges/badge/alignments/alignment');
+        $paths[] = new restore_path_element('relatedbadge', '/badges/badge/relatedbadges/relatedbadge');
         $paths[] = new restore_path_element('manual_award', '/badges/badge/manual_awards/manual_award');
 
         return $paths;
@@ -2576,11 +2601,85 @@ class restore_badges_structure_step extends restore_structure_step {
                 'attachment'     => $data->attachment,
                 'notification'   => $data->notification,
                 'status'         => BADGE_STATUS_INACTIVE,
-                'nextcron'       => $data->nextcron
+                'nextcron'       => $data->nextcron,
+                'version'        => $data->version,
+                'language'       => $data->language,
+                'imageauthorname' => $data->imageauthorname,
+                'imageauthoremail' => $data->imageauthoremail,
+                'imageauthorurl' => $data->imageauthorurl,
+                'imagecaption'   => $data->imagecaption
         );
 
         $newid = $DB->insert_record('badge', $params);
         $this->set_mapping('badge', $data->id, $newid, $restorefiles);
+    }
+
+    /**
+     * Create an endorsement for a badge.
+     *
+     * @param mixed $data
+     * @return void
+     */
+    public function process_endorsement($data) {
+        global $DB;
+
+        $data = (object)$data;
+
+        $params = [
+            'badgeid' => $this->get_new_parentid('badge'),
+            'issuername' => $data->issuername,
+            'issuerurl' => $data->issuerurl,
+            'issueremail' => $data->issueremail,
+            'claimid' => $data->claimid,
+            'claimcomment' => $data->claimcomment,
+            'dateissued' => $this->apply_date_offset($data->dateissued)
+        ];
+        $newid = $DB->insert_record('badge_endorsement', $params);
+        $this->set_mapping('endorsement', $data->id, $newid);
+    }
+
+    /**
+     * Link to related badges for a badge. This relies on post processing in after_execute().
+     *
+     * @param mixed $data
+     * @return void
+     */
+    public function process_relatedbadge($data) {
+        global $DB;
+
+        $data = (object)$data;
+        $relatedbadgeid = $data->relatedbadgeid;
+
+        if ($relatedbadgeid) {
+            // Only backup and restore related badges if they are contained in the backup file.
+            $params = array(
+                    'badgeid'           => $this->get_new_parentid('badge'),
+                    'relatedbadgeid'    => $relatedbadgeid
+            );
+            $newid = $DB->insert_record('badge_related', $params);
+        }
+    }
+
+    /**
+     * Link to an alignment for a badge.
+     *
+     * @param mixed $data
+     * @return void
+     */
+    public function process_alignment($data) {
+        global $DB;
+
+        $data = (object)$data;
+        $params = array(
+                'badgeid'           => $this->get_new_parentid('badge'),
+                'targetname'        => $data->targetname,
+                'targeturl'         => $data->targeturl,
+                'targetdescription' => $data->targetdescription,
+                'targetframework'   => $data->targetframework,
+                'targetcode'        => $data->targetcode
+        );
+        $newid = $DB->insert_record('badge_alignment', $params);
+        $this->set_mapping('alignment', $data->id, $newid);
     }
 
     public function process_criterion($data) {
@@ -2595,6 +2694,7 @@ class restore_badges_structure_step extends restore_structure_step {
                 'description'       => isset($data->description) ? $data->description : '',
                 'descriptionformat' => isset($data->descriptionformat) ? $data->descriptionformat : 0,
         );
+
         $newid = $DB->insert_record('badge_criteria', $params);
         $this->set_mapping('criterion', $data->id, $newid);
     }
@@ -2625,6 +2725,14 @@ class restore_badges_structure_step extends restore_structure_step {
             if (!empty($role)) {
                 $params['name'] = 'role_' . $role;
                 $params['value'] = $role;
+            } else {
+                return;
+            }
+        } else if ($data->criteriatype == BADGE_CRITERIA_TYPE_COMPETENCY) {
+            $competencyid = $this->get_mappingid('competency', $data->value);
+            if (!empty($competencyid)) {
+                $params['name'] = 'competency_' . $competencyid;
+                $params['value'] = $competencyid;
             } else {
                 return;
             }
@@ -2660,8 +2768,38 @@ class restore_badges_structure_step extends restore_structure_step {
     }
 
     protected function after_execute() {
+        global $DB;
         // Add related files.
         $this->add_related_files('badges', 'badgeimage', 'badge');
+
+        $badgeid = $this->get_new_parentid('badge');
+        // Remap any related badges.
+        // We do this in the DB directly because this is backup/restore it is not valid to call into
+        // the component API.
+        $params = array('badgeid' => $badgeid);
+        $query = "SELECT DISTINCT br.id, br.badgeid, br.relatedbadgeid
+                    FROM {badge_related} br
+                   WHERE (br.badgeid = :badgeid)";
+        $relatedbadges = $DB->get_records_sql($query, $params);
+        $newrelatedids = [];
+        foreach ($relatedbadges as $relatedbadge) {
+            $relatedid = $this->get_mappingid('badge', $relatedbadge->relatedbadgeid);
+            $params['relatedbadgeid'] = $relatedbadge->relatedbadgeid;
+            $DB->delete_records_select('badge_related', '(badgeid = :badgeid AND relatedbadgeid = :relatedbadgeid)', $params);
+            if ($relatedid) {
+                $newrelatedids[] = $relatedid;
+            }
+        }
+        if (!empty($newrelatedids)) {
+            $relatedbadges = [];
+            foreach ($newrelatedids as $relatedid) {
+                $relatedbadge = new stdClass();
+                $relatedbadge->badgeid = $badgeid;
+                $relatedbadge->relatedbadgeid = $relatedid;
+                $relatedbadges[] = $relatedbadge;
+            }
+            $DB->insert_records('badge_related', $relatedbadges);
+        }
     }
 }
 
@@ -2754,7 +2892,8 @@ class restore_calendarevents_structure_step extends restore_structure_step {
                 'uuid'           => $data->uuid,
                 'sequence'       => $data->sequence,
                 'timemodified'   => $data->timemodified,
-                'priority'       => isset($data->priority) ? $data->priority : null);
+                'priority'       => isset($data->priority) ? $data->priority : null,
+                'location'       => isset($data->location) ? $data->location : null);
         if ($this->name == 'activity_calendar') {
             $params['instance'] = $this->task->get_activityid();
         } else {
@@ -3733,6 +3872,10 @@ class restore_activity_grades_structure_step extends restore_structure_step {
     }
 
     protected function process_grade_grade($data) {
+        global $CFG;
+
+        require_once($CFG->libdir . '/grade/constants.php');
+
         $data = (object)($data);
         $olduserid = $data->userid;
         $oldid = $data->id;
@@ -3747,7 +3890,16 @@ class restore_activity_grades_structure_step extends restore_structure_step {
 
             $grade = new grade_grade($data, false);
             $grade->insert('restore');
-            $this->set_mapping('grade_grades', $oldid, $grade->id);
+
+            $this->set_mapping('grade_grades', $oldid, $grade->id, true);
+
+            $this->add_related_files(
+                GRADE_FILE_COMPONENT,
+                GRADE_FEEDBACK_FILEAREA,
+                'grade_grades',
+                null,
+                $oldid
+            );
         } else {
             debugging("Mapped user id not found for user id '{$olduserid}', grade item id '{$data->itemid}'");
         }
@@ -3822,9 +3974,12 @@ class restore_activity_grade_history_structure_step extends restore_structure_st
     }
 
     protected function process_grade_grade($data) {
-        global $DB;
+        global $CFG, $DB;
+
+        require_once($CFG->libdir . '/grade/constants.php');
 
         $data = (object) $data;
+        $oldhistoryid = $data->id;
         $olduserid = $data->userid;
         unset($data->id);
 
@@ -3835,13 +3990,77 @@ class restore_activity_grade_history_structure_step extends restore_structure_st
             $data->oldid = $this->get_mappingid('grade_grades', $data->oldid);
             $data->usermodified = $this->get_mappingid('user', $data->usermodified, null);
             $data->rawscaleid = $this->get_mappingid('scale', $data->rawscaleid);
-            $DB->insert_record('grade_grades_history', $data);
+
+            $newhistoryid = $DB->insert_record('grade_grades_history', $data);
+
+            $this->set_mapping('grade_grades_history', $oldhistoryid, $newhistoryid, true);
+
+            $this->add_related_files(
+                GRADE_FILE_COMPONENT,
+                GRADE_HISTORY_FEEDBACK_FILEAREA,
+                'grade_grades_history',
+                null,
+                $oldhistoryid
+            );
         } else {
             $message = "Mapped user id not found for user id '{$olduserid}', grade item id '{$data->itemid}'";
             $this->log($message, backup::LOG_DEBUG);
         }
     }
+}
 
+/**
+ * This structure steps restores the content bank content
+ */
+class restore_contentbankcontent_structure_step extends restore_structure_step {
+
+    /**
+     * Define structure for content bank step
+     */
+    protected function define_structure() {
+
+        $paths = [];
+        $paths[] = new restore_path_element('contentbankcontent', '/contents/content');
+
+        return $paths;
+    }
+
+    /**
+     * Define data processed for content bank
+     *
+     * @param mixed  $data
+     */
+    public function process_contentbankcontent($data) {
+        global $DB;
+
+        $data = (object)$data;
+        $oldid = $data->id;
+
+        $params = [
+            'name'           => $data->name,
+            'contextid'      => $this->task->get_contextid(),
+            'contenttype'    => $data->contenttype,
+            'instanceid'     => $data->instanceid,
+            'timecreated'    => $data->timecreated,
+        ];
+        $exists = $DB->record_exists('contentbank_content', $params);
+        if (!$exists) {
+            $params['configdata'] = $data->configdata;
+            $params['usercreated'] = $this->get_mappingid('user', $data->usercreated);
+            $params['usermodified'] = $this->get_mappingid('user', $data->usermodified);
+            $params['timemodified'] = time();
+            $newitemid = $DB->insert_record('contentbank_content', $params);
+            $this->set_mapping('contentbank_content', $oldid, $newitemid, true);
+        }
+    }
+
+    /**
+     * Define data processed after execute for content bank
+     */
+    protected function after_execute() {
+        // Add related files.
+        $this->add_related_files('contentbank', 'public', 'contentbank_content');
+    }
 }
 
 /**
@@ -4039,6 +4258,9 @@ class restore_module_structure_step extends restore_structure_step {
 
         // Apply for 'format' plugins optional paths at module level
         $this->add_plugin_structure('format', $module);
+
+        // Apply for 'report' plugins optional paths at module level.
+        $this->add_plugin_structure('report', $module);
 
         // Apply for 'plagiarism' plugins optional paths at module level
         $this->add_plugin_structure('plagiarism', $module);
@@ -4434,11 +4656,11 @@ class restore_create_categories_and_questions extends restore_structure_step {
 
         // Before 3.5, question categories could be created at top level.
         // From 3.5 onwards, all question categories should be a child of a special category called the "top" category.
-        $backuprelease = floatval($this->get_task()->get_info()->backup_release);
+        $backuprelease = $this->get_task()->get_info()->backup_release; // The major version: 2.9, 3.0, 3.10...
         preg_match('/(\d{8})/', $this->get_task()->get_info()->moodle_release, $matches);
         $backupbuild = (int)$matches[1];
         $before35 = false;
-        if ($backuprelease < 3.5 || $backupbuild < 20180205) {
+        if (version_compare($backuprelease, '3.5', '<') || $backupbuild < 20180205) {
             $before35 = true;
         }
         if (empty($mapping->info->parent) && $before35) {
@@ -4460,6 +4682,12 @@ class restore_create_categories_and_questions extends restore_structure_step {
             // This is the same as what happens during an upgrade to 3.1+ anyway.
             if ($DB->record_exists('question_categories', ['stamp' => $data->stamp, 'contextid' => $data->contextid])) {
                 $data->stamp = make_unique_id_code();
+            }
+
+            // The idnumber if it exists also needs to be unique within a context or reset it to null.
+            if (!empty($data->idnumber) && $DB->record_exists('question_categories',
+                    ['idnumber' => $data->idnumber, 'contextid' => $data->contextid])) {
+                unset($data->idnumber);
             }
 
             // Let's create the question_category and save mapping.
@@ -4500,13 +4728,38 @@ class restore_create_categories_and_questions extends restore_structure_step {
         }
 
         $userid = $this->get_mappingid('user', $data->createdby);
-        $data->createdby = $userid ? $userid : $this->task->get_userid();
+        if ($userid) {
+            // The question creator is included in the backup, so we can use their mapping id.
+            $data->createdby = $userid;
+        } else {
+            // Leave the question creator unchanged when we are restoring the same site.
+            // Otherwise use current user id.
+            if (!$this->task->is_samesite()) {
+                $data->createdby = $this->task->get_userid();
+            }
+        }
 
         $userid = $this->get_mappingid('user', $data->modifiedby);
-        $data->modifiedby = $userid ? $userid : $this->task->get_userid();
+        if ($userid) {
+            // The question modifier is included in the backup, so we can use their mapping id.
+            $data->modifiedby = $userid;
+        } else {
+            // Leave the question modifier unchanged when we are restoring the same site.
+            // Otherwise use current user id.
+            if (!$this->task->is_samesite()) {
+                $data->modifiedby = $this->task->get_userid();
+            }
+        }
 
         // With newitemid = 0, let's create the question
         if (!$questionmapping->newitemid) {
+
+            // The idnumber if it exists also needs to be unique within a category or reset it to null.
+            if (!empty($data->idnumber) && $DB->record_exists('question',
+                    ['idnumber' => $data->idnumber, 'category' => $data->category])) {
+                unset($data->idnumber);
+            }
+
             if ($data->qtype === 'random') {
                 // Ensure that this newly created question is considered by
                 // \qtype_random\task\remove_unused_questions.
@@ -4682,11 +4935,11 @@ class restore_move_module_questions_categories extends restore_execution_step {
     protected function define_execution() {
         global $DB;
 
-        $backuprelease = floatval($this->task->get_info()->backup_release);
+        $backuprelease = $this->task->get_info()->backup_release; // The major version: 2.9, 3.0, 3.10...
         preg_match('/(\d{8})/', $this->task->get_info()->moodle_release, $matches);
         $backupbuild = (int)$matches[1];
         $after35 = false;
-        if ($backuprelease >= 3.5 && $backupbuild > 20180205) {
+        if (version_compare($backuprelease, '3.5', '>=') && $backupbuild > 20180205) {
             $after35 = true;
         }
 
@@ -5170,10 +5423,9 @@ class restore_process_file_aliases_queue extends restore_execution_step {
 
 
 /**
- * Abstract structure step, to be used by all the activities using core questions stuff
- * (like the quiz module), to support qtype plugins, states and sessions
+ * Helper code for use by any plugin that stores question attempt data that it needs to back up.
  */
-abstract class restore_questions_activity_structure_step extends restore_activity_structure_step {
+trait restore_questions_attempt_data_trait {
     /** @var array question_attempt->id to qtype. */
     protected $qtypes = array();
     /** @var array question_attempt->id to questionid. */
@@ -5225,26 +5477,26 @@ abstract class restore_questions_activity_structure_step extends restore_activit
     /**
      * Process question_usages
      */
-    protected function process_question_usage($data) {
+    public function process_question_usage($data) {
         $this->restore_question_usage_worker($data, '');
     }
 
     /**
      * Process question_attempts
      */
-    protected function process_question_attempt($data) {
+    public function process_question_attempt($data) {
         $this->restore_question_attempt_worker($data, '');
     }
 
     /**
      * Process question_attempt_steps
      */
-    protected function process_question_attempt_step($data) {
+    public function process_question_attempt_step($data) {
         $this->restore_question_attempt_step_worker($data, '');
     }
 
     /**
-     * This method does the acutal work for process_question_usage or
+     * This method does the actual work for process_question_usage or
      * process_{nameprefix}_question_usage.
      * @param array $data the data from the XML file.
      * @param string $nameprefix the element name prefix.
@@ -5259,8 +5511,7 @@ abstract class restore_questions_activity_structure_step extends restore_activit
         $data = (object)$data;
         $oldid = $data->id;
 
-        $oldcontextid = $this->get_task()->get_old_contextid();
-        $data->contextid  = $this->get_mappingid('context', $this->task->get_old_contextid());
+        $data->contextid  = $this->task->get_contextid();
 
         // Everything ready, insert (no mapping needed)
         $newitemid = $DB->insert_record('question_usages', $data);
@@ -5279,7 +5530,7 @@ abstract class restore_questions_activity_structure_step extends restore_activit
     abstract protected function inform_new_usage_id($newusageid);
 
     /**
-     * This method does the acutal work for process_question_attempt or
+     * This method does the actual work for process_question_attempt or
      * process_{nameprefix}_question_attempt.
      * @param array $data the data from the XML file.
      * @param string $nameprefix the element name prefix.
@@ -5309,7 +5560,7 @@ abstract class restore_questions_activity_structure_step extends restore_activit
     }
 
     /**
-     * This method does the acutal work for process_question_attempt_step or
+     * This method does the actual work for process_question_attempt_step or
      * process_{nameprefix}_question_attempt_step.
      * @param array $data the data from the XML file.
      * @param string $nameprefix the element name prefix.
@@ -5416,6 +5667,17 @@ abstract class restore_questions_activity_structure_step extends restore_activit
             $this->add_related_files('question', $filearea, 'question_attempt_step');
         }
     }
+}
+
+
+/**
+ * Abstract structure step to help activities that store question attempt data.
+ *
+ * @copyright 2011 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+abstract class restore_questions_activity_structure_step extends restore_activity_structure_step {
+    use restore_questions_attempt_data_trait;
 
     /**
      * Attach below $element (usually attempts) the needed restore_path_elements
@@ -5459,7 +5721,7 @@ abstract class restore_questions_activity_structure_step extends restore_activit
     /**
      * Process the attempt data defined by {@link add_legacy_question_attempt_data()}.
      * @param object $data contains all the grouped attempt data to process.
-     * @param pbject $quiz data about the activity the attempts belong to. Required
+     * @param object $quiz data about the activity the attempts belong to. Required
      * fields are (basically this only works for the quiz module):
      *      oldquestions => list of question ids in this activity - using old ids.
      *      preferredbehaviour => the behaviour to use for questionattempts.
@@ -5521,7 +5783,7 @@ abstract class restore_questions_activity_structure_step extends restore_activit
 
         $data->uniqueid = $usage->id;
         $upgrader->save_usage($quiz->preferredbehaviour, $data, $qas,
-                 $this->questions_recode_layout($quiz->oldquestions));
+                $this->questions_recode_layout($quiz->oldquestions));
     }
 
     protected function find_question_session_and_states($data, $questionid) {
@@ -5580,6 +5842,7 @@ abstract class restore_questions_activity_structure_step extends restore_activit
         }
     }
 }
+
 
 /**
  * Restore completion defaults for each module type

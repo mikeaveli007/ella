@@ -13,7 +13,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 /* eslint-disable no-unused-vars */
-/* global SELECTOR, TOOLSELECTOR, AJAXBASE, COMMENTCOLOUR, ANNOTATIONCOLOUR, AJAXBASEPROGRESS, CLICKTIMEOUT */
 
 /**
  * Provides an in browser PDF editor.
@@ -34,6 +33,11 @@ var EDITOR = function() {
     EDITOR.superclass.constructor.apply(this, arguments);
 };
 EDITOR.prototype = {
+
+    /**
+     * Store old coordinates of the annotations before rotation happens.
+     */
+    oldannotationcoordinates: null,
 
     /**
      * The dialogue used for all action menu displays.
@@ -266,7 +270,7 @@ EDITOR.prototype = {
      * @method refresh_button_state
      */
     refresh_button_state: function() {
-        var button, currenttoolnode, imgurl, drawingregion;
+        var button, currenttoolnode, imgurl, drawingregion, stampimgurl, drawingcanvas;
 
         // Initalise the colour buttons.
         button = this.get_dialogue_element(SELECTOR.COMMENTCOLOURBUTTON);
@@ -291,9 +295,28 @@ EDITOR.prototype = {
         drawingregion.setAttribute('data-currenttool', this.currentedit.tool);
 
         button = this.get_dialogue_element(SELECTOR.STAMPSBUTTON);
-        button.one('img').setAttrs({'src': this.get_stamp_image_url(this.currentedit.stamp),
+        stampimgurl = this.get_stamp_image_url(this.currentedit.stamp);
+        button.one('img').setAttrs({'src': stampimgurl,
                                     'height': '16',
                                     'width': '16'});
+
+        drawingcanvas = this.get_dialogue_element(SELECTOR.DRAWINGCANVAS);
+        switch (this.currentedit.tool) {
+            case 'drag':
+                drawingcanvas.setStyle('cursor', 'move');
+                break;
+            case 'highlight':
+                drawingcanvas.setStyle('cursor', 'text');
+                break;
+            case 'select':
+                drawingcanvas.setStyle('cursor', 'default');
+                break;
+            case 'stamp':
+                drawingcanvas.setStyle('cursor', 'url(' + stampimgurl + '), crosshair');
+                break;
+            default:
+                drawingcanvas.setStyle('cursor', 'crosshair');
+        }
     },
 
     /**
@@ -343,7 +366,7 @@ EDITOR.prototype = {
      * @method open_in_panel
      */
     open_in_panel: function(panel) {
-        var drawingcanvas, drawingregion;
+        var drawingcanvas;
 
         this.panel = panel;
         panel.append(this.get('body'));
@@ -353,9 +376,6 @@ EDITOR.prototype = {
 
         drawingcanvas = this.get_dialogue_element(SELECTOR.DRAWINGCANVAS);
         this.graphic = new Y.Graphic({render: drawingcanvas});
-
-        drawingregion = this.get_dialogue_element(SELECTOR.DRAWINGREGION);
-        drawingregion.on('scroll', this.move_canvas, this);
 
         if (!this.get('readonly')) {
             drawingcanvas.on('gesturemovestart', this.edit_start, null, this);
@@ -373,7 +393,7 @@ EDITOR.prototype = {
      * @method link_handler
      */
     link_handler: function(e) {
-        var drawingcanvas, drawingregion;
+        var drawingcanvas;
         var resize = true;
         e.preventDefault();
 
@@ -395,9 +415,6 @@ EDITOR.prototype = {
 
             drawingcanvas = this.get_dialogue_element(SELECTOR.DRAWINGCANVAS);
             this.graphic = new Y.Graphic({render: drawingcanvas});
-
-            drawingregion = this.get_dialogue_element(SELECTOR.DRAWINGREGION);
-            drawingregion.on('scroll', this.move_canvas, this);
 
             if (!this.get('readonly')) {
                 drawingcanvas.on('gesturemovestart', this.edit_start, null, this);
@@ -778,6 +795,8 @@ EDITOR.prototype = {
             annotationcolourbutton,
             searchcommentsbutton,
             expcolcommentsbutton,
+            rotateleftbutton,
+            rotaterightbutton,
             currentstampbutton,
             stampfiles,
             picker,
@@ -794,6 +813,17 @@ EDITOR.prototype = {
         if (this.get('readonly')) {
             return;
         }
+
+        // Rotate Left.
+        rotateleftbutton = this.get_dialogue_element(SELECTOR.ROTATELEFTBUTTON);
+        rotateleftbutton.on('click', this.rotatePDF, this, true);
+        rotateleftbutton.on('key', this.rotatePDF, 'down:13', this, true);
+
+        // Rotate Right.
+        rotaterightbutton = this.get_dialogue_element(SELECTOR.ROTATERIGHTBUTTON);
+        rotaterightbutton.on('click', this.rotatePDF, this, false);
+        rotaterightbutton.on('key', this.rotatePDF, 'down:13', this, false);
+
         this.disable_touch_scroll();
 
         // Setup the tool buttons.
@@ -1053,15 +1083,21 @@ EDITOR.prototype = {
      * @method edit_move
      */
     edit_move: function(e) {
-        e.preventDefault();
         var bounds = this.get_canvas_bounds(),
             canvas = this.get_dialogue_element(SELECTOR.DRAWINGCANVAS),
             drawingregion = this.get_dialogue_element(SELECTOR.DRAWINGREGION),
             clientpoint = new M.assignfeedback_editpdf.point(e.clientX + canvas.get('docScrollX'),
                                                              e.clientY + canvas.get('docScrollY')),
             point = this.get_canvas_coordinates(clientpoint),
+            activeelement = document.activeElement,
             diffX,
             diffY;
+
+        if (activeelement.type === 'textarea') {
+            return;
+        }
+
+        e.preventDefault();
 
         // Ignore events out of the canvas area.
         if (point.x < 0 || point.x > bounds.width || point.y < 0 || point.y > bounds.height) {
@@ -1447,6 +1483,103 @@ EDITOR.prototype = {
         for (i = 0; i < this.drawables.length; i++) {
             this.drawables[i].scroll_update(x, y);
         }
+    },
+
+    /**
+     * Calculate degree to rotate.
+     * @protected
+     * @param {Object} e javascript event
+     * @param {boolean} left  true if rotating left, false if rotating right
+     * @method rotatepdf
+     */
+    rotatePDF: function(e, left) {
+        e.preventDefault();
+
+        if (this.get('destroyed')) {
+            return;
+        }
+        var self = this;
+        // Save old coordinates.
+        var i;
+        this.oldannotationcoordinates = [];
+        var annotations = this.pages[this.currentpage].annotations;
+        for (i = 0; i < annotations.length; i++) {
+            var oldannotation = annotations[i];
+            this.oldannotationcoordinates.push([oldannotation.x, oldannotation.y]);
+        }
+
+        var ajaxurl = AJAXBASE;
+        var config = {
+            method: 'post',
+            context: this,
+            sync: false,
+            data: {
+                'sesskey': M.cfg.sesskey,
+                'action': 'rotatepage',
+                'index': this.currentpage,
+                'userid': this.get('userid'),
+                'attemptnumber': this.get('attemptnumber'),
+                'assignmentid': this.get('assignmentid'),
+                'rotateleft': left
+            },
+            on: {
+                success: function(tid, response) {
+                    var jsondata;
+                    try {
+                        jsondata = Y.JSON.parse(response.responseText);
+                        var page = self.pages[self.currentpage];
+                        page.url = jsondata.page.url;
+                        page.width = jsondata.page.width;
+                        page.height = jsondata.page.height;
+                        self.loadingicon.hide();
+
+                        // Change canvas size to fix the new page.
+                        var drawingcanvas = self.get_dialogue_element(SELECTOR.DRAWINGCANVAS);
+                        drawingcanvas.setStyle('backgroundImage', 'url("' + page.url + '")');
+                        drawingcanvas.setStyle('width', page.width + 'px');
+                        drawingcanvas.setStyle('height', page.height + 'px');
+
+                        /**
+                         * Move annotation to old position.
+                         * Reason: When canvas size change
+                         * > Shape annotations move with relation to canvas coordinates
+                         * > Nodes of stamp annotations move with relation to canvas coordinates
+                         * > Presentation (picture) of stamp annotations  stay to document coordinates (stick to its own position)
+                         * > Without relocating the node and presentation of a stamp annotation to the same x,y position,
+                         * the stamp annotation cannot be chosen when using "drag" tool.
+                         * The following code brings all annotations to their old positions with relation to the canvas coordinates.
+                         */
+                        var i;
+                        // Annotations.
+                        var annotations = page.annotations;
+                        for (i = 0; i < annotations.length; i++) {
+                            if (self.oldannotationcoordinates && self.oldannotationcoordinates[i]) {
+                                var oldX = self.oldannotationcoordinates[i][0];
+                                var oldY = self.oldannotationcoordinates[i][1];
+                                var annotation = annotations[i];
+                                annotation.move(oldX, oldY);
+                            }
+                        }
+                        /**
+                         * Update Position of comments with relation to canvas coordinates.
+                         * Without this code, the comments will stay at their positions in windows/document coordinates.
+                         */
+                        var oldcomments = page.comments;
+                        for (i = 0; i < oldcomments.length; i++) {
+                            oldcomments[i].updatePosition();
+                        }
+                        // Save Annotations.
+                        return self.save_current_page();
+                    } catch (e) {
+                        return new M.core.exception(e);
+                    }
+                },
+                failure: function(tid, response) {
+                    return new M.core.exception(response.responseText);
+                }
+            }
+        };
+        Y.io(ajaxurl, config);
     },
 
     /**

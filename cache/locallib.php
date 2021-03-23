@@ -68,6 +68,7 @@ class cache_config_writer extends cache_config {
      */
     protected function config_save() {
         global $CFG;
+        static $confighash = '';
         $cachefile = static::get_config_file_path();
         $directory = dirname($cachefile);
         if ($directory !== $CFG->dataroot && !file_exists($directory)) {
@@ -86,6 +87,15 @@ class cache_config_writer extends cache_config {
         // Prepare the file content.
         $content = "<?php defined('MOODLE_INTERNAL') || die();\n \$configuration = ".var_export($configuration, true).";";
 
+        // Do both file content and hash based detection because this might be called
+        // many times within a single request.
+        $hash = sha1($content);
+        if (($hash === $confighash) || (file_exists($cachefile) && $content === file_get_contents($cachefile))) {
+            // Config is unchanged so don't bother locking and writing.
+            $confighash = $hash;
+            return;
+        }
+
         // We need to create a temporary cache lock instance for use here. Remember we are generating the config file
         // it doesn't exist and thus we can't use the normal API for this (it'll just try to use config).
         $lockconf = reset($this->configlocks);
@@ -102,13 +112,15 @@ class cache_config_writer extends cache_config {
         $factory = cache_factory::instance();
         $locking = $factory->create_lock_instance($lockconf);
         if ($locking->lock('configwrite', 'config', true)) {
+            $tempcachefile = "{$cachefile}.tmp";
             // Its safe to use w mode here because we have already acquired the lock.
-            $handle = fopen($cachefile, 'w');
+            $handle = fopen($tempcachefile, 'w');
             fwrite($handle, $content);
             fflush($handle);
             fclose($handle);
             $locking->unlock('configwrite', 'config');
-            @chmod($cachefile, $CFG->filepermissions);
+            @chmod($tempcachefile, $CFG->filepermissions);
+            rename($tempcachefile, $cachefile);
             // Tell PHP to recompile the script.
             core_component::invalidate_opcode_php_cache($cachefile);
         } else {
@@ -738,7 +750,9 @@ abstract class cache_administration_helper extends cache_helper {
 
     /**
      * Returns an array of information about plugins, everything a renderer needs.
-     * @return array
+     *
+     * @return array for each store, an array containing various information about each store.
+     *     See the code below for details
      */
     public static function get_store_plugin_summaries() {
         $return = array();
@@ -779,7 +793,9 @@ abstract class cache_administration_helper extends cache_helper {
 
     /**
      * Returns an array about the definitions. All the information a renderer needs.
-     * @return array
+     *
+     * @return array for each store, an array containing various information about each store.
+     *     See the code below for details
      */
     public static function get_definition_summaries() {
         $factory = cache_factory::instance();
@@ -845,10 +861,14 @@ abstract class cache_administration_helper extends cache_helper {
 
     /**
      * Returns all of the actions that can be performed on a definition.
-     * @param context $context
-     * @return array
+     *
+     * @param context $context the system context.
+     * @param array $definitionsummary information about this cache, from the array returned by
+     *      cache_administration_helper::get_definition_summaries(). Currently only 'sharingoptions'
+     *      element is used.
+     * @return array of actions. Each action is an array with two elements, 'text' and 'url'.
      */
-    public static function get_definition_actions(context $context, array $definition) {
+    public static function get_definition_actions(context $context, array $definitionsummary) {
         if (has_capability('moodle/site:config', $context)) {
             $actions = array();
             // Edit mappings.
@@ -857,7 +877,7 @@ abstract class cache_administration_helper extends cache_helper {
                 'url' => new moodle_url('/cache/admin.php', array('action' => 'editdefinitionmapping', 'sesskey' => sesskey()))
             );
             // Edit sharing.
-            if (count($definition['sharingoptions']) > 1) {
+            if (count($definitionsummary['sharingoptions']) > 1) {
                 $actions[] = array(
                     'text' => get_string('editsharing', 'cache'),
                     'url' => new moodle_url('/cache/admin.php', array('action' => 'editdefinitionsharing', 'sesskey' => sesskey()))
@@ -877,8 +897,9 @@ abstract class cache_administration_helper extends cache_helper {
      * Returns all of the actions that can be performed on a store.
      *
      * @param string $name The name of the store
-     * @param array $storedetails
-     * @return array
+     * @param array $storedetails information about this store, from the array returned by
+     *      cache_administration_helper::get_store_instance_summaries().
+     * @return array of actions. Each action is an array with two elements, 'text' and 'url'.
      */
     public static function get_store_instance_actions($name, array $storedetails) {
         $actions = array();
@@ -902,11 +923,12 @@ abstract class cache_administration_helper extends cache_helper {
         return $actions;
     }
 
-
     /**
      * Returns all of the actions that can be performed on a plugin.
      *
      * @param string $name The name of the plugin
+     * @param array $plugindetails information about this store, from the array returned by
+     *      cache_administration_helper::get_store_plugin_summaries().
      * @param array $plugindetails
      * @return array
      */

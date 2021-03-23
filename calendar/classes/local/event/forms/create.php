@@ -68,7 +68,7 @@ class create extends \moodleform {
         $editoroptions = !(empty($this->_customdata['editoroptions'])) ? $this->_customdata['editoroptions'] : null;
         $courseid = !(empty($this->_customdata['courseid'])) ? $this->_customdata['courseid'] : null;
 
-        $eventtypes = calendar_get_allowed_event_types($courseid);
+        $eventtypes = $this->_customdata['eventtypes'];
 
         if (in_array(true, $eventtypes, true) === false) {
             print_error('nopermissiontoupdatecalendar');
@@ -100,6 +100,10 @@ class create extends \moodleform {
         $mform->setType('description', PARAM_RAW);
         $mform->setAdvanced('description');
 
+        $mform->addElement('text', 'location', get_string('location', 'moodle'), 'size="50"');
+        $mform->setType('location', PARAM_RAW_TRIMMED);
+        $mform->setAdvanced('location');
+
         // Add the variety of elements allowed for selecting event duration.
         $this->add_event_duration_elements($mform);
 
@@ -124,8 +128,8 @@ class create extends \moodleform {
         $eventtype = isset($data['eventtype']) ? $data['eventtype'] : null;
         $coursekey = ($eventtype == 'group') ? 'groupcourseid' : 'courseid';
         $courseid = (!empty($data[$coursekey])) ? $data[$coursekey] : null;
-        $eventtypes = calendar_get_allowed_event_types($courseid);
 
+        $eventtypes = $this->_customdata['eventtypes'];
         if (empty($eventtype) || !isset($eventtypes[$eventtype]) || $eventtypes[$eventtype] == false) {
             $errors['eventtype'] = get_string('invalideventtype', 'calendar');
         }

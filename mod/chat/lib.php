@@ -123,7 +123,8 @@ function chat_add_instance($chat) {
         $event = new stdClass();
         $event->type        = CALENDAR_EVENT_TYPE_ACTION;
         $event->name        = $chat->name;
-        $event->description = format_module_intro('chat', $chat, $chat->coursemodule);
+        $event->description = format_module_intro('chat', $chat, $chat->coursemodule, false);
+        $event->format      = FORMAT_HTML;
         $event->courseid    = $chat->course;
         $event->groupid     = 0;
         $event->userid      = 0;
@@ -169,7 +170,8 @@ function chat_update_instance($chat) {
         if ($chat->schedule > 0) {
             $event->type        = CALENDAR_EVENT_TYPE_ACTION;
             $event->name        = $chat->name;
-            $event->description = format_module_intro('chat', $chat, $chat->coursemodule);
+            $event->description = format_module_intro('chat', $chat, $chat->coursemodule, false);
+            $event->format      = FORMAT_HTML;
             $event->timestart   = $chat->chattime;
             $event->timesort    = $chat->chattime;
 
@@ -186,7 +188,8 @@ function chat_update_instance($chat) {
             $event = new stdClass();
             $event->type        = CALENDAR_EVENT_TYPE_ACTION;
             $event->name        = $chat->name;
-            $event->description = format_module_intro('chat', $chat, $chat->coursemodule);
+            $event->description = format_module_intro('chat', $chat, $chat->coursemodule, false);
+            $event->format      = FORMAT_HTML;
             $event->courseid    = $chat->course;
             $event->groupid     = 0;
             $event->userid      = 0;
@@ -334,7 +337,7 @@ function chat_print_recent_activity($course, $viewfullnames, $timestart) {
     $strftimerecent = get_string('strftimerecent');
 
     if ($past) {
-        echo $OUTPUT->heading(get_string("pastchats", 'chat').':', 3);
+        echo $OUTPUT->heading(get_string("pastchats", 'chat') . ':', 6);
 
         foreach ($past as $cm) {
             $link = $CFG->wwwroot.'/mod/chat/view.php?id='.$cm->id;
@@ -345,7 +348,7 @@ function chat_print_recent_activity($course, $viewfullnames, $timestart) {
     }
 
     if ($current) {
-        echo $OUTPUT->heading(get_string("currentchats", 'chat').':', 3);
+        echo $OUTPUT->heading(get_string("currentchats", 'chat') . ':', 6);
 
         $oldest = floor((time() - $CFG->chat_old_ping) / 10) * 10;  // Better db caching.
 
@@ -395,41 +398,6 @@ function chat_print_recent_activity($course, $viewfullnames, $timestart) {
             echo '</div>';
         }
     }
-
-    return true;
-}
-
-/**
- * Function to be run periodically according to the moodle cron
- * This function searches for things that need to be done, such
- * as sending out mail, toggling flags etc ...
- *
- * @global object
- * @return bool
- */
-function chat_cron () {
-    global $DB;
-
-    chat_update_chat_times();
-
-    chat_delete_old_users();
-
-    // Delete old messages with a single SQL query.
-    $subselect = "SELECT c.keepdays
-                    FROM {chat} c
-                   WHERE c.id = {chat_messages}.chatid";
-
-    $sql = "DELETE
-              FROM {chat_messages}
-             WHERE ($subselect) > 0 AND timestamp < ( ".time()." -($subselect) * 24 * 3600)";
-
-    $DB->execute($sql);
-
-    $sql = "DELETE
-              FROM {chat_messages_current}
-             WHERE timestamp < ( ".time()." - 8 * 3600)";
-
-    $DB->execute($sql);
 
     return true;
 }
@@ -495,7 +463,8 @@ function chat_prepare_update_events($chat, $cm = null) {
     $event = new stdClass();
     $event->name        = $chat->name;
     $event->type        = CALENDAR_EVENT_TYPE_ACTION;
-    $event->description = format_module_intro('chat', $chat, $cm->id);
+    $event->description = format_module_intro('chat', $chat, $cm->id, false);
+    $event->format      = FORMAT_HTML;
     $event->timestart   = $chat->chattime;
     $event->timesort    = $chat->chattime;
     if ($event->id = $DB->get_field('event', 'id', array('modulename' => 'chat', 'instance' => $chat->id,
@@ -1171,44 +1140,10 @@ function chat_get_post_actions() {
 }
 
 /**
- * @deprecated since 3.3
- * @todo The final deprecation of this function will take place in Moodle 3.7 - see MDL-57487.
- * @global object
- * @global object
- * @param array $courses
- * @param array $htmlarray Passed by reference
+ * @deprecated since Moodle 3.3, when the block_course_overview block was removed.
  */
-function chat_print_overview($courses, &$htmlarray) {
-    global $USER, $CFG;
-
-    debugging('The function chat_print_overview() is now deprecated.', DEBUG_DEVELOPER);
-
-    if (empty($courses) || !is_array($courses) || count($courses) == 0) {
-        return array();
-    }
-
-    if (!$chats = get_all_instances_in_courses('chat', $courses)) {
-        return;
-    }
-
-    $strchat = get_string('modulename', 'chat');
-    $strnextsession  = get_string('nextsession', 'chat');
-
-    foreach ($chats as $chat) {
-        if ($chat->chattime and $chat->schedule) {  // A chat is scheduled.
-            $str = '<div class="chat overview"><div class="name">'.
-                   $strchat.': <a '.($chat->visible ? '' : ' class="dimmed"').
-                   ' href="'.$CFG->wwwroot.'/mod/chat/view.php?id='.$chat->coursemodule.'">'.
-                   $chat->name.'</a></div>';
-            $str .= '<div class="info">'.$strnextsession.': '.userdate($chat->chattime).'</div></div>';
-
-            if (empty($htmlarray[$chat->course]['chat'])) {
-                $htmlarray[$chat->course]['chat'] = $str;
-            } else {
-                $htmlarray[$chat->course]['chat'] .= $str;
-            }
-        }
-    }
+function chat_print_overview() {
+    throw new coding_exception('chat_print_overview() can not be used any more and is obsolete.');
 }
 
 
@@ -1467,6 +1402,14 @@ function mod_chat_core_calendar_provide_event_action(calendar_event $event,
 
     if (!$cm->uservisible) {
         // The module is not visible to the user for any reason.
+        return null;
+    }
+
+    $completion = new \completion_info($cm->get_course());
+
+    $completiondata = $completion->get_data($cm, false, $userid);
+
+    if ($completiondata->completionstate != COMPLETION_INCOMPLETE) {
         return null;
     }
 

@@ -3,7 +3,7 @@ name: Core
 on: [push]
 
 env:
-  php: 7.2
+  php: 7.4
 
 jobs:
   Grunt:
@@ -48,10 +48,10 @@ jobs:
       matrix:
         include:
           - os: ubuntu-18.04
-            php: 7.0
+            php: 7.2
             db: mysqli
           - os: ubuntu-18.04
-            php: 7.2
+            php: 7.4
             db: pgsql
 
     steps:
@@ -82,7 +82,6 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: mysqli, zip, gd, xmlrpc, soap
           coverage: none
 
       - name: Checking out code from ${{ env.GITHUB_REF_SLUG }}

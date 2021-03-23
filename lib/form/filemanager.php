@@ -296,9 +296,7 @@ class MoodleQuickForm_filemanager extends HTML_QuickForm_element implements temp
         $output = $PAGE->get_renderer('core', 'files');
         $html .= $output->render($fm);
 
-        $html .= html_writer::empty_tag('input', array('value' => $draftitemid, 'name' => $elname, 'type' => 'hidden'));
-        // label element needs 'for' attribute work
-        $html .= html_writer::empty_tag('input', array('value' => '', 'id' => 'id_'.$elname, 'type' => 'hidden'));
+        $html .= html_writer::empty_tag('input', array('value' => $draftitemid, 'name' => $elname, 'type' => 'hidden', 'id' => $id));
 
         if (!empty($options->accepted_types) && $options->accepted_types != '*') {
             $html .= html_writer::tag('p', get_string('filesofthesetypes', 'form'));
@@ -398,6 +396,7 @@ class form_filemanager implements renderable {
     public function __construct(stdClass $options) {
         global $CFG, $USER, $PAGE;
         require_once($CFG->dirroot. '/repository/lib.php');
+        require_once($CFG->libdir . '/licenselib.php');
         $defaults = array(
             'maxbytes'=>-1,
             'areamaxbytes' => FILE_AREA_MAX_BYTES_UNLIMITED,
@@ -411,15 +410,9 @@ class form_filemanager implements renderable {
             'author'=>fullname($USER),
             'licenses'=>array()
             );
-        if (!empty($CFG->licenses)) {
-            $array = explode(',', $CFG->licenses);
-            foreach ($array as $license) {
-                $l = new stdClass();
-                $l->shortname = $license;
-                $l->fullname = get_string($license, 'license');
-                $defaults['licenses'][] = $l;
-            }
-        }
+
+        $defaults['licenses'] = license_manager::get_licenses();
+
         if (!empty($CFG->sitedefaultlicense)) {
             $defaults['defaultlicense'] = $CFG->sitedefaultlicense;
         }

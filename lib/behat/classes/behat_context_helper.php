@@ -105,7 +105,7 @@ class behat_context_helper {
      * @param string $component The component or subsystem to find the context for
      * @return behat_base|null
      */
-    public static function get_component_context(string $component) {
+    public static function get_component_context(string $component): ?behat_base {
         $component = str_replace('core_', '', $component);
 
         if ($classname = self::get_theme_override("behat_{$component}")) {
@@ -121,7 +121,7 @@ class behat_context_helper {
      * @param string $classname
      * @return string|null
      */
-    protected static function get_theme_override(string $classname) {
+    protected static function get_theme_override(string $classname): ?string {
         $suitename = self::$environment->getSuite()->getName();
         // If default suite, then get the default theme name.
         if ($suitename == 'default') {

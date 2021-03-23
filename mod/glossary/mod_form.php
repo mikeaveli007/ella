@@ -111,7 +111,7 @@ class mod_glossary_mod_form extends moodleform_mod {
             $choices[0] = get_string('none');
             $choices[1] = get_string('withauthor', 'glossary');
             $choices[2] = get_string('withoutauthor', 'glossary');
-            $mform->addElement('select', 'rsstype', get_string('rsstype'), $choices);
+            $mform->addElement('select', 'rsstype', get_string('rsstype', 'glossary'), $choices);
             $mform->addHelpButton('rsstype', 'rsstype', 'glossary');
 
             $choices = array();
@@ -130,7 +130,7 @@ class mod_glossary_mod_form extends moodleform_mod {
             $choices[50] = '50';
             $mform->addElement('select', 'rssarticles', get_string('rssarticles'), $choices);
             $mform->addHelpButton('rssarticles', 'rssarticles', 'glossary');
-            $mform->disabledIf('rssarticles', 'rsstype', 'eq', 0);
+            $mform->hideIf('rssarticles', 'rsstype', 'eq', 0);
         }
 
 //-------------------------------------------------------------------------------

@@ -50,7 +50,7 @@ class behat_form_autocomplete extends behat_form_text {
 
         // Clear all current selections.
         $rootnode = $this->field->getParent()->getParent();
-        $selections = $rootnode->findAll('css', '.form-autocomplete-selection > [role=listitem]');
+        $selections = $rootnode->findAll('css', '.form-autocomplete-selection [role=option]');
         foreach (array_reverse($selections) as $selection) {
             $selection->click();
             $this->wait_for_pending_js();
@@ -78,7 +78,7 @@ class behat_form_autocomplete extends behat_form_text {
      * @param   string $value
      * @param   bool $allowscreation
      */
-    protected function add_value(string $value, bool $allowscreation) {
+    protected function add_value(string $value, bool $allowscreation): void {
         $value = trim($value);
 
         // Click into the field.
@@ -116,9 +116,7 @@ class behat_form_autocomplete extends behat_form_text {
         $this->wait_for_pending_js();
 
         // Press the escape to close the autocomplete suggestions list.
-        // Note: This does not make use of the `type_keys` API because it can cause some modals to close.
-        // This is not an issue in later versions of Moodle where the autocomplete handling has been updated.
-        $this->key_press(27);
+        behat_base::type_keys($this->session, [behat_keys::ESCAPE]);
         $this->wait_for_pending_js();
     }
 }

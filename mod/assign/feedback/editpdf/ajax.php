@@ -125,14 +125,14 @@ if ($action === 'pollconversions') {
             $annotations = page_editor::get_annotations($grade->id, $index, $draft);
             $page->annotations = $annotations;
             $response->pages[] = $page;
-
-            $component = 'assignfeedback_editpdf';
-            $filearea = document_services::PAGE_IMAGE_FILEAREA;
-            $filepath = '/';
-            $fs = get_file_storage();
-            $files = $fs->get_directory_files($context->id, $component, $filearea, $grade->id, $filepath);
-            $response->pageready = count($files);
         }
+
+        $component = 'assignfeedback_editpdf';
+        $filearea = document_services::PAGE_IMAGE_FILEAREA;
+        $filepath = '/';
+        $fs = get_file_storage();
+        $files = $fs->get_directory_files($context->id, $component, $filearea, $grade->id, $filepath);
+        $response->pageready = count($files);
     }
 
     echo json_encode($response);
@@ -227,6 +227,27 @@ if ($action === 'pollconversions') {
 
     $result = $result && page_editor::unrelease_drafts($grade->id);
     echo json_encode($result);
+    die();
+} else if ($action == 'rotatepage') {
+    require_capability('mod/assign:grade', $context);
+    $response = new stdClass();
+    $index = required_param('index', PARAM_INT);
+    $grade = $assignment->get_user_grade($userid, true, $attemptnumber);
+    $rotateleft = required_param('rotateleft', PARAM_BOOL);
+    $filearea = document_services::PAGE_IMAGE_FILEAREA;
+    $pagefile = document_services::rotate_page($assignment, $userid, $attemptnumber, $index, $rotateleft);
+    $page = new stdClass();
+    $page->url = moodle_url::make_pluginfile_url($context->id, document_services::COMPONENT, $filearea,
+        $grade->id, '/', $pagefile->get_filename())->out();
+    if ($imageinfo = $pagefile->get_imageinfo()) {
+        $page->width = $imageinfo['width'];
+        $page->height = $imageinfo['height'];
+    } else {
+        $page->width = 0;
+        $page->height = 0;
+    }
+    $response = (object)['page' => $page];
+    echo json_encode($response);
     die();
 }
 

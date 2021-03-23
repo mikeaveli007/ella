@@ -11,7 +11,7 @@ Feature: View gradebook when scales are used
     And I set the following administration settings values:
       | grade_report_showranges    | 1 |
       | grade_aggregations_visible | Mean of grades,Weighted mean of grades,Simple weighted mean of grades,Mean of grades (with extra credits),Median of grades,Lowest grade,Highest grade,Mode of grades,Natural |
-    And I navigate to "Scales" node in "Site administration > Grades"
+    And I navigate to "Grades > Scales" in site administration
     And I press "Add a new scale"
     And I set the following fields to these values:
       | Name  | <span lang="en" class="multilang">EN</span><span lang="fr" class="multilang">FR</span> Letterscale |
@@ -55,23 +55,23 @@ Feature: View gradebook when scales are used
     And I click on "Grade" "link" in the "Student 1" "table_row"
     And I set the field "Grade" to "A"
     And I press "Save changes"
-    And I press "Ok"
+    And I press "OK"
     And I click on "[data-action=next-user]" "css_element"
     And I set the field "Grade" to "B"
     And I press "Save changes"
-    And I press "Ok"
+    And I press "OK"
     And I click on "[data-action=next-user]" "css_element"
     And I set the field "Grade" to "C"
     And I press "Save changes"
-    And I press "Ok"
+    And I press "OK"
     And I click on "[data-action=next-user]" "css_element"
     And I set the field "Grade" to "D"
     And I press "Save changes"
-    And I press "Ok"
+    And I press "OK"
     And I click on "[data-action=next-user]" "css_element"
     And I set the field "Grade" to "F"
     And I press "Save changes"
-    And I press "Ok"
+    And I press "OK"
     And I am on "Course 1" course homepage
     And I navigate to "Setup > Course grade settings" in the course gradebook
     And I set the field "Show weightings" to "Show"

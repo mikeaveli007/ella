@@ -26,10 +26,11 @@ namespace tool_dataprivacy;
 
 defined('MOODLE_INTERNAL') || die();
 
+use lang_string;
 use core\persistent;
 
 /**
- * Class for loading/storing competencies from the DB.
+ * Class for loading/storing data requests from the DB.
  *
  * @copyright  2018 Jun Pataleta
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -62,6 +63,7 @@ class data_request extends persistent {
             ],
             'comments' => [
                 'type' => PARAM_TEXT,
+                'message' => new lang_string('errorinvalidrequestcomments', 'tool_dataprivacy'),
                 'default' => ''
             ],
             'commentsformat' => [
@@ -75,7 +77,10 @@ class data_request extends persistent {
                 'default' => FORMAT_PLAIN
             ],
             'userid' => [
-                'default' => 0,
+                'default' => function() {
+                    global $USER;
+                    return $USER->id;
+                },
                 'type' => PARAM_INT
             ],
             'requestedby' => [
@@ -83,10 +88,9 @@ class data_request extends persistent {
                 'type' => PARAM_INT
             ],
             'status' => [
-                'default' => api::DATAREQUEST_STATUS_PENDING,
+                'default' => api::DATAREQUEST_STATUS_AWAITING_APPROVAL,
                 'choices' => [
                     api::DATAREQUEST_STATUS_PENDING,
-                    api::DATAREQUEST_STATUS_PREPROCESSING,
                     api::DATAREQUEST_STATUS_AWAITING_APPROVAL,
                     api::DATAREQUEST_STATUS_APPROVED,
                     api::DATAREQUEST_STATUS_PROCESSING,
@@ -118,6 +122,10 @@ class data_request extends persistent {
                 ],
                 'type' => PARAM_INT,
                 'default' => FORMAT_PLAIN
+            ],
+            'systemapproved' => [
+                'default' => false,
+                'type' => PARAM_BOOL,
             ],
             'creationmethod' => [
                 'default' => self::DATAREQUEST_CREATION_MANUAL,
@@ -239,7 +247,6 @@ class data_request extends persistent {
         }
 
         $resettable = [
-            api::DATAREQUEST_STATUS_AWAITING_APPROVAL => true,
             api::DATAREQUEST_STATUS_APPROVED => true,
             api::DATAREQUEST_STATUS_REJECTED => true,
         ];
@@ -254,7 +261,6 @@ class data_request extends persistent {
      */
     public function is_active() : bool {
         $active = [
-            api::DATAREQUEST_STATUS_AWAITING_APPROVAL => true,
             api::DATAREQUEST_STATUS_APPROVED => true,
         ];
 
@@ -280,7 +286,14 @@ class data_request extends persistent {
         $currentdata = $this->to_record();
         unset($currentdata->id);
 
-        $clone = api::create_data_request($this->get('userid'), $this->get('type'));
+        // Clone the original request, but do not notify.
+        $clone = api::create_data_request(
+                $this->get('userid'),
+                $this->get('type'),
+                $this->get('comments'),
+                $this->get('creationmethod'),
+                false
+            );
         $clone->set('comments', $this->get('comments'));
         $clone->set('dpo', $this->get('dpo'));
         $clone->set('requestedby', $this->get('requestedby'));

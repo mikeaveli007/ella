@@ -19,7 +19,8 @@ Feature: In an assignment, teacher can annotate PDF files during grading
       | teacher1 | C1 | editingteacher |
       | student1 | C1 | student |
     And I log in as "admin"
-    And I navigate to "Annotate PDF" node in "Site administration > Plugins > Activity modules > Assignment > Feedback plugins"
+    And I am on site homepage
+    And I navigate to "Plugins > Activity modules > Assignment > Feedback plugins > Annotate PDF" in site administration
     And I upload "pix/help.png" file to "" filemanager
     And I upload "pix/docs.png" file to "" filemanager
     When I press "Save changes"
@@ -132,7 +133,7 @@ Feature: In an assignment, teacher can annotate PDF files during grading
     And I draw on the pdf
     And I press "Save changes"
     And I should see "The changes to the grade and feedback were saved"
-    And I press "Ok"
+    And I press "OK"
     And I click on "Edit settings" "link"
     And I follow "Test assignment name"
     And I navigate to "View all submissions" in current page administration

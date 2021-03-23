@@ -33,12 +33,10 @@ $string['clianswerno'] = 'لا';
 $string['cliansweryes'] = 'نعم';
 $string['cliincorrectvalueerror'] = 'خطأ، القيمة "{$a->value}" غير صحيحة من أجل "{$a->option}"';
 $string['cliincorrectvalueretry'] = 'قيمة غير صحيحة، حاول مرة أخرى';
-$string['clitypevalue'] = 'اطبع القيمة';
-$string['clitypevaluedefault'] = 'ادخل القيم أو اضغط إدخال (Enter) لإستخدام القيم الأفتراضية  ({$a})';
-$string['cliunknowoption'] = 'خيارات غير معروفة
-{$a}
-الرجاء استخدام خيار المساعدة';
-$string['cliyesnoprompt'] = 'أدخل y (وتعني نعم) أو n (وتعني لا)';
-$string['environmentrequireinstall'] = 'يجب تنصيبه/تمكينه';
+$string['clitypevalue'] = 'اكتب قيمة';
+$string['clitypevaluedefault'] = 'اكتب قيمة أو اضغط زر الإدخال لاستخدام القيم الافتراضية ({$a})';
+$string['cliunknowoption'] = 'خيارات غير معروفة: {$a} الرجاء استخدام -- خيار المساعدة.';
+$string['cliyesnoprompt'] = 'أدخل (Y) و تعني نعم أو (N) و تعني لا';
+$string['environmentrequireinstall'] = 'يجب تثبيته و تمكينه';
 $string['environmentrequireversion'] = 'يتطلب الإصدار {$a->needed}، وأنت تستعمل الإصدار {$a->current}';
 $string['upgradekeyset'] = 'مفتاح التحديث (اتركها فارغة إن لم ترغب بتحديده)';

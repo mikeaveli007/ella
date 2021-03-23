@@ -1,3 +1,41 @@
+### 10.0.0 ###
+
+* Display of progress and grade in referenced course on the main course page can be
+  now configured (issue #32). Credit goes to Arnaud Trouvé (@ak4t0sh).
+* Supported Moodle versions 3.9 (LTS) and 3.10.
+
+### 9.0.1 ###
+
+* Added example JSON context to the ionic template to pass the mustache lint.
+
+### 9.0.0 ###
+
+* Added support for the Moodle Mobile App. The app displays a simple screen with the
+  information about the progress in the referenced course, the current final grade
+  there and a button to go to the referenced course. Teacher specific features such as
+  fetching grades are out of mobile app support scope (issue #19).
+* Added standard subcourse:view allowing to fine control what can view the module
+  instances in the course.
+* Added ability to mark the Subcourse activity as completed automatically upon opening
+  by users - uses standard view tracking feature.
+
+### 8.0.1 ###
+
+* Fixed issue #38 causing the grades fetch fail and throw error in certain cases. This
+  is a regression of the hidden grades support introduced in 8.0.0 (issue #28).
+
+### 8.0.0 ###
+
+* Referenced course selector uses the autocomplete form widget (issue #34).
+* Referenced course final grades can now be fetched either as real values (existing
+  and default behaviour) or as percentual values (new optional behaviour). This allows
+  teacher to keep the percentage displayed in the referenced course matching with the
+  grade in the subcourse activity even if there are excluded grades (issue #29).
+* If the grades are hidden in the referenced course, they are now correctly marked as
+  hidden in subcourse activity, too. This supports both hidden grade item (i.e. whole
+  columns in the gradebook) and individual grades (issue #28).
+* Supported and tested on Moodle 3.8 and 3.9. Likely to work on lower versions, too.
+
 ### 7.2.0 ###
 
 * Links to the referenced course can open in a new window/tab (issue #27).

@@ -29,6 +29,16 @@ Feature: Verify that keyboard steps work as expected
     And the focused element is "Username" "field"
 
   @javascript
+  Scenario: Using the arrow keys allows me to navigate through menus
+    Given the following "users" exist:
+      | username | email                        | firstname | lastname |
+      | saffronr | saffron.rutledge@example.com | Saffron   | Rutledge |
+    And I log in as "saffronr"
+    And I click on "Saffron Rutledge" "link" in the ".usermenu" "css_element"
+    When I press the up key
+    Then the focused element is "Log out" "link"
+
+  @javascript
   Scenario: The escape key can be used to close a dialogue
     Given the following "course" exists:
      | fullname  | C1|

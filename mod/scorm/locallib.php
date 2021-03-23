@@ -997,12 +997,12 @@ function scorm_print_launch ($user, $scorm, $action, $cm) {
         if ($scorm->hidebrowse == 0) {
             print_string('mode', 'scorm');
             echo ': '.html_writer::empty_tag('input', array('type' => 'radio', 'id' => 'b', 'name' => 'mode',
-                    'value' => 'browse', 'class' => 'm-r-1')).
+                    'value' => 'browse', 'class' => 'mr-1')).
                         html_writer::label(get_string('browse', 'scorm'), 'b');
             echo html_writer::empty_tag('input', array('type' => 'radio',
                                                         'id' => 'n', 'name' => 'mode',
                                                         'value' => 'normal', 'checked' => 'checked',
-                                                        'class' => 'm-x-1')).
+                                                        'class' => 'mx-1')).
                     html_writer::label(get_string('normal', 'scorm'), 'n');
 
         } else {
@@ -2424,7 +2424,8 @@ function scorm_update_calendar(stdClass $scorm, $cmid) {
         if ((!empty($scorm->timeopen)) && ($scorm->timeopen > 0)) {
             // Calendar event exists so update it.
             $event->name = get_string('calendarstart', 'scorm', $scorm->name);
-            $event->description = format_module_intro('scorm', $scorm, $cmid);
+            $event->description = format_module_intro('scorm', $scorm, $cmid, false);
+            $event->format = FORMAT_HTML;
             $event->timestart = $scorm->timeopen;
             $event->timesort = $scorm->timeopen;
             $event->visible = instance_is_visible('scorm', $scorm);
@@ -2441,7 +2442,8 @@ function scorm_update_calendar(stdClass $scorm, $cmid) {
         // Event doesn't exist so create one.
         if ((!empty($scorm->timeopen)) && ($scorm->timeopen > 0)) {
             $event->name = get_string('calendarstart', 'scorm', $scorm->name);
-            $event->description = format_module_intro('scorm', $scorm, $cmid);
+            $event->description = format_module_intro('scorm', $scorm, $cmid, false);
+            $event->format = FORMAT_HTML;
             $event->courseid = $scorm->course;
             $event->groupid = 0;
             $event->userid = 0;
@@ -2465,7 +2467,8 @@ function scorm_update_calendar(stdClass $scorm, $cmid) {
         if ((!empty($scorm->timeclose)) && ($scorm->timeclose > 0)) {
             // Calendar event exists so update it.
             $event->name = get_string('calendarend', 'scorm', $scorm->name);
-            $event->description = format_module_intro('scorm', $scorm, $cmid);
+            $event->description = format_module_intro('scorm', $scorm, $cmid, false);
+            $event->format = FORMAT_HTML;
             $event->timestart = $scorm->timeclose;
             $event->timesort = $scorm->timeclose;
             $event->visible = instance_is_visible('scorm', $scorm);
@@ -2482,7 +2485,8 @@ function scorm_update_calendar(stdClass $scorm, $cmid) {
         // Event doesn't exist so create one.
         if ((!empty($scorm->timeclose)) && ($scorm->timeclose > 0)) {
             $event->name = get_string('calendarend', 'scorm', $scorm->name);
-            $event->description = format_module_intro('scorm', $scorm, $cmid);
+            $event->description = format_module_intro('scorm', $scorm, $cmid, false);
+            $event->format = FORMAT_HTML;
             $event->courseid = $scorm->course;
             $event->groupid = 0;
             $event->userid = 0;

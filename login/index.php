@@ -32,6 +32,8 @@ redirect_if_major_upgrade_required();
 $testsession = optional_param('testsession', 0, PARAM_INT); // test session works properly
 $anchor      = optional_param('anchor', '', PARAM_RAW);     // Used to restore hash anchor to wantsurl.
 
+$resendconfirmemail = optional_param('resendconfirmemail', false, PARAM_BOOL);
+
 // It might be safe to do this for non-Behat sites, or there might
 // be a security risk. For now we only allow it on Behat sites.
 // If you wants to do the analysis, you may be able to remove the
@@ -80,7 +82,7 @@ if (!empty($SESSION->has_timed_out)) {
 $frm  = false;
 $user = false;
 
-$authsequence = get_enabled_auth_plugins(true); // auths, in sequence
+$authsequence = get_enabled_auth_plugins(); // Auths, in sequence.
 foreach($authsequence as $authname) {
     $authplugin = get_auth_plugin($authname);
     // The auth plugin's loginpage_hook() can eventually set $frm and/or $user.
@@ -184,7 +186,23 @@ if ($frm and isset($frm->username)) {                             // Login WITH 
             $PAGE->set_heading($site->fullname);
             echo $OUTPUT->header();
             echo $OUTPUT->heading(get_string("mustconfirm"));
-            echo $OUTPUT->box(get_string("emailconfirmsent", "", $user->email), "generalbox boxaligncenter");
+            if ($resendconfirmemail) {
+                if (!send_confirmation_email($user)) {
+                    echo $OUTPUT->notification(get_string('emailconfirmsentfailure'), \core\output\notification::NOTIFY_ERROR);
+                } else {
+                    echo $OUTPUT->notification(get_string('emailconfirmsentsuccess'), \core\output\notification::NOTIFY_SUCCESS);
+                }
+            }
+            echo $OUTPUT->box(get_string("emailconfirmsent", "", s($user->email)), "generalbox boxaligncenter");
+            $resendconfirmurl = new moodle_url('/login/index.php',
+                [
+                    'username' => $frm->username,
+                    'password' => $frm->password,
+                    'resendconfirmemail' => true,
+                    'logintoken' => \core\session\manager::get_login_token()
+                ]
+            );
+            echo $OUTPUT->single_button($resendconfirmurl, get_string('emailconfirmationresend'));
             echo $OUTPUT->footer();
             die;
         }

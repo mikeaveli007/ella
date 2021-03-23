@@ -81,11 +81,30 @@ class qtype_essay_question extends question_with_responses {
     }
 
     public function summarise_response(array $response) {
+        $output = null;
+
         if (isset($response['answer'])) {
-            return question_utils::to_plain_text($response['answer'],
-                    $response['answerformat'], array('para' => false));
+            $output .= question_utils::to_plain_text($response['answer'],
+                $response['answerformat'], array('para' => false));
+        }
+
+        if (isset($response['attachments'])  && $response['attachments']) {
+            $attachedfiles = [];
+            foreach ($response['attachments']->get_files() as $file) {
+                $attachedfiles[] = $file->get_filename() . ' (' . display_size($file->get_filesize()) . ')';
+            }
+            if ($attachedfiles) {
+                $output .= get_string('attachedfiles', 'qtype_essay', implode(', ', $attachedfiles));
+            }
+        }
+        return $output;
+    }
+
+    public function un_summarise_response(string $summary) {
+        if (!empty($summary)) {
+            return ['answer' => text_to_html($summary)];
         } else {
-            return null;
+            return [];
         }
     }
 

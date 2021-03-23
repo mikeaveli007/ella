@@ -53,11 +53,17 @@ class mod_lti_external extends external_api {
                 'id' => new external_value(PARAM_INT, 'Tool type id'),
                 'name' => new external_value(PARAM_NOTAGS, 'Tool type name'),
                 'description' => new external_value(PARAM_NOTAGS, 'Tool type description'),
+                'platformid' => new external_value(PARAM_TEXT, 'Platform ID'),
+                'clientid' => new external_value(PARAM_TEXT, 'Client ID'),
+                'deploymentid' => new external_value(PARAM_INT, 'Deployment ID'),
                 'urls' => new external_single_structure(
                     array(
                         'icon' => new external_value(PARAM_URL, 'Tool type icon URL'),
                         'edit' => new external_value(PARAM_URL, 'Tool type edit URL'),
                         'course' => new external_value(PARAM_URL, 'Tool type edit URL', VALUE_OPTIONAL),
+                        'publickeyset' => new external_value(PARAM_URL, 'Public Keyset URL'),
+                        'accesstoken' => new external_value(PARAM_URL, 'Access Token URL'),
+                        'authrequest' => new external_value(PARAM_URL, 'Authorisation Request URL'),
                     )
                 ),
                 'state' => new external_single_structure(
@@ -132,22 +138,18 @@ class mod_lti_external extends external_api {
      * @throws moodle_exception
      */
     public static function get_tool_proxies($orphanedonly) {
-        global $PAGE;
         $params = self::validate_parameters(self::get_tool_proxies_parameters(),
                                             array(
                                                 'orphanedonly' => $orphanedonly
                                             ));
         $orphanedonly = $params['orphanedonly'];
 
-        $proxies = array();
         $context = context_system::instance();
 
         self::validate_context($context);
         require_capability('moodle/site:config', $context);
 
-        $proxies = lti_get_tool_proxies($orphanedonly);
-
-        return array_map('serialise_tool_proxy', $proxies);
+        return lti_get_tool_proxies($orphanedonly);
     }
 
     /**
@@ -158,7 +160,7 @@ class mod_lti_external extends external_api {
      */
     public static function get_tool_proxies_returns() {
         return new external_multiple_structure(
-            self::tool_type_return_structure()
+            self::tool_proxy_return_structure()
         );
     }
 
@@ -306,8 +308,9 @@ class mod_lti_external extends external_api {
 
                 $viewablefields = [];
                 if (has_capability('mod/lti:view', $context)) {
+                    $options = array('noclean' => true);
                     list($module['intro'], $module['introformat']) =
-                        external_format_text($lti->intro, $lti->introformat, $context->id, 'mod_lti', 'intro', null);
+                        external_format_text($lti->intro, $lti->introformat, $context->id, 'mod_lti', 'intro', null, $options);
 
                     $module['introfiles'] = external_util::get_area_files($context->id, 'mod_lti', 'intro', false, false);
                     $viewablefields = array('launchcontainer', 'showtitlelaunch', 'showdescriptionlaunch', 'icon', 'secureicon');

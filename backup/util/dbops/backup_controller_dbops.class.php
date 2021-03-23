@@ -564,7 +564,8 @@ abstract class backup_controller_dbops extends backup_dbops {
                         'backup_general_histories'          => 'grade_histories',
                         'backup_general_questionbank'       => 'questionbank',
                         'backup_general_groups'             => 'groups',
-                        'backup_general_competencies'       => 'competencies'
+                        'backup_general_competencies'       => 'competencies',
+                        'backup_general_contentbankcontent' => 'contentbankcontent',
                 );
                 self::apply_admin_config_defaults($controller, $settings, true);
                 break;
@@ -577,7 +578,8 @@ abstract class backup_controller_dbops extends backup_dbops {
                         'backup_import_calendarevents'     => 'calendarevents',
                         'backup_import_questionbank'       => 'questionbank',
                         'backup_import_groups'             => 'groups',
-                        'backup_import_competencies'       => 'competencies'
+                        'backup_import_competencies'       => 'competencies',
+                        'backup_import_contentbankcontent' => 'contentbankcontent',
                 );
                 self::apply_admin_config_defaults($controller, $settings, true);
                 if ((!$controller->get_interactive()) &&
@@ -608,7 +610,8 @@ abstract class backup_controller_dbops extends backup_dbops {
                         'backup_auto_histories'          => 'grade_histories',
                         'backup_auto_questionbank'       => 'questionbank',
                         'backup_auto_groups'             => 'groups',
-                        'backup_auto_competencies'       => 'competencies'
+                        'backup_auto_competencies'       => 'competencies',
+                        'backup_auto_contentbankcontent' => 'contentbankcontent'
                 );
                 self::apply_admin_config_defaults($controller, $settings, false);
                 break;
@@ -675,5 +678,32 @@ abstract class backup_controller_dbops extends backup_dbops {
                 $controller->log('Unknown setting: ' . $setting, BACKUP::LOG_DEBUG);
             }
         }
+    }
+
+    /**
+     * Get the progress details of a backup operation.
+     * Get backup records directly from database, if the backup has successfully completed
+     * there will be no controller object to load.
+     *
+     * @param string $backupid The backup id to query.
+     * @return array $progress The backup progress details.
+     */
+    public static function get_progress($backupid) {
+        global $DB;
+
+        $progress = array();
+        $backuprecord = $DB->get_record(
+            'backup_controllers',
+            array('backupid' => $backupid),
+            'status, progress, operation',
+            MUST_EXIST);
+
+        $status = $backuprecord->status;
+        $progress = $backuprecord->progress;
+        $operation = $backuprecord->operation;
+
+        $progress = array('status' => $status, 'progress' => $progress, 'backupid' => $backupid, 'operation' => $operation);
+
+        return $progress;
     }
 }

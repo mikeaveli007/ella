@@ -36,8 +36,6 @@ use core_calendar\local\event\value_objects\event_description;
 use core_calendar\local\event\value_objects\event_times;
 use core_calendar\local\event\entities\event_interface;
 
-require_once($CFG->libdir . '/coursecatlib.php');
-
 /**
  * Abstract factory for creating calendar events.
  *
@@ -135,12 +133,15 @@ abstract class event_abstract_factory implements event_factory_interface {
         $user = null;
         $module = null;
         $subscription = null;
+        $component = null;
 
         if ($dbrow->modulename && $dbrow->instance) {
             $module = new cm_info_proxy($dbrow->modulename, $dbrow->instance, $dbrow->courseid);
         }
 
-        $category = new coursecat_proxy($dbrow->categoryid);
+        if ($dbrow->categoryid) {
+            $category = new coursecat_proxy($dbrow->categoryid);
+        }
 
         $course = new std_proxy($dbrow->courseid, function($id) {
             return calendar_get_course_cached($this->coursecachereference, $id);
@@ -171,6 +172,10 @@ abstract class event_abstract_factory implements event_factory_interface {
             $repeatcollection = null;
         }
 
+        if (!empty($dbrow->component)) {
+            $component = $dbrow->component;
+        }
+
         $event = new event(
             $dbrow->id,
             $dbrow->name,
@@ -189,7 +194,9 @@ abstract class event_abstract_factory implements event_factory_interface {
                 (new \DateTimeImmutable())->setTimestamp($dbrow->timemodified)
             ),
             !empty($dbrow->visible),
-            $subscription
+            $subscription,
+            $dbrow->location,
+            $component
         );
 
         $isactionevent = !empty($dbrow->type) && $dbrow->type == CALENDAR_EVENT_TYPE_ACTION;

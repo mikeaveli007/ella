@@ -41,27 +41,19 @@ Feature: Questionnaires can use an existing public survey to gather responses in
 
     And I log in as "teacher2"
     And I am on "Course 2" course homepage with editing mode on
-    And I follow "Add an activity or resource"
-    And I click on "Questionnaire" "radio"
-    And I click on "Add" "button" in the "Add an activity or resource" "dialogue"
-    And I set the field "Name" to "Questionnaire instance 1"
-    And I expand all fieldsets
-    Then I should see "Content options"
-    And I click on "Public questionnaire [Course 1]" "radio"
-    And I press "Save and display"
+    And I add a "Questionnaire" to section "1" and I fill the form with:
+      | Name | Questionnaire instance 1 |
+      | Description | Description |
+      | Use public | Public questionnaire [Course 1] |
     Then I should see "Questionnaire instance 1"
     And I log out
 
     And I log in as "teacher3"
     And I am on "Course 3" course homepage with editing mode on
-    And I follow "Add an activity or resource"
-    And I click on "Questionnaire" "radio"
-    And I click on "Add" "button" in the "Add an activity or resource" "dialogue"
-    And I set the field "Name" to "Questionnaire instance 2"
-    And I expand all fieldsets
-    Then I should see "Content options"
-    And I click on "Public questionnaire [Course 1]" "radio"
-    And I press "Save and display"
+    And I add a "Questionnaire" to section "1" and I fill the form with:
+      | Name | Questionnaire instance 2 |
+      | Description | Description |
+      | Use public | Public questionnaire [Course 1] |
     Then I should see "Questionnaire instance 2"
     And I log out
 
@@ -75,7 +67,7 @@ Feature: Questionnaires can use an existing public survey to gather responses in
     And I set the field "Enter a number" to "1"
     And I press "Submit questionnaire"
     Then I should see "Thank you for completing this Questionnaire."
-    And I follow "Continue"
+    And I press "Continue"
     Then I should see "Your response"
     And I should see "Enter a number"
     And "//div[contains(@class,'questionnaire_numeric') and contains(@class,'questionnaire_response')]//span[@class='selected' and text()='1']" "xpath_element" should exist
@@ -89,7 +81,7 @@ Feature: Questionnaires can use an existing public survey to gather responses in
     And I set the field "Enter a number" to "2"
     And I press "Submit questionnaire"
     Then I should see "Thank you for completing this Questionnaire."
-    And I follow "Continue"
+    And I press "Continue"
     Then I should see "Your response"
     And I should see "Enter a number"
     And "//div[contains(@class,'questionnaire_numeric') and contains(@class,'questionnaire_response')]//span[@class='selected' and text()='2']" "xpath_element" should exist

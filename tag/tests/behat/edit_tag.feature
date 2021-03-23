@@ -34,7 +34,8 @@ Feature: Users can edit tags to add description or rename
     And I press "Customise this page"
     # TODO MDL-57120 site "Tags" link not accessible without navigation block.
     And I add the "Navigation" block if not present
-    And I navigate to "Tags" node in "Site pages"
+    And I click on "Site pages" "list_item" in the "Navigation" "block"
+    And I click on "Tags" "link" in the "Navigation" "block"
     And I follow "Turtle"
     And I follow "User 1"
     And I follow "Cat"
@@ -58,7 +59,8 @@ Feature: Users can edit tags to add description or rename
     And I press "Customise this page"
     # TODO MDL-57120 site "Tags" link not accessible without navigation block.
     And I add the "Navigation" block if not present
-    And I navigate to "Tags" node in "Site pages"
+    And I click on "Site pages" "list_item" in the "Navigation" "block"
+    And I click on "Tags" "link" in the "Navigation" "block"
     And I follow "Turtle"
     And I follow "User 1"
     And I follow "Cat"
@@ -90,7 +92,7 @@ Feature: Users can edit tags to add description or rename
     And I press "Customise this page"
       # TODO MDL-57120 site "Tags" link not accessible without navigation block.
     And I add the "Navigation" block if not present
-    And I navigate to "Tags" node in "Site pages"
+    And I click on "Tags" "link" in the "Navigation" "block"
     And I follow "Turtle"
     And I follow "User 1"
     And I follow "Cat"
@@ -112,7 +114,7 @@ Feature: Users can edit tags to add description or rename
   @javascript
   Scenario: Manager can change tag description and rename the tag from tag manage page
     When I log in as "manager1"
-    And I navigate to "Manage tags" node in "Site administration > Appearance"
+    And I navigate to "Appearance > Manage tags" in site administration
     And I follow "Default collection"
     And I click on "Edit this tag" "link" in the "Cat" "table_row"
     And I set the following fields to these values:
@@ -131,7 +133,7 @@ Feature: Users can edit tags to add description or rename
 
   Scenario: Renaming the tag in edit tag form from tag manage page
     When I log in as "manager1"
-    And I navigate to "Manage tags" node in "Site administration > Appearance"
+    And I navigate to "Appearance > Manage tags" in site administration
     And I follow "Default collection"
     And I click on "Edit this tag" "link" in the "Cat" "table_row"
     And I set the following fields to these values:
@@ -153,7 +155,7 @@ Feature: Users can edit tags to add description or rename
   @javascript
   Scenario: Renaming the tag using quick edit field on tag manage page
     When I log in as "manager1"
-    And I navigate to "Manage tags" node in "Site administration > Appearance"
+    And I navigate to "Appearance > Manage tags" in site administration
     And I follow "Default collection"
     # Renaming tag to a valid name
     And I set the field "Edit tag name" in the "Cat" "table_row" to "Kitten"
@@ -165,7 +167,7 @@ Feature: Users can edit tags to add description or rename
     # Renaming tag to an invalid name
     And I set the field "Edit tag name" in the "Turtle" "table_row" to "DOG"
     And I should see "The tag name is already in use. Do you want to combine these tags?"
-    And I press "Cancel"
+    And I click on "Cancel" "button" in the "Confirm" "dialogue"
     And "New name for tag" "field" should not exist
     And I should see "Turtle"
     And I should see "Dog"
@@ -188,7 +190,7 @@ Feature: Users can edit tags to add description or rename
   @javascript
   Scenario: Combining tags when renaming
     When I log in as "manager1"
-    And I navigate to "Manage tags" node in "Site administration > Appearance"
+    And I navigate to "Appearance > Manage tags" in site administration
     And I follow "Default collection"
     And I set the field "Edit tag name" in the "Turtle" "table_row" to "DOG"
     And I should see "The tag name is already in use. Do you want to combine these tags?"
@@ -200,7 +202,7 @@ Feature: Users can edit tags to add description or rename
   @javascript
   Scenario: Combining multiple tags
     When I log in as "manager1"
-    And I navigate to "Manage tags" node in "Site administration > Appearance"
+    And I navigate to "Appearance > Manage tags" in site administration
     And I follow "Default collection"
     And I set the following fields to these values:
       | Select tag Dog | 1 |
@@ -219,7 +221,7 @@ Feature: Users can edit tags to add description or rename
 
   Scenario: Filtering tags
     When I log in as "manager1"
-    And I navigate to "Manage tags" node in "Site administration > Appearance"
+    And I navigate to "Appearance > Manage tags" in site administration
     And I follow "Default collection"
     And I should not see "Reset filter"
     And I set the field "Search" to "t"

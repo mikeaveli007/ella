@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Provides {@link backup_subcourse_activity_structure_step} class.
+ * Provides {@see backup_subcourse_activity_structure_step} class.
  *
  * @package     mod_subcourse
  * @category    backup
@@ -40,7 +40,8 @@ class backup_subcourse_activity_structure_step extends backup_activity_structure
 
         $subcourse = new backup_nested_element('subcourse', array('id'), array(
             'name', 'intro', 'introformat', 'timecreated', 'timemodified', 'timefetched',
-            'refcourse', 'instantredirect', 'completioncourse', 'blankwindow'
+            'refcourse', 'instantredirect', 'completioncourse', 'blankwindow', 'fetchpercentage',
+            'coursepageprintgrade', 'coursepageprintprogress'
         ));
 
         $subcourse->set_source_table('subcourse', array('id' => backup::VAR_ACTIVITYID));

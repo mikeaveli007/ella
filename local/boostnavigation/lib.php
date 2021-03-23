@@ -24,13 +24,22 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+// Define constants used by this plugin.
+define('LOCAL_BOOSTNAVIGATION_COLLAPSEICON_NONE', 0);
+define('LOCAL_BOOSTNAVIGATION_COLLAPSEICON_JUSTINDENT', 1);
+define('LOCAL_BOOSTNAVIGATION_COLLAPSEICON_YES', 2);
+
+define('LOCAL_BOOSTNAVIGATION_MOVEBEFORE_GRADES', 'grades');
+define('LOCAL_BOOSTNAVIGATION_MOVEBEFORE_BADGES', 'badgesview');
+define('LOCAL_BOOSTNAVIGATION_MOVEBEFORE_COMPETENCIES', 'competencies');
+
 /**
  * Fumble with Moodle's global navigation by leveraging Moodle's *_extend_navigation() hook.
  *
  * @param global_navigation $navigation
  */
 function local_boostnavigation_extend_navigation(global_navigation $navigation) {
-    global $CFG, $PAGE, $COURSE;
+    global $CFG, $PAGE, $COURSE, $USER;
 
     // Fetch config.
     $config = get_config('local_boostnavigation');
@@ -104,54 +113,233 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
                 }
             }
         }
-    }
 
-    // Check if admin wanted us to collapse the mycourses node.
-    // We won't support the setting navshowmycoursecategories in this feature as this would have complicated the feature's
-    // JavaScript code quite heavily.
-    if (isset($config->collapsemycoursesnode) && $config->collapsemycoursesnode == true
+        // Otherwise.
+    } else {
+        // Check if admin wanted us to show all of my courses in Boost's nav drawer regardless of the course progress and then to
+        // apply the block_myoverview filters to the mycourses root node list in Boost's nav drawer.
+        // We won't support the setting navshowmycoursecategories in this feature. It would be possible to support it similar to
+        // $config->removemycoursesnode and as it has been done before in local_boostcoc,
+        // but we want to keep things simple here now.
+        if (isset($config->modifymycoursesrootnodeshowfiltered) && $config->modifymycoursesrootnodeshowfiltered == true
             && $CFG->navshowmycoursecategories == false) {
-        // If yes, do it.
-        if ($mycoursesnode) {
-            // Remember the collapsible node for JavaScript.
-            $collapsenodesforjs[] = 'mycourses';
-            // Change the isexpandable attribute for the mycourses node to true (it's the default in Moodle core, just to be safe).
-            $mycoursesnode->isexpandable = true;
-            // Get the user preference for the collapse state of the mycourses node and set the collapse and hidden
-            // node of the course nodes attributes accordingly.
-            // Note: We are somehow abusing the hidden node attribute here for our own purposes. In Boost core, it is
-            // set to true for invisible courses, but these are currently displayed just as visible courses in the
-            // nav drawer, so we accept this abuse.
-            // Additionally, for some crazy reason, the mycourses child nodes also have the isexpandable attribute set to true
-            // by default. We set this to false here as only the mycourses parent node should have isexpandable set to true.
-            $userprefmycoursesnode = get_user_preferences('local_boostnavigation-collapse_mycoursesnode',
-                    $config->collapsemycoursesnodedefault);
-            if ($userprefmycoursesnode == 1) {
-                $mycoursesnode->collapse = true;
-                foreach ($mycourseschildrennodeskeys as $k) {
-                    $childnode = $mycoursesnode->get($k);
-                    $childnode->hidden = true;
-                    $childnode->isexpandable = false;
-                }
-            } else {
-                $mycoursesnode->collapse = false;
-                foreach ($mycourseschildrennodeskeys as $k) {
-                    $childnode = $mycoursesnode->get($k);
-                    $childnode->hidden = false;
-                    $childnode->isexpandable = false;
+            // If yes, do it.
+            if ($mycoursesnode) {
+                // Get list of my courses with all necessary fields.
+                $mycourses = enrol_get_my_courses('enddate');
+                // Do only if I am enrolled in at least one course.
+                if (count($mycourses) > 0) {
+                    // Get the current filter setting, falling back to Moodle's default COURSE_TIMELINE_ALL
+                    // if the user preference does not exist yet.
+                    $currentfilter = get_user_preferences('block_myoverview_user_grouping_preference',
+                            COURSE_TIMELINE_ALL);
+
+                    // Do only if we are dealing with another filter than COURSE_TIMELINE_INPROGRESS as this is already the list
+                    // how it is delivered by Moodle core.
+                    if ($currentfilter != COURSE_TIMELINE_INPROGRESS) {
+                        // If the filter is set to show favourite courses.
+                        if ($currentfilter == COURSE_FAVOURITES) {
+                            // Get the favourite courses.
+                            $favouritecourseids = [];
+                            $ufservice = \core_favourites\service_factory::get_service_for_user_context(
+                                \context_user::instance($USER->id)
+                            );
+                            $favourites = $ufservice->find_favourites_by_type('core_course', 'courses');
+                            if ($favourites) {
+                                $favouritecourseids = array_map(
+                                    function ($favourite) {
+                                        return $favourite->itemid;
+                                    }, $favourites);
+                            }
+                            list($filteredcourses, $processedcount) = course_filter_courses_by_favourites(
+                                    $mycourses,
+                                    $favouritecourseids
+                            );
+
+                            // If the filter is set to show custom course fields.
+                        } else if ($currentfilter == COURSE_CUSTOMFIELD) {
+                            // Get the filtered courses.
+                            $customfieldname = get_config('block_myoverview', 'customfiltergrouping');
+                            $customfieldvalue = get_user_preferences('block_myoverview_user_grouping_customfieldvalue_preference');
+                            list($filteredcourses, $processedcount) = course_filter_courses_by_customfield(
+                                    $mycourses,
+                                    $customfieldname,
+                                    $customfieldvalue
+                            );
+
+                            // If the filter is set to any other value.
+                        } else {
+                            // Get the filtered courses.
+                            list($filteredcourses, $processedcount) = course_filter_courses_by_timeline_classification(
+                                    $mycourses,
+                                    $currentfilter
+                            );
+                        }
+
+                        // If there are any filtered courses to be shown.
+                        if (count($filteredcourses) > 0) {
+                            // Reduce complexity of the list of filtered courses as we really only need the course IDs.
+                            $filteredcoursesids = array_map(
+                                function ($course) {
+                                    return $course->id;
+                                }, $filteredcourses);
+
+                            // Verify that all courses below the mycourses node which should be shown are really shown and
+                            // all courses which should not be shown are not shown.
+                            foreach ($mycourseschildrennodeskeys as $k) {
+                                // If the node is in the list of shown courses.
+                                if (in_array($k, $filteredcoursesids)) {
+                                    // Show the course node.
+                                    $mycoursesnode->get($k)->showinflatnavigation = true;
+
+                                    // Otherwise.
+                                } else {
+                                    // Hide the course node.
+                                    $mycoursesnode->get($k)->showinflatnavigation = false;
+                                }
+                            }
+
+                            // Otherwise.
+                        } else {
+                            // Simply hide all courses.
+                            foreach ($mycourseschildrennodeskeys as $k) {
+                                $mycoursesnode->get($k)->showinflatnavigation = false;
+                            }
+                        }
+                    }
                 }
             }
         }
-        // If the node shouldn't be collapsed, set some node attributes to avoid side effects with the CSS styles
-        // which ship with this plugin.
-    } else {
-        if ($mycoursesnode) {
-            // Change the isexpandable attribute for the mycourses parent node to false.
-            $mycoursesnode->isexpandable = false;
-            // Change the isexpandable attribute for the mycourses child node to false.
-            foreach ($mycourseschildrennodeskeys as $k) {
-                $childnode = $mycoursesnode->get($k);
-                $childnode->isexpandable = false;
+
+        // Check if admin wanted us to add the active filters hint root node or to add the change filter link root node
+        // to the mycourses list in Boost's nav drawer.
+        if ((isset($config->modifymycoursesrootnodefilterhint) && $config->modifymycoursesrootnodefilterhint == true) ||
+            (isset($config->modifymycoursesrootnodeshowfiltered) && $config->modifymycoursesrootnodeshowfiltered == true &&
+                isset($config->modifymycoursesrootnodefilterlink) && $config->modifymycoursesrootnodefilterlink == true)) {
+            // If yes, do it.
+            if ($mycoursesnode) {
+                // Do only if I am enrolled in at least one course.
+                if (count($mycourseschildrennodeskeys) > 0) {
+                    // Prepare string.
+                    $mycourseshintstring = '';
+
+                    // If enabled, create active filters hint.
+                    if (isset($config->modifymycoursesrootnodefilterhint) && $config->modifymycoursesrootnodefilterhint == true) {
+                        // If showing filtered courses is enabled, build active filters hint string.
+                        if (isset($config->modifymycoursesrootnodeshowfiltered) &&
+                                $config->modifymycoursesrootnodeshowfiltered == true) {
+                            // Get the current filter setting, falling back to Moodle's default COURSE_TIMELINE_ALL
+                            // if the user preference does not exist yet.
+                            $currentfilter = get_user_preferences('block_myoverview_user_grouping_preference',
+                                    COURSE_TIMELINE_ALL);
+
+                            // Build the active filters hint.
+                            if ($currentfilter == COURSE_CUSTOMFIELD) {
+                                $customfieldname = get_config('block_myoverview', 'customfiltergrouping');
+                                $customfieldvalue =
+                                        get_user_preferences('block_myoverview_user_grouping_customfieldvalue_preference');
+                                $currentfieldstring =
+                                        local_boostnavigation_get_customfield_valuestring($customfieldname, $customfieldvalue);
+                            } else {
+                                $currentfieldstring = get_string($currentfilter, 'block_myoverview');
+                            }
+                            $mycourseshintstring = get_string('mycoursesrootnodefilterhintenabledcurrentfilter',
+                                    'local_boostnavigation');
+                            $mycourseshintstring .= ' ';
+                            $mycourseshintstring .= $currentfieldstring;
+
+                            // Otherwise hardcode the inprogress filter.
+                        } else {
+                            // Build the active filters hint.
+                            $mycourseshintstring = get_string('mycoursesrootnodefilterhintenabledcourselist',
+                                    'local_boostnavigation');
+                            $mycourseshintstring .= ' ';
+                            $mycourseshintstring .= get_string(COURSE_TIMELINE_INPROGRESS, 'block_myoverview');
+                        }
+                    }
+
+                    // If enabled and not on Dashboard, create change filters link.
+                    if (isset($config->modifymycoursesrootnodeshowfiltered) &&
+                            $config->modifymycoursesrootnodeshowfiltered == true &&
+                            isset($config->modifymycoursesrootnodefilterlink) &&
+                            $config->modifymycoursesrootnodefilterlink == true &&
+                            $PAGE->pagelayout !== 'mydashboard') {
+
+                        // Add line break if the hint setting is enabled as well.
+                        if (isset($config->modifymycoursesrootnodefilterhint) &&
+                                $config->modifymycoursesrootnodefilterhint == true) {
+                            $mycourseshintstring .= html_writer::empty_tag('br');
+                        }
+
+                        $url = new moodle_url('/my/'); // Link target: Dashboard.
+                        $mycourseshintstring .= html_writer::link($url, get_string('mycoursesrootnodefilterlink',
+                                'local_boostnavigation'));
+                    }
+
+                    // If we really have a node to recreate now.
+                    if ($mycourseshintstring != '') {
+                        // Create new navigation node.
+                        // (use TYPE_COURSE to get the correct indent instead of TYPE_CUSTOM which would be semantically correct).
+                        $mycourseshintnode = navigation_node::create($mycourseshintstring, null, global_navigation::TYPE_COURSE,
+                                null, 'localboostnavigationactivefiltershint', new pix_icon('i/filter', ''));
+
+                        // Show the navigation node in Boost's nav drawer.
+                        $mycourseshintnode->showinflatnavigation = true;
+
+                        // Add the node to the mycourses list in Boost's nav drawer
+                        // (will be added at the end where we want it to be).
+                        $mycoursesnode->add_node($mycourseshintnode);
+                    }
+                }
+            }
+        }
+
+        // Check if admin wanted us to collapse the mycourses node.
+        // We won't support the setting navshowmycoursecategories in this feature as this would have complicated the feature's
+        // JavaScript code quite heavily.
+        if (isset($config->collapsemycoursesnode) && $config->collapsemycoursesnode == true
+            && $CFG->navshowmycoursecategories == false) {
+            // If yes, do it.
+            if ($mycoursesnode) {
+                // Remember the collapsible node for JavaScript.
+                $collapsenodesforjs[] = 'mycourses';
+                // Add the localboostnavigationcollapsibleparent class to the mycourses node.
+                $mycoursesnode->add_class('localboostnavigationcollapsibleparent');
+                // Get the user preference for the collapse state of the mycourses node and add the
+                // localboostnavigationcollapsedparent and localboostnavigationcollapsedchild classes accordingly.
+                // Additionally, add the localboostnavigationcollapsiblechild class to all child nodes.
+                $mycoursesnode->add_class('localboostnavigationcollapsibleparent');
+                $userprefmycoursesnode = get_user_preferences('local_boostnavigation-collapse_mycoursesnode',
+                    $config->collapsemycoursesnodedefault);
+                if ($userprefmycoursesnode == 1) {
+                    $mycoursesnode->add_class('localboostnavigationcollapsedparent');
+                    foreach ($mycourseschildrennodeskeys as $k) {
+                        $childnode = $mycoursesnode->get($k);
+                        $childnode->add_class('localboostnavigationcollapsiblechild');
+                        $childnode->add_class('localboostnavigationcollapsedchild');
+                    }
+                } else {
+                    foreach ($mycourseschildrennodeskeys as $k) {
+                        $childnode = $mycoursesnode->get($k);
+                        $childnode->add_class('localboostnavigationcollapsiblechild');
+                    }
+                }
+                if (isset($mycourseshintnode)) {
+                    $mycourseshintnode->add_class('localboostnavigationcollapsiblechild');
+                }
+
+                // Check if admin really wanted to show an icon in the parent node and indent the parent node.
+                // Case: LOCAL_BOOSTNAVIGATION_COLLAPSEICON_YES) - Icon and indent is already fine.
+                // Case: LOCAL_BOOSTNAVIGATION_COLLAPSEICON_JUSTINDENT - Icon has to be removed, but indent is fine.
+                // Note that the icon is removed by setting it to i/navigationitem which is mapped it fa-fw
+                // and which is the same as the navigation_node constructor sets if the icon is set to null.
+                if ($config->collapsemycoursesnodeicon == LOCAL_BOOSTNAVIGATION_COLLAPSEICON_JUSTINDENT) {
+                    $mycoursesnode->icon = new pix_icon('i/navigationitem', '');
+                    // Case: LOCAL_BOOSTNAVIGATION_COLLAPSEICON_NONE - Icon and indent have to be removed.
+                } else if ($config->collapsemycoursesnodeicon == LOCAL_BOOSTNAVIGATION_COLLAPSEICON_NONE) {
+                    $mycoursesnode->icon = new pix_icon('i/navigationitem', '');
+                    $mycoursesnode->add_class('localboostnavigationcollapsibleparentforcenoindent');
+                }
             }
         }
     }
@@ -162,13 +350,10 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
         // Only proceed if we are inside a course and we are _not_ on the frontpage.
         if ($PAGE->context->get_course_context(false) == true && $COURSE->id != SITEID) {
             // Check if there is any badge in the course.
-            require_once($CFG->dirroot . '/lib/badgeslib.php');
-
-            // Get number of badges in course.
-            $totalbadges = count(badges_get_badges(BADGE_TYPE_COURSE, $PAGE->course->id, '', '' , 0, 0));
+            $coursehasbadges = local_boostnavigation_course_has_badges($PAGE->course->id);
 
             // Only proceed if there are no badges in course.
-            if ($totalbadges == 0) {
+            if ($coursehasbadges == false) {
                 if ($badgesnode = $navigation->find('badgesview', global_navigation::TYPE_SETTING)) {
                     // Remove badges node (Just hiding it with the showinflatnavigation attribute does not work here).
                     $badgesnode->remove();
@@ -215,8 +400,20 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
         // Only proceed if we are inside a course and we are _not_ on the frontpage.
         if ($PAGE->context->get_course_context(false) == true && $COURSE->id != SITEID) {
             if ($participantsnode = $navigation->find('participants', global_navigation::TYPE_CONTAINER)) {
-                // Remove participants node (Just hiding it with the showinflatnavigation attribute does not work here).
-                $participantsnode->remove();
+                // Check if we are on a user logs page.
+                if (strpos($PAGE->url, 'report/log/user.php') === false) {
+                    // If we are not, remove the participants node
+                    // (Just hiding it with the showinflatnavigation attribute does not work here).
+                    $participantsnode->remove();
+                } else {
+                    // If we are, we can't remove the node completely as this would result in an error when a teacher accesses the
+                    // user logs. However, the user logs just need the participants node to be there to add it to the breadcrumbs.
+                    // On a user logs page, the participants node won't be shown in the nav drawer as the page is outside the course
+                    // scope. So we use a trick and don't set the participants node not to be rendered in the breadcrumbs.
+                    // The end result in the nav drawer is the same as if we would remove the node completely, but the user logs
+                    // remain usable.
+                    $participantsnode->mainnavonly = true;
+                }
             }
         }
     }
@@ -235,15 +432,58 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
     // Check if admin wants us to insert the coursesections node in Boost's nav drawer.
     // Or if admin wants us to insert the activities and / or resources node in Boost's nav drawer.
     // Or if admin wants us to insert custom course nodes in Boost's nav drawer.
-    // If one of these four settings is activated, we will need the coursehome node and don't want
+    // Or if admin wanted us to move the contentbank node in Boost's nav drawer.
+    // If one of these settings is activated, we will need the coursehome node and don't want
     // to fetch these more than once.
     if (isset($config->insertcoursesectionscoursenode) && $config->insertcoursesectionscoursenode == true ||
             isset($config->insertactivitiescoursenode) && $config->insertactivitiescoursenode == true ||
             isset($config->insertresourcescoursenode) && $config->insertresourcescoursenode == true ||
             isset($config->insertcustomcoursenodesusers) && $config->insertcustomcoursenodesusers == true ||
-            isset($config->insertcustomcoursenodesadmins) && $config->insertcustomcoursenodesadmins == true) {
+            isset($config->insertcustomcoursenodesadmins) && $config->insertcustomcoursenodesadmins == true ||
+            isset($config->movecontentbankcoursenode) && $config->movecontentbankcoursenode == true) {
         // Fetch course home node.
         $coursehomenode = $PAGE->navigation->find($COURSE->id, navigation_node::TYPE_COURSE);
+    }
+
+    // Check if admin wanted us to remove the contentbank node from Boost's nav drawer or
+    // if admin wanted us to move the contentbank node in Boost's nav drawer.
+    if (isset($config->removecontentbankcoursenode) && $config->removecontentbankcoursenode == true ||
+            isset($config->removecontentbanknoncoursenode) && $config->removecontentbanknoncoursenode == true ||
+            isset($config->movecontentbankcoursenode) && $config->movecontentbankcoursenode == true) {
+        // If yes, do it.
+        if ($contentbanknode = $navigation->find('contentbank', global_navigation::TYPE_CUSTOM)) {
+            // Check if admin wanted us to remove the contentbank node in course context from Boost's nav drawer.
+            if (isset($config->removecontentbankcoursenode) && $config->removecontentbankcoursenode == true) {
+                // Only proceed if we are inside a course and we are _not_ on the frontpage.
+                if ($PAGE->context->get_course_context(false) == true && $COURSE->id != SITEID) {
+                    // Hide contentbank node.
+                    $contentbanknode->showinflatnavigation = false;
+                }
+
+                // Otherwise check if admin wanted us to move the contentbank node in course context in Boost's nav drawer.
+            } else if (isset($config->movecontentbankcoursenode) && $config->movecontentbankcoursenode == true) {
+                // Only proceed if we are inside a course and we are _not_ on the frontpage.
+                if ($PAGE->context->get_course_context(false) == true && $COURSE->id != SITEID) {
+                    // Remove the content bank node from the navigation tree (but do not destroy the node object).
+                    $contentbanknode->remove();
+
+                    // Hide the node from the flat navigation like we do for custom course nodes which we add to the course section.
+                    $contentbanknode->showinflatnavigation = false;
+
+                    // Re-add the node to the course section before the configure course node.
+                    $coursehomenode->add_node($contentbanknode, $config->movecontentbankcoursenodebefore);
+                }
+            }
+
+            // Check if admin wanted us to remove the contentbank node in noncourse context from Boost's nav drawer.
+            if (isset($config->removecontentbanknoncoursenode) && $config->removecontentbanknoncoursenode == true) {
+                // Only proceed if we are not inside a course or if we are on the frontpage.
+                if ($PAGE->context->get_course_context(false) == false || $COURSE->id == SITEID) {
+                    // Hide contentbank node.
+                    $contentbanknode->showinflatnavigation = false;
+                }
+            }
+        }
     }
 
     // Check if admin wants us to insert the coursesections node in Boost's nav drawer.
@@ -252,7 +492,7 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
     if (isset($config->insertcoursesectionscoursenode) && $config->insertcoursesectionscoursenode == true &&
            $CFG->linkcoursesections == true) {
         // Only proceed if we are inside a course and we are _not_ on the frontpage.
-        if ($PAGE->context->get_course_context(false) == true && $COURSE->id != SITEID) {
+        if ($PAGE->context->get_course_context(false) == true && $COURSE->id != SITEID && $coursehomenode) {
             // Fetch all section nodes from navigation tree.
             $allsectionnodes = $coursehomenode->children->type(navigation_node::TYPE_SECTION);
 
@@ -272,7 +512,8 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
                         global_navigation::TYPE_CUSTOM,
                         null,
                         'localboostnavigationcoursesections',
-                        null);
+                        new pix_icon('i/folder', ''));
+
                 // Prevent that the coursesections course node is marked as active and added to the breadcrumb when showing the
                 // course home page.
                 $coursesectionsnode->make_inactive();
@@ -287,18 +528,16 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
                         $collapsenodesforjs[] = 'localboostnavigationcoursesections';
                         // Get the children nodes for the coursehome node.
                         $coursehomenodechildrennodeskeys = $coursehomenode->get_children_key_list();
-                        // Change the isexpandable attribute for the coursesections node to true.
-                        $coursesectionsnode->isexpandable = true;
-                        // Get the user preference for the collapse state of the coursesections node and set the collapse and hidden
-                        // node attributes of the existing section nodes accordingly. At the same time, reallocate the parent of the
-                        // existing section nodes.
-                        // Note: We are somehow abusing the hidden node attribute here for our own purposes. In Boost core, it is
-                        // set to true for invisible sections, but these are currently displayed just as visible sections in the
-                        // nav drawer, so we accept this abuse.
+                        // Add the localboostnavigationcollapsibleparent class to the coursesections node.
+                        $coursesectionsnode->add_class('localboostnavigationcollapsibleparent');
+                        // Get the user preference for the collapse state of the coursesections node and add the
+                        // localboostnavigationcollapsedparent and localboostnavigationcollapsedchild classes accordingly.
+                        // Additionally, add the localboostnavigationcollapsiblechild class to all child nodes.
+                        // At the same time, reallocate the parent of the existing section nodes.
                         $userprefcoursesectionsnode = get_user_preferences('local_boostnavigation-collapse_'.
                                 'localboostnavigationcoursesectionsnode', $config->collapsecoursesectionscoursenodedefault);
                         if ($userprefcoursesectionsnode == 1) {
-                            $coursesectionsnode->collapse = true;
+                            $coursesectionsnode->add_class('localboostnavigationcollapsedparent');
                             foreach ($coursehomenodechildrennodeskeys as $k) {
                                 // As $coursehomenodechildrennodeskeys also contains some other nodes, we have to check the node's
                                 // action URL to see if we have a section node.
@@ -309,12 +548,12 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
                                     $urlpath = parse_url($url, PHP_URL_PATH);
                                     if ($urlpath == '/course/view.php' && $node->key != 'localboostnavigationcoursesections') {
                                         $node->set_parent($coursesectionsnode);
-                                        $node->hidden = true;
+                                        $node->add_class('localboostnavigationcollapsiblechild');
+                                        $node->add_class('localboostnavigationcollapsedchild');
                                     }
                                 }
                             }
                         } else {
-                            $coursesectionsnode->collapse = false;
                             foreach ($coursehomenodechildrennodeskeys as $k) {
                                 // As $coursehomenodechildrennodeskeys also contains some other nodes, we have to check the node's
                                 // action URL to see if we have a section node.
@@ -325,19 +564,44 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
                                     $urlpath = parse_url($url, PHP_URL_PATH);
                                     if ($urlpath == '/course/view.php' && $node->key != 'localboostnavigationcoursesections') {
                                         $node->set_parent($coursesectionsnode);
-                                        $node->hidden = false;
+                                        $node->add_class('localboostnavigationcollapsiblechild');
                                     }
                                 }
                             }
                         }
+
+                        // Check if admin really wanted to show an icon in the parent node and indent the parent node.
+                        // Case: LOCAL_BOOSTNAVIGATION_COLLAPSEICON_YES) - Icon and indent is already fine.
+                        // Case: LOCAL_BOOSTNAVIGATION_COLLAPSEICON_JUSTINDENT - Icon has to be removed, but indent is fine.
+                        // Note that the icon is removed by setting it to i/navigationitem which is mapped it fa-fw
+                        // and which is the same as the navigation_node constructor sets if the icon is set to null.
+                        if ($config->collapsecoursesectionscoursenodeicon == LOCAL_BOOSTNAVIGATION_COLLAPSEICON_JUSTINDENT) {
+                            $coursesectionsnode->icon = new pix_icon('i/navigationitem', '');
+                            // Case: LOCAL_BOOSTNAVIGATION_COLLAPSEICON_NONE - Icon and indent have to be removed.
+                        } else if ($config->collapsecoursesectionscoursenodeicon == LOCAL_BOOSTNAVIGATION_COLLAPSEICON_NONE) {
+                            $coursesectionsnode->icon = new pix_icon('i/navigationitem', '');
+                            $coursesectionsnode->add_class('localboostnavigationcollapsibleparentforcenoindent');
+                        }
                     }
-                    // If the node shouldn't be collapsed, set some node attributes to avoid side effects with the CSS styles
-                    // which ship with this plugin.
+
+                    // If not, we have at least to reallocate the parent of the existing section nodes so that the section nodes
+                    // can be referenced in CSS.
                 } else {
-                    if ($coursesectionsnode) {
-                        // Change the isexpandable attribute for the coursesections node to false
-                        // (it's the default in Moodle core, just to be safe).
-                        $coursesectionsnode->isexpandable = false;
+                    // Get the children nodes for the coursehome node.
+                    $coursehomenodechildrennodeskeys = $coursehomenode->get_children_key_list();
+                    // Reallocate the parent of the existing section nodes.
+                    foreach ($coursehomenodechildrennodeskeys as $k) {
+                        // As $coursehomenodechildrennodeskeys also contains some other nodes, we have to check the node's
+                        // action URL to see if we have a section node.
+                        $node = $coursehomenode->get($k);
+                        // If a node does not have an action URL, just skip it.
+                        if ($node->action) {
+                            $url = $node->action->out_as_local_url();
+                            $urlpath = parse_url($url, PHP_URL_PATH);
+                            if ($urlpath == '/course/view.php' && $node->key != 'localboostnavigationcoursesections') {
+                                $node->set_parent($coursesectionsnode);
+                            }
+                        }
                     }
                 }
             }
@@ -416,7 +680,7 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
                         global_navigation::TYPE_CUSTOM,
                         null,
                         'localboostnavigationactivities',
-                        null);
+                        new pix_icon('activities', '', 'local_boostnavigation'));
                 // Prevent that the activities course node is marked as active and added to the breadcrumb when showing the
                 // course home page.
                 $activitiesnode->make_inactive();
@@ -425,10 +689,17 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
 
                 // Create an activity course node for each activity type.
                 foreach ($modfullnames as $modname => $modfullname) {
+                    // If, for any reason, $modfullname is empty, skip this activity type as it would
+                    // crash navigation_node::create() otherwise.
+                    if (empty($modfullname)) {
+                        continue;
+                    }
+
                     // Process "Resources" activity type.
                     if ($modname === 'resources') {
                         // Do only if the admin does not want a dedicated resources node.
                         if ($config->insertresourcescoursenode == false) {
+                            // Create the node.
                             $activitynode = navigation_node::create($modfullname,
                                     new moodle_url('/course/resources.php', array('id' => $COURSE->id)),
                                     global_navigation::TYPE_ACTIVITY,
@@ -443,12 +714,20 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
 
                         // Process all other activity types.
                     } else {
+                        // Create the node.
                         $activitynode = navigation_node::create($modfullname,
                                 new moodle_url('/mod/'.$modname.'/index.php', array('id' => $COURSE->id)),
                                 global_navigation::TYPE_ACTIVITY,
                                 null,
-                                'localboostnavigationactivity'.$modname,
-                                new pix_icon('activities', '', 'local_boostnavigation'));
+                                'localboostnavigationactivity'.$modname);
+
+                        // Set the icon.
+                        if ($config->insertactivitiescoursenoderealicons == true) {
+                            $activitynode->icon = new pix_icon('icon', '', $modname);
+                        } else {
+                            $activitynode->icon = new pix_icon('activities', '', 'local_boostnavigation');
+                        }
+
                         // Add the activity course node to the coursehome node.
                         $coursehomenode->add_node($activitynode);
                         // Remember the activity course node's key for collapsing it later.
@@ -462,36 +741,51 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
                     if ($activitiesnode) {
                         // Remember the collapsible node for JavaScript.
                         $collapsenodesforjs[] = 'localboostnavigationactivities';
-                        // Change the isexpandable attribute for the activities node to true.
-                        $activitiesnode->isexpandable = true;
-                        // Get the user preference for the collapse state of the activities node and set the collapse and hidden
-                        // node attributes of the activity nodes accordingly. At the same time, reallocate the parent of the
-                        // existing section nodes.
+                        // Add the localboostnavigationcollapsibleparent class to the activities node.
+                        $activitiesnode->add_class('localboostnavigationcollapsibleparent');
+                        // Get the user preference for the collapse state of the activities node and add the
+                        // localboostnavigationcollapsedparent and localboostnavigationcollapsedchild classes accordingly.
+                        // Additionally, add the localboostnavigationcollapsiblechild class to all child nodes.
+                        // At the same time, reallocate the parent of the existing activities nodes.
                         $userprefactivitiesnode = get_user_preferences('local_boostnavigation-collapse_'.
                                 'localboostnavigationactivitiesnode', $config->collapseactivitiescoursenodedefault);
                         if ($userprefactivitiesnode == 1) {
-                            $activitiesnode->collapse = true;
+                            $activitiesnode->add_class('localboostnavigationcollapsedparent');
                             foreach ($activitiesnodechildrennodeskeys as $k) {
                                 $node = $coursehomenode->get($k);
                                 $node->set_parent($activitiesnode);
-                                $node->hidden = true;
+                                $node->add_class('localboostnavigationcollapsiblechild');
+                                $node->add_class('localboostnavigationcollapsedchild');
                             }
                         } else {
                             $activitiesnode->collapse = false;
                             foreach ($activitiesnodechildrennodeskeys as $k) {
                                 $node = $coursehomenode->get($k);
                                 $node->set_parent($activitiesnode);
-                                $node->hidden = false;
+                                $node->add_class('localboostnavigationcollapsiblechild');
                             }
                         }
+
+                        // Check if admin really wanted to show an icon in the parent node and indent the parent node.
+                        // Case: LOCAL_BOOSTNAVIGATION_COLLAPSEICON_YES) - Icon and indent is already fine.
+                        // Case: LOCAL_BOOSTNAVIGATION_COLLAPSEICON_JUSTINDENT - Icon has to be removed, but indent is fine.
+                        // Note that the icon is removed by setting it to i/navigationitem which is mapped it fa-fw
+                        // and which is the same as the navigation_node constructor sets if the icon is set to null.
+                        if ($config->collapseactivitiescoursenodeicon == LOCAL_BOOSTNAVIGATION_COLLAPSEICON_JUSTINDENT) {
+                            $activitiesnode->icon = new pix_icon('i/navigationitem', '');
+                            // Case: LOCAL_BOOSTNAVIGATION_COLLAPSEICON_NONE - Icon and indent have to be removed.
+                        } else if ($config->collapseactivitiescoursenodeicon == LOCAL_BOOSTNAVIGATION_COLLAPSEICON_NONE) {
+                            $activitiesnode->icon = new pix_icon('i/navigationitem', '');
+                            $activitiesnode->add_class('localboostnavigationcollapsibleparentforcenoindent');
+                        }
                     }
-                    // If the node shouldn't be collapsed, set some node attributes to avoid side effects with the CSS styles
-                    // which ship with this plugin.
+                        // If not, we have at least to reallocate the parent of the activities nodes so that the activities nodes
+                        // can be referenced in CSS.
                 } else {
-                    if ($activitiesnode) {
-                        // Change the isexpandable attribute for the activities node to false
-                        // (it's the default in Moodle core, just to be safe).
-                        $activitiesnode->isexpandable = false;
+                    // Reallocate the parent of the activities nodes.
+                    foreach ($activitiesnodechildrennodeskeys as $k) {
+                        $node = $coursehomenode->get($k);
+                        $node->set_parent($activitiesnode);
                     }
                 }
             }
@@ -503,7 +797,7 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
         // If yes, do it.
         $customnodesret = local_boostnavigation_build_custom_nodes($config->insertcustomnodesusers, $navigation,
                 'localboostnavigationcustomrootusers', true, $config->collapsecustomnodesusers,
-                $config->collapsecustomnodesusersdefault);
+                $config->collapsecustomnodesusersdefault, $config->collapsecustomnodesusersaccordion);
 
         // Check if admin wanted us to also collapse the custom nodes for users.
         if ($config->collapsecustomnodesusers == true) {
@@ -513,6 +807,11 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
             } else {
                 $collapsenodesforjs = $customnodesret;
             }
+
+            // Check if admin wanted us to collapse the custom nodes for users as accordion.
+            if ($config->collapsecustomnodesusersaccordion == true) {
+                $accordionnodesforjs[] = 'localboostnavigationcustomrootusers';
+            }
         }
     }
 
@@ -521,7 +820,7 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
         // If yes, do it.
         $customnodesret = local_boostnavigation_build_custom_nodes($config->insertcustomnodesadmins, $navigation,
                 'localboostnavigationcustomrootadmins', true, $config->collapsecustomnodesadmins,
-                $config->collapsecustomnodesadminsdefault);
+                $config->collapsecustomnodesadminsdefault, $config->collapsecustomnodesadminsaccordion);
 
         // Check if admin wanted us to also collapse the custom nodes for admins.
         if ($config->collapsecustomnodesadmins == true) {
@@ -531,17 +830,22 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
             } else {
                 $collapsenodesforjs = $customnodesret;
             }
+
+            // Check if admin wanted us to collapse the custom nodes for admins as accordion.
+            if ($config->collapsecustomnodesadminsaccordion == true) {
+                $accordionnodesforjs[] = 'localboostnavigationcustomrootadmins';
+            }
         }
     }
 
     // Check if admin wants us to insert custom course nodes for users in Boost's nav drawer.
     if (isset($config->insertcustomcoursenodesusers) && !empty($config->insertcustomcoursenodesusers)) {
         // Only proceed if we are inside a course and we are _not_ on the frontpage.
-        if ($PAGE->context->get_course_context(false) == true && $COURSE->id != SITEID) {
+        if ($PAGE->context->get_course_context(false) == true && $COURSE->id != SITEID && $coursehomenode) {
             // If yes, do it.
             $customnodesret = local_boostnavigation_build_custom_nodes($config->insertcustomcoursenodesusers, $coursehomenode,
                     'localboostnavigationcustomcourseusers', false, $config->collapsecustomcoursenodesusers,
-                    $config->collapsecustomcoursenodesusersdefault);
+                    $config->collapsecustomcoursenodesusersdefault, $config->collapsecustomcoursenodesusersaccordion);
 
             // Check if admin wanted us to also collapse the custom course nodes for users.
             if ($config->collapsecustomcoursenodesusers == true) {
@@ -550,6 +854,11 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
                     $collapsenodesforjs = array_merge($collapsenodesforjs, $customnodesret);
                 } else {
                     $collapsenodesforjs = $customnodesret;
+                }
+
+                // Check if admin wanted us to collapse the custom course nodes for users as accordion.
+                if ($config->collapsecustomcoursenodesusersaccordion == true) {
+                    $accordionnodesforjs[] = 'localboostnavigationcustomcourseusers';
                 }
             }
         }
@@ -562,7 +871,7 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
             // If yes, do it.
             $customnodesret = local_boostnavigation_build_custom_nodes($config->insertcustomcoursenodesadmins, $coursehomenode,
                     'localboostnavigationcustomcourseadmins', false, $config->collapsecustomcoursenodesadmins,
-                    $config->collapsecustomcoursenodesadminsdefault);
+                    $config->collapsecustomcoursenodesadminsdefault, $config->collapsecustomcoursenodesadminsaccordion);
 
             // Check if admin wanted us to also collapse the custom course nodes for admins.
             if ($config->collapsecustomcoursenodesadmins == true) {
@@ -571,6 +880,11 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
                     $collapsenodesforjs = array_merge($collapsenodesforjs, $customnodesret);
                 } else {
                     $collapsenodesforjs = $customnodesret;
+                }
+
+                // Check if admin wanted us to collapse the custom course nodes for admins as accordion.
+                if ($config->collapsecustomcoursenodesadminsaccordion == true) {
+                    $accordionnodesforjs[] = 'localboostnavigationcustomcourseadmins';
                 }
             }
         }
@@ -581,7 +895,7 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
         // If yes, do it.
         $customnodesret = local_boostnavigation_build_custom_nodes($config->insertcustombottomnodesusers, $navigation,
                 'localboostnavigationcustombottomusers', true, $config->collapsecustombottomnodesusers,
-                $config->collapsecustombottomnodesusersdefault);
+                $config->collapsecustombottomnodesusersdefault, $config->collapsecustombottomnodesusersaccordion);
 
         // Check if admin wanted us to also collapse the custom bottom nodes for users.
         if ($config->collapsecustombottomnodesusers == true) {
@@ -591,6 +905,11 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
             } else {
                 $collapsenodesforjs = $customnodesret;
             }
+
+            // Check if admin wanted us to collapse the custom bottom nodes for users as accordion.
+            if ($config->collapsecustombottomnodesusersaccordion == true) {
+                $accordionnodesforjs[] = 'localboostnavigationcustombottomusers';
+            }
         }
     }
 
@@ -599,7 +918,7 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
         // If yes, do it.
         $customnodesret = local_boostnavigation_build_custom_nodes($config->insertcustombottomnodesadmins, $navigation,
                 'localboostnavigationcustombottomadmins', true, $config->collapsecustombottomnodesadmins,
-                $config->collapsecustombottomnodesadminsdefault);
+                $config->collapsecustombottomnodesadminsdefault, $config->collapsecustombottomnodesadminsaccordion);
 
         // Check if admin wanted us to also collapse the custom bottom nodes for admins.
         if ($config->collapsecustombottomnodesadmins == true) {
@@ -609,13 +928,27 @@ function local_boostnavigation_extend_navigation(global_navigation $navigation) 
             } else {
                 $collapsenodesforjs = $customnodesret;
             }
+
+            // Check if admin wanted us to collapse the custom bottom nodes for admins as accordion.
+            if ($config->collapsecustombottomnodesadminsaccordion == true) {
+                $accordionnodesforjs[] = 'localboostnavigationcustombottomadmins';
+            }
         }
     }
 
     // If at least one setting to collapse a node is enabled.
     if (!empty($collapsenodesforjs)) {
-        // Add JavaScript for collapsing nodes to the page.
-        $PAGE->requires->js_call_amd('local_boostnavigation/collapsenavdrawernodes', 'init', [$collapsenodesforjs]);
+        // If at least one setting to collapse a node as accordion is enabled.
+        if (!empty($accordionnodesforjs)) {
+            // Add JavaScript for collapsing nodes to the page and pass the $collapsenodesforjs and $accordionnodesforjs data.
+            $PAGE->requires->js_call_amd('local_boostnavigation/collapsenavdrawernodes', 'init',
+                    [$collapsenodesforjs, $accordionnodesforjs]);
+            // Otherwise.
+        } else {
+            // Add JavaScript for collapsing nodes to the page and pass the $collapsenodesforjs data only.
+            $PAGE->requires->js_call_amd('local_boostnavigation/collapsenavdrawernodes', 'init',
+                    [$collapsenodesforjs, []]);
+        }
         // Allow updating the necessary user preferences via Ajax.
         foreach ($collapsenodesforjs as $node) {
             user_preference_allow_ajax_update('local_boostnavigation-collapse_'.$node.'node', PARAM_BOOL);
@@ -646,7 +979,7 @@ function local_boostnavigation_extend_navigation_course(navigation_node $navigat
                     navigation_node::TYPE_SETTING,
                     null,
                     'competencies2',
-                    null);
+                    new pix_icon('i/competencies', ''));
             // Add the competencies node.
             $navigation->add_node($competenciesnode);
         }
@@ -668,19 +1001,34 @@ function local_boostnavigation_get_fontawesome_icon_map() {
 
     // Create the icon map with the icons which are used in any case.
     $iconmapping = [
-            'local_boostnavigation:customnode' => 'fa-square local-boostnavigation-fa-sm',
+            'local_boostnavigation:customnodexxs' => 'fa-square local-boostnavigation-fa-xxs',
+            'local_boostnavigation:customnodexs' => 'fa-square local-boostnavigation-fa-xs',
             'local_boostnavigation:resources' => 'fa-archive',
             'local_boostnavigation:activities' => 'fa-share-alt',
     ];
 
     // Fetch all FontAwesome icons from the custom nodes settings.
     // Collect all settings which contain custom nodes.
-    $customnodesettings = array($config->insertcustomnodesusers,
-            $config->insertcustomnodesadmins,
-            $config->insertcustomcoursenodesusers,
-            $config->insertcustomcoursenodesadmins,
-            $config->insertcustombottomnodesusers,
-            $config->insertcustombottomnodesadmins);
+    $customnodesettings = array();
+    if (isset($config->insertcustomnodesusers) && !empty($config->insertcustomnodesusers)) {
+        $customnodesettings[] = $config->insertcustomnodesusers;
+    }
+    if (isset($config->insertcustomnodesadmins) && !empty($config->insertcustomnodesadmins)) {
+        $customnodesettings[] = $config->insertcustomnodesadmins;
+    }
+    if (isset($config->insertcustomcoursenodesusers) && !empty($config->insertcustomcoursenodesusers)) {
+        $customnodesettings[] = $config->insertcustomcoursenodesusers;
+    }
+    if (isset($config->insertcustomcoursenodesadmins) && !empty($config->insertcustomcoursenodesadmins)) {
+        $customnodesettings[] = $config->insertcustomcoursenodesadmins;
+    }
+    if (isset($config->insertcustombottomnodesusers) && !empty($config->insertcustombottomnodesusers)) {
+        $customnodesettings[] = $config->insertcustombottomnodesusers;
+    }
+    if (isset($config->insertcustombottomnodesadmins) && !empty($config->insertcustombottomnodesadmins)) {
+        $customnodesettings[] = $config->insertcustombottomnodesadmins;
+    }
+
     // Process the settings one by one.
     foreach ($customnodesettings as $c) {
 
@@ -722,9 +1070,29 @@ function local_boostnavigation_reset_fontawesome_icon_map() {
     // Reset the icon system cache.
     // There is the function \core\output\icon_system::reset_caches() which does seem to be only usable in unit tests.
     // Thus, we clear the icon system cache brutally.
-    $cache = \cache::make('core', 'fontawesomeiconmapping');
-    $cache->delete('mapping');
-    // And rebuild it brutally.
     $instance = \core\output\icon_system::instance(\core\output\icon_system::FONTAWESOME);
+    $cache = \cache::make('core', 'fontawesomeiconmapping');
+    $mapkey = 'mapping_'.preg_replace('/[^a-zA-Z0-9_]/', '_', get_class($instance));
+    $cache->delete($mapkey);
+    // And rebuild it brutally.
     $instance->get_icon_name_map();
+}
+
+/**
+ * Hack into the Moodle page build process as early as possible to modify $CFG by leveraging Moodle's *_before_http_headers() hook.
+ */
+function local_boostnavigation_before_http_headers() {
+    global $CFG;
+
+    // Fetch config.
+    $config = get_config('local_boostnavigation');
+
+    // If the plugin setting modifymycoursesrootnodeshowfiltered (which is explained is enabled above in
+    // local_boostnavigation_extend_navigation()), then it is necessary to avoid that the nav drawer course list length is limited.
+    // We realize that by setting $CFG->navcourselimit to a very high value and we do this here and automatically so that the
+    // admin can't forget it.
+    if (isset($config->modifymycoursesrootnodeshowfiltered) && $config->modifymycoursesrootnodeshowfiltered == true
+            && $CFG->navshowmycoursecategories == false) {
+        $CFG->navcourselimit = 100000;
+    }
 }

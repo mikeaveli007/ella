@@ -223,8 +223,6 @@ class core_user_externallib_testcase extends externallib_advanced_testcase {
             'city' => 'Perth',
             'url' => 'http://moodle.org',
             'country' => 'AU',
-            'lang' => 'kkl',
-            'theme' => 'kkt',
         );
         $user1 = self::getDataGenerator()->create_user($user1);
         if (!empty($CFG->usetags)) {
@@ -330,11 +328,9 @@ class core_user_externallib_testcase extends externallib_advanced_testcase {
                 if (!empty($CFG->usetags) and !empty($generateduser->interests)) {
                     $this->assertEquals(implode(', ', $generateduser->interests), $returneduser['interests']);
                 }
-                // Check empty since incorrect values were used when creating the user.
-                if ($returneduser['id'] == $user1->id) {
-                    $this->assertEmpty($returneduser['lang']);
-                    $this->assertEmpty($returneduser['theme']);
-                }
+                // Default language and no theme were used for the user.
+                $this->assertEquals($CFG->lang, $returneduser['lang']);
+                $this->assertEmpty($returneduser['theme']);
             }
         }
 
@@ -508,8 +504,14 @@ class core_user_externallib_testcase extends externallib_advanced_testcase {
                 ], [
                     'type' => 'invalidpreference',
                     'value' => 'abcd'
-                ]]
-            );
+                ]
+            ],
+            'department' => 'College of Science',
+            'institution' => 'National Institute of Physics',
+            'phone1' => '01 2345 6789',
+            'maildisplay' => 1,
+            'interests' => 'badminton, basketball, cooking,  '
+        );
 
         // User with an authentication method done externally.
         $user2 = array(
@@ -540,6 +542,12 @@ class core_user_externallib_testcase extends externallib_advanced_testcase {
                 $usertotest = $user1;
                 $this->assertEquals('atto', get_user_preferences('htmleditor', null, $dbuser));
                 $this->assertEquals(null, get_user_preferences('invalidpreference', null, $dbuser));
+                // Confirm user interests have been saved.
+                $interests = core_tag_tag::get_item_tags_array('core', 'user', $createduser['id'],
+                        core_tag_tag::BOTH_STANDARD_AND_NOT, 0, false);
+                // There should be 3 user interests.
+                $this->assertCount(3, $interests);
+
             } else if ($createduser['username'] === $user2['username']) {
                 $usertotest = $user2;
             }
@@ -808,8 +816,14 @@ class core_user_externallib_testcase extends externallib_advanced_testcase {
                 ], [
                     'type' => 'invialidpreference',
                     'value' => 'abcd'
-                ]]
-            );
+                ]
+            ],
+            'department' => 'College of Science',
+            'institution' => 'National Institute of Physics',
+            'phone1' => '01 2345 6789',
+            'maildisplay' => 1,
+            'interests' => 'badminton, basketball, cooking,  '
+        );
 
         $context = context_system::instance();
         $roleid = $this->assignUserCapability('moodle/user:update', $context->id);
@@ -846,8 +860,17 @@ class core_user_externallib_testcase extends externallib_advanced_testcase {
         $this->assertEquals($dbuser->city, $user1['city']);
         $this->assertEquals($dbuser->country, $user1['country']);
         $this->assertNotEquals(0, $dbuser->picture, 'Picture must be set to the new icon itemid for this user');
+        $this->assertEquals($dbuser->department, $user1['department']);
+        $this->assertEquals($dbuser->institution, $user1['institution']);
+        $this->assertEquals($dbuser->phone1, $user1['phone1']);
+        $this->assertEquals($dbuser->maildisplay, $user1['maildisplay']);
         $this->assertEquals('atto', get_user_preferences('htmleditor', null, $dbuser));
         $this->assertEquals(null, get_user_preferences('invalidpreference', null, $dbuser));
+
+        // Confirm user interests have been saved.
+        $interests = core_tag_tag::get_item_tags_array('core', 'user', $user1['id'], core_tag_tag::BOTH_STANDARD_AND_NOT, 0, false);
+        // There should be 3 user interests.
+        $this->assertCount(3, $interests);
 
         // Confirm no picture change when parameter is not supplied.
         unset($user1['userpicture']);
@@ -1374,6 +1397,40 @@ class core_user_externallib_testcase extends externallib_advanced_testcase {
         $this->assertCount(0, $result['saved']);
         $this->assertEquals('nopermission', $result['warnings'][0]['warningcode']);
         $this->assertEquals($user2->id, $result['warnings'][0]['itemid']);
+    }
+
+    /**
+     * Test update_user_preferences unsetting an existing preference.
+     */
+    public function test_update_user_preferences_unset() {
+        global $DB;
+        $this->resetAfterTest(true);
+
+        $user = self::getDataGenerator()->create_user();
+
+        // Save users preferences.
+        $this->setAdminUser();
+        $preferences = array(
+            array(
+                'name' => 'htmleditor',
+                'value' => 'atto',
+                'userid' => $user->id,
+            )
+        );
+
+        $result = core_user_external::set_user_preferences($preferences);
+        $result = external_api::clean_returnvalue(core_user_external::set_user_preferences_returns(), $result);
+        $this->assertCount(0, $result['warnings']);
+        $this->assertCount(1, $result['saved']);
+
+        // Get preference from DB to avoid cache.
+        $this->assertEquals('atto', $DB->get_field('user_preferences', 'value',
+            array('userid' => $user->id, 'name' => 'htmleditor')));
+
+        // Now, unset.
+        $result = core_user_external::update_user_preferences($user->id, null, array(array('type' => 'htmleditor')));
+
+        $this->assertEquals(0, $DB->count_records('user_preferences', array('userid' => $user->id, 'name' => 'htmleditor')));
     }
 
     /**

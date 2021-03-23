@@ -28,7 +28,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->libdir . '/eventslib.php');
 require_once($CFG->dirroot . '/calendar/lib.php');
 
 
@@ -85,7 +84,7 @@ function quiz_add_instance($quiz) {
     $cmid = $quiz->coursemodule;
 
     // Process the options from the form.
-    $quiz->created = time();
+    $quiz->timecreated = time();
     $result = quiz_process_options($quiz);
     if ($result && is_string($result)) {
         return $result;
@@ -204,6 +203,7 @@ function quiz_delete_instance($id) {
     }
 
     quiz_grade_item_delete($quiz);
+    // We must delete the module record after we delete the grade item.
     $DB->delete_records('quiz', array('id' => $quiz->id));
 
     return true;
@@ -503,15 +503,7 @@ function quiz_user_outline($course, $user, $mod, $quiz) {
         $result->info = get_string('grade') . ': ' . get_string('hidden', 'grades');
     }
 
-    // Datesubmitted == time created. dategraded == time modified or time overridden
-    // if grade was last modified by the user themselves use date graded. Otherwise use
-    // date submitted.
-    // TODO: move this copied & pasted code somewhere in the grades API. See MDL-26704.
-    if ($grade->usermodified == $user->id || empty($grade->datesubmitted)) {
-        $result->time = $grade->dategraded;
-    } else {
-        $result->time = $grade->datesubmitted;
-    }
+    $result->time = grade_get_date_for_user_grade($grade, $user);
 
     return $result;
 }
@@ -569,8 +561,8 @@ function quiz_user_complete($course, $user, $mod, $quiz) {
                 } else {
                     echo get_string('hidden', 'grades');
                 }
+                echo ' - '.userdate($attempt->timefinish).'<br />';
             }
-            echo ' - '.userdate($attempt->timemodified).'<br />';
         }
     } else {
         print_string('noattempts', 'quiz');
@@ -579,32 +571,6 @@ function quiz_user_complete($course, $user, $mod, $quiz) {
     return true;
 }
 
-/**
- * Quiz periodic clean-up tasks.
- */
-function quiz_cron() {
-    global $CFG;
-
-    require_once($CFG->dirroot . '/mod/quiz/cronlib.php');
-    mtrace('');
-
-    $timenow = time();
-    $overduehander = new mod_quiz_overdue_attempt_updater();
-
-    $processto = $timenow - get_config('quiz', 'graceperiodmin');
-
-    mtrace('  Looking for quiz overdue quiz attempts...');
-
-    list($count, $quizcount) = $overduehander->update_overdue_attempts($timenow, $processto);
-
-    mtrace('  Considered ' . $count . ' attempts in ' . $quizcount . ' quizzes.');
-
-    // Run cron for our sub-plugin types.
-    cron_execute_plugin_type('quiz', 'quiz reports');
-    cron_execute_plugin_type('quizaccess', 'quiz access rules');
-
-    return true;
-}
 
 /**
  * @param int|array $quizids A quiz ID, or an array of quiz IDs.
@@ -775,7 +741,7 @@ function quiz_grade_item_update($quiz, $grades = null) {
     require_once($CFG->dirroot . '/mod/quiz/locallib.php');
     require_once($CFG->libdir . '/gradelib.php');
 
-    if (array_key_exists('cmidnumber', $quiz)) { // May not be always present.
+    if (property_exists($quiz, 'cmidnumber')) { // May not be always present.
         $params = array('itemname' => $quiz->name, 'idnumber' => $quiz->cmidnumber);
     } else {
         $params = array('itemname' => $quiz->name);
@@ -1154,6 +1120,14 @@ function quiz_process_options($quiz) {
     $quiz->reviewoverallfeedback = quiz_review_option_form_to_db($quiz, 'overallfeedback');
     $quiz->reviewattempt |= mod_quiz_display_options::DURING;
     $quiz->reviewoverallfeedback &= ~mod_quiz_display_options::DURING;
+
+    // Ensure that disabled checkboxes in completion settings are set to 0.
+    if (empty($quiz->completionusegrade)) {
+        $quiz->completionpass = 0;
+    }
+    if (empty($quiz->completionpass)) {
+        $quiz->completionattemptsexhausted = 0;
+    }
 }
 
 /**
@@ -1286,11 +1260,12 @@ function quiz_update_events($quiz, $override = null) {
 
         $event = new stdClass();
         $event->type = !$timeclose ? CALENDAR_EVENT_TYPE_ACTION : CALENDAR_EVENT_TYPE_STANDARD;
-        $event->description = format_module_intro('quiz', $quiz, $cmid);
+        $event->description = format_module_intro('quiz', $quiz, $cmid, false);
+        $event->format = FORMAT_HTML;
         // Events module won't show user events when the courseid is nonzero.
         $event->courseid    = ($userid) ? 0 : $quiz->course;
         $event->groupid     = $groupid;
-        $event->userid      = $userid;
+        $event->userid      = 0;
         $event->modulename  = 'quiz';
         $event->instance    = $quiz->id;
         $event->timestart   = $timeopen;
@@ -1323,6 +1298,8 @@ function quiz_update_events($quiz, $override = null) {
             $params = new stdClass();
             $params->quiz = $quiz->name;
             $eventname = get_string('overrideusereventname', 'quiz', $params);
+            // Only set userid for override events.
+            $event->userid = $userid;
             // Set user override priority.
             $event->priority = CALENDAR_EVENT_USER_OVERRIDE_PRIORITY;
         } else {
@@ -1602,103 +1579,10 @@ function quiz_reset_userdata($data) {
 }
 
 /**
- * Prints quiz summaries on MyMoodle Page
- *
- * @deprecated since 3.3
- * @todo The final deprecation of this function will take place in Moodle 3.7 - see MDL-57487.
- * @param array $courses
- * @param array $htmlarray
+ * @deprecated since Moodle 3.3, when the block_course_overview block was removed.
  */
-function quiz_print_overview($courses, &$htmlarray) {
-    global $USER, $CFG;
-
-    debugging('The function quiz_print_overview() is now deprecated.', DEBUG_DEVELOPER);
-
-    // These next 6 Lines are constant in all modules (just change module name).
-    if (empty($courses) || !is_array($courses) || count($courses) == 0) {
-        return array();
-    }
-
-    if (!$quizzes = get_all_instances_in_courses('quiz', $courses)) {
-        return;
-    }
-
-    // Get the quizzes attempts.
-    $attemptsinfo = [];
-    $quizids = [];
-    foreach ($quizzes as $quiz) {
-        $quizids[] = $quiz->id;
-        $attemptsinfo[$quiz->id] = ['count' => 0, 'hasfinished' => false];
-    }
-    $attempts = quiz_get_user_attempts($quizids, $USER->id);
-    foreach ($attempts as $attempt) {
-        $attemptsinfo[$attempt->quiz]['count']++;
-        $attemptsinfo[$attempt->quiz]['hasfinished'] = true;
-    }
-    unset($attempts);
-
-    // Fetch some language strings outside the main loop.
-    $strquiz = get_string('modulename', 'quiz');
-    $strnoattempts = get_string('noattempts', 'quiz');
-
-    // We want to list quizzes that are currently available, and which have a close date.
-    // This is the same as what the lesson does, and the dabate is in MDL-10568.
-    $now = time();
-    foreach ($quizzes as $quiz) {
-        if ($quiz->timeclose >= $now && $quiz->timeopen < $now) {
-            $str = '';
-
-            // Now provide more information depending on the uers's role.
-            $context = context_module::instance($quiz->coursemodule);
-            if (has_capability('mod/quiz:viewreports', $context)) {
-                // For teacher-like people, show a summary of the number of student attempts.
-                // The $quiz objects returned by get_all_instances_in_course have the necessary $cm
-                // fields set to make the following call work.
-                $str .= '<div class="info">' . quiz_num_attempt_summary($quiz, $quiz, true) . '</div>';
-
-            } else if (has_any_capability(array('mod/quiz:reviewmyattempts', 'mod/quiz:attempt'), $context)) { // Student
-                // For student-like people, tell them how many attempts they have made.
-
-                if (isset($USER->id)) {
-                    if ($attemptsinfo[$quiz->id]['hasfinished']) {
-                        // The student's last attempt is finished.
-                        continue;
-                    }
-
-                    if ($attemptsinfo[$quiz->id]['count'] > 0) {
-                        $str .= '<div class="info">' .
-                            get_string('numattemptsmade', 'quiz', $attemptsinfo[$quiz->id]['count']) . '</div>';
-                    } else {
-                        $str .= '<div class="info">' . $strnoattempts . '</div>';
-                    }
-
-                } else {
-                    $str .= '<div class="info">' . $strnoattempts . '</div>';
-                }
-
-            } else {
-                // For ayone else, there is no point listing this quiz, so stop processing.
-                continue;
-            }
-
-            // Give a link to the quiz, and the deadline.
-            $html = '<div class="quiz overview">' .
-                    '<div class="name">' . $strquiz . ': <a ' .
-                    ($quiz->visible ? '' : ' class="dimmed"') .
-                    ' href="' . $CFG->wwwroot . '/mod/quiz/view.php?id=' .
-                    $quiz->coursemodule . '">' .
-                    $quiz->name . '</a></div>';
-            $html .= '<div class="info">' . get_string('quizcloseson', 'quiz',
-                    userdate($quiz->timeclose)) . '</div>';
-            $html .= $str;
-            $html .= '</div>';
-            if (empty($htmlarray[$quiz->course]['quiz'])) {
-                $htmlarray[$quiz->course]['quiz'] = $html;
-            } else {
-                $htmlarray[$quiz->course]['quiz'] .= $html;
-            }
-        }
-    }
+function quiz_print_overview() {
+    throw new coding_exception('quiz_print_overview() can not be used any more and is obsolete.');
 }
 
 /**
@@ -2184,6 +2068,14 @@ function mod_quiz_core_calendar_provide_event_action(calendar_event $event,
         return null;
     }
 
+    $completion = new \completion_info($cm->get_course());
+
+    $completiondata = $completion->get_data($cm, false, $userid);
+
+    if ($completiondata->completionstate != COMPLETION_INCOMPLETE) {
+        return null;
+    }
+
     quiz_update_effective_access($quiz, $userid);
 
     // Check if quiz is closed, if so don't display it.
@@ -2277,16 +2169,14 @@ function mod_quiz_get_completion_active_rule_descriptions($cm) {
     foreach ($cm->customdata['customcompletionrules'] as $key => $val) {
         switch ($key) {
             case 'completionattemptsexhausted':
-                if (empty($val)) {
-                    continue;
+                if (!empty($val)) {
+                    $descriptions[] = get_string('completionattemptsexhausteddesc', 'quiz');
                 }
-                $descriptions[] = get_string('completionattemptsexhausteddesc', 'quiz');
                 break;
             case 'completionpass':
-                if (empty($val)) {
-                    continue;
+                if (!empty($val)) {
+                    $descriptions[] = get_string('completionpassdesc', 'quiz', format_time($val));
                 }
-                $descriptions[] = get_string('completionpassdesc', 'quiz', format_time($val));
                 break;
             default:
                 break;

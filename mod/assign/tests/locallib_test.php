@@ -1490,6 +1490,7 @@ class mod_assign_locallib_testcase extends advanced_testcase {
     }
 
     public function test_cron() {
+        global $PAGE;
         $this->resetAfterTest();
 
         // First run cron so there are no messages waiting to be sent (from other tests).
@@ -1519,6 +1520,16 @@ class mod_assign_locallib_testcase extends advanced_testcase {
         $this->assertEquals(1, count($messages));
         $this->assertEquals(1, $messages[0]->notification);
         $this->assertEquals($assign->get_instance()->name, $messages[0]->contexturlname);
+        // Test customdata.
+        $customdata = json_decode($messages[0]->customdata);
+        $this->assertEquals($assign->get_course_module()->id, $customdata->cmid);
+        $this->assertEquals($assign->get_instance()->id, $customdata->instance);
+        $this->assertEquals('feedbackavailable', $customdata->messagetype);
+        $userpicture = new user_picture($teacher);
+        $userpicture->size = 1; // Use f1 size.
+        $this->assertEquals($userpicture->get_url($PAGE)->out(false), $customdata->notificationiconurl);
+        $this->assertEquals(0, $customdata->uniqueidforuser);   // Not used in this case.
+        $this->assertFalse($customdata->blindmarking);
     }
 
     public function test_cron_without_notifications() {
@@ -3004,7 +3015,7 @@ class mod_assign_locallib_testcase extends advanced_testcase {
      * Testing for comment inline settings
      */
     public function test_feedback_comment_commentinline() {
-        global $CFG;
+        global $CFG, $USER;
 
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course();
@@ -3023,22 +3034,6 @@ External link 2:<img alt=\"Moodle\" src=\"https://moodle.org/logo/logo-240x60.gi
 Internal link 1:<img src='@@PLUGINFILE@@/logo-240x60.gif' alt='Moodle'/>
 Internal link 2:<img alt=\"Moodle\" src=\"@@PLUGINFILE@@logo-240x60.gif\"/>
 Anchor link 1:<a href=\"@@PLUGINFILE@@logo-240x60.gif\" alt=\"bananas\">Link text</a>
-Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
-";
-
-        // Note the internal images have been stripped and the html is purified (quotes fixed in this case).
-        $filteredtext = "Hello!
-
-I'm writing to you from the Moodle Majlis in Muscat, Oman, where we just had several days of Moodle community goodness.
-
-URL outside a tag: https://moodle.org/logo/logo-240x60.gif
-Plugin url outside a tag: @@PLUGINFILE@@/logo-240x60.gif
-
-External link 1:<img src=\"https://moodle.org/logo/logo-240x60.gif\" alt=\"Moodle\" />
-External link 2:<img alt=\"Moodle\" src=\"https://moodle.org/logo/logo-240x60.gif\" />
-Internal link 1:
-Internal link 2:
-Anchor link 1:Link text
 Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
 ";
 
@@ -3067,6 +3062,27 @@ Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
             ];
         $formparams = array($assign, $data, $pagination);
         $mform = new mod_assign_grade_form(null, [$assign, $data, $pagination]);
+
+        // We need to get the URL these will be transformed to.
+        $context = context_user::instance($USER->id);
+        $itemid = $data->assignfeedbackcomments_editor['itemid'];
+        $url = $CFG->wwwroot . '/draftfile.php/' . $context->id . '/user/draft/' . $itemid;
+
+        // Note the internal images have been stripped and the html is purified (quotes fixed in this case).
+        $filteredtext = "Hello!
+
+I'm writing to you from the Moodle Majlis in Muscat, Oman, where we just had several days of Moodle community goodness.
+
+URL outside a tag: https://moodle.org/logo/logo-240x60.gif
+Plugin url outside a tag: $url/logo-240x60.gif
+
+External link 1:<img src=\"https://moodle.org/logo/logo-240x60.gif\" alt=\"Moodle\" />
+External link 2:<img alt=\"Moodle\" src=\"https://moodle.org/logo/logo-240x60.gif\" />
+Internal link 1:<img src=\"$url/logo-240x60.gif\" alt=\"Moodle\" />
+Internal link 2:<img alt=\"Moodle\" src=\"@@PLUGINFILE@@logo-240x60.gif\" />
+Anchor link 1:<a href=\"@@PLUGINFILE@@logo-240x60.gif\">Link text</a>
+Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
+";
 
         $this->assertEquals($filteredtext, $data->assignfeedbackcomments_editor['text']);
     }
@@ -3496,11 +3512,14 @@ Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
             } else if ($type == 'file') {
                 $this->assertEquals(array('feedback_files' => 'Feedback files'), $fileareas);
                 $usingfilearea++;
+            } else if ($type == 'comments') {
+                $this->assertEquals(array('feedback' => 'Feedback comments'), $fileareas);
+                $usingfilearea++;
             } else {
                 $this->assertEmpty($fileareas);
             }
         }
-        $this->assertEquals(2, $usingfilearea);
+        $this->assertEquals(3, $usingfilearea);
     }
 
     /**
@@ -3632,7 +3651,7 @@ Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
         $result = $assign->testable_process_save_quick_grades($data);
         $this->assertContains(get_string('quickgradingchangessaved', 'assign'), $result);
         $grade = $assign->get_user_grade($student->id, false);
-        $this->assertEquals('60.0', $grade->grade);
+        $this->assertEquals(60.0, $grade->grade);
 
         // Attempt to grade with a past attempts grade info.
         $assign->testable_process_add_attempt($student->id);
@@ -3656,7 +3675,7 @@ Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
         $result = $assign->testable_process_save_quick_grades($data);
         $this->assertContains(get_string('quickgradingchangessaved', 'assign'), $result);
         $grade = $assign->get_user_grade($student->id, false);
-        $this->assertEquals('40.0', $grade->grade);
+        $this->assertEquals(40.0, $grade->grade);
 
         // Catch grade update conflicts.
         // Save old data for later.
@@ -3670,13 +3689,13 @@ Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
         $result = $assign->testable_process_save_quick_grades($data);
         $this->assertContains(get_string('quickgradingchangessaved', 'assign'), $result);
         $grade = $assign->get_user_grade($student->id, false);
-        $this->assertEquals('30.0', $grade->grade);
+        $this->assertEquals(30.0, $grade->grade);
 
         // Now update using 'old' data. Should fail.
         $result = $assign->testable_process_save_quick_grades($pastdata);
         $this->assertContains(get_string('errorrecordmodified', 'assign'), $result);
         $grade = $assign->get_user_grade($student->id, false);
-        $this->assertEquals('30.0', $grade->grade);
+        $this->assertEquals(30.0, $grade->grade);
     }
 
     /**
@@ -3766,69 +3785,43 @@ Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
         $this->assertEquals(1, $completiondata->completionstate);
     }
 
-    public function get_assignments_with_rescaled_null_grades_provider() {
-        return [
-            'Negative less than one is errant' => [
-                'grade' => -0.64,
-                'count' => 1,
-            ],
-            'Negative more than one is errant' => [
-                'grade' => -30.18,
-                'count' => 1,
-            ],
-            'Negative one exactly is not errant' => [
-                'grade' => ASSIGN_GRADE_NOT_SET,
-                'count' => 0,
-            ],
-            'Positive grade is not errant' => [
-                'grade' => 1,
-                'count' => 0,
-            ],
-            'Large grade is not errant' => [
-                'grade' => 100,
-                'count' => 0,
-            ],
-            'Zero grade is not errant' => [
-                'grade' => 0,
-                'count' => 0,
-            ],
-        ];
-    }
-
     /**
-     * Test determining if the assignment as any null grades that were rescaled.
-     * @dataProvider get_assignments_with_rescaled_null_grades_provider
+     * Test updating activity completion when submitting an assessment for MDL-67126.
      */
-    public function test_get_assignments_with_rescaled_null_grades($grade, $count) {
-        global $DB;
-
+    public function test_update_activity_completion_records_team_submission_new() {
         $this->resetAfterTest();
 
-        $course = $this->getDataGenerator()->create_course();
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
         $teacher = $this->getDataGenerator()->create_and_enrol($course, 'teacher');
         $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $otherstudent = $this->getDataGenerator()->create_and_enrol($course, 'student');
 
-        $this->setUser($teacher);
+        $grouping = $this->getDataGenerator()->create_grouping(array('courseid' => $course->id));
+        $group1 = $this->getDataGenerator()->create_group(['courseid' => $course->id]);
+
+        groups_add_member($group1, $student);
+        groups_add_member($group1, $otherstudent);
+
         $assign = $this->create_instance($course, [
-                'grade' => 100,
-            ]);
+                'submissiondrafts' => 0,
+                'completion' => COMPLETION_TRACKING_AUTOMATIC,
+                'completionsubmit' => 1,
+                'teamsubmission' => 1,
+                'assignsubmission_onlinetext_enabled' => 1
+        ]);
 
-        // Try getting a student's grade. This will give a grade of -1.
-        // Then we can override it with a bad negative grade.
-        $assign->get_user_grade($student->id, true);
+        $cm = $assign->get_course_module();
 
-        // Set the grade to something errant.
-        $DB->set_field(
-            'assign_grades',
-            'grade',
-            $grade,
-            [
-                'userid' => $student->id,
-                'assignment' => $assign->get_instance()->id,
-            ]
-        );
+        $this->add_submission($student, $assign);
 
-        $this->assertCount($count, get_assignments_with_rescaled_null_grades());
+        $completion = new completion_info($course);
+
+        // Completion should now be met.
+        $completiondata = $completion->get_data($cm, false, $student->id);
+        $this->assertEquals(1, $completiondata->completionstate);
+
+        $completiondata = $completion->get_data($cm, false, $otherstudent->id);
+        $this->assertEquals(1, $completiondata->completionstate);
     }
 
     /**
@@ -3978,5 +3971,284 @@ Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
         $this->assertNotContains(get_string('submissionslocked', 'assign'), $output2);
         // Check that submissionstatus_marked 'Graded' message does appear for student.
         $this->assertContains(get_string('submissionstatus_marked', 'assign'), $output2);
+    }
+
+    /**
+     * Test the result of get_filters is consistent.
+     */
+    public function test_get_filters() {
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $assign = $this->create_instance($course);
+        $valid = $assign->get_filters();
+
+        $this->assertEquals(count($valid), 5);
+    }
+
+    /**
+     * Test assign->get_instance() for a number of cases, as defined in the data provider.
+     *
+     * @dataProvider assign_get_instance_provider
+     * @param array $courseconfig the config to use when creating the course.
+     * @param array $assignconfig the config to use when creating the assignment.
+     * @param array $enrolconfig the config to use when enrolling the user (this will be the active user).
+     * @param array $expectedproperties an map containing the expected names and values for the assign instance data.
+     */
+    public function test_assign_get_instance(array $courseconfig, array $assignconfig, array $enrolconfig,
+            array $expectedproperties) {
+        $this->resetAfterTest();
+
+        set_config('enablecourserelativedates', true); // Enable relative dates at site level.
+
+        $course = $this->getDataGenerator()->create_course($courseconfig);
+        $assign = $this->create_instance($course, $assignconfig);
+        $user = $this->getDataGenerator()->create_and_enrol($course, ...array_values($enrolconfig));
+
+        $instance = $assign->get_instance($user->id);
+
+        foreach ($expectedproperties as $propertyname => $propertyval) {
+            $this->assertEquals($propertyval, $instance->$propertyname);
+        }
+    }
+
+    /**
+     * The test_assign_get_instance data provider.
+     */
+    public function assign_get_instance_provider() {
+        $timenow = time();
+
+        // The get_default_instance() method shouldn't calculate any properties per-user. It should just return the record data.
+        // We'll confirm this works for a few different user types anyway, just like we do for get_instance().
+        return [
+            'Teacher whose enrolment starts after the course start date, relative dates mode enabled' => [
+                'courseconfig' => ['relativedatesmode' => true, 'startdate' => $timenow - 10 * DAYSECS],
+                'assignconfig' => ['duedate' => $timenow + 4 * DAYSECS],
+                'enrolconfig' => ['shortname' => 'teacher', 'userparams' => null, 'method' => 'manual',
+                    'startdate' => $timenow - 8 * DAYSECS],
+                'expectedproperties' => ['duedate' => $timenow + 6 * DAYSECS]
+            ],
+            'Teacher whose enrolment starts before the course start date, relative dates mode enabled' => [
+                'courseconfig' => ['relativedatesmode' => true, 'startdate' => $timenow - 10 * DAYSECS],
+                'assignconfig' => ['duedate' => $timenow + 4 * DAYSECS],
+                'enrolconfig' => ['shortname' => 'teacher', 'userparams' => null, 'method' => 'manual',
+                    'startdate' => $timenow - 12 * DAYSECS],
+                'expectedproperties' => ['duedate' => $timenow + 4 * DAYSECS]
+            ],
+            'Teacher whose enrolment starts after the course start date, relative dates mode disabled' => [
+                'courseconfig' => ['relativedatesmode' => false, 'startdate' => $timenow - 10 * DAYSECS],
+                'assignconfig' => ['duedate' => $timenow + 4 * DAYSECS],
+                'enrolconfig' => ['shortname' => 'teacher', 'userparams' => null, 'method' => 'manual',
+                    'startdate' => $timenow - 8 * DAYSECS],
+                'expectedproperties' => ['duedate' => $timenow + 4 * DAYSECS]
+            ],
+            'Student whose enrolment starts after the course start date, relative dates mode enabled' => [
+                'courseconfig' => ['relativedatesmode' => true, 'startdate' => $timenow - 10 * DAYSECS],
+                'assignconfig' => ['duedate' => $timenow + 4 * DAYSECS],
+                'enrolconfig' => ['shortname' => 'student', 'userparams' => null, 'method' => 'manual',
+                    'startdate' => $timenow - 8 * DAYSECS],
+                'expectedproperties' => ['duedate' => $timenow + 6 * DAYSECS]
+            ],
+            'Student whose enrolment starts before the course start date, relative dates mode enabled' => [
+                'courseconfig' => ['relativedatesmode' => true, 'startdate' => $timenow - 10 * DAYSECS],
+                'assignconfig' => ['duedate' => $timenow + 4 * DAYSECS],
+                'enrolconfig' => ['shortname' => 'student', 'userparams' => null, 'method' => 'manual',
+                    'startdate' => $timenow - 12 * DAYSECS],
+                'expectedproperties' => ['duedate' => $timenow + 4 * DAYSECS]
+            ],
+            'Student whose enrolment starts after the course start date, relative dates mode disabled' => [
+                'courseconfig' => ['relativedatesmode' => false, 'startdate' => $timenow - 10 * DAYSECS],
+                'assignconfig' => ['duedate' => $timenow + 4 * DAYSECS],
+                'enrolconfig' => ['shortname' => 'student', 'userparams' => null, 'method' => 'manual',
+                    'startdate' => $timenow - 8 * DAYSECS],
+                'expectedproperties' => ['duedate' => $timenow + 4 * DAYSECS]
+            ],
+        ];
+    }
+
+    /**
+     * Test assign->get_default_instance() for a number of cases, as defined in the date provider.
+     *
+     * @dataProvider assign_get_default_instance_provider
+     * @param array $courseconfig the config to use when creating the course.
+     * @param array $assignconfig the config to use when creating the assignment.
+     * @param array $enrolconfig the config to use when enrolling the user (this will be the active user).
+     * @param array $expectedproperties an map containing the expected names and values for the assign instance data.
+     */
+    public function test_assign_get_default_instance(array $courseconfig, array $assignconfig, array $enrolconfig,
+            array $expectedproperties) {
+        $this->resetAfterTest();
+
+        set_config('enablecourserelativedates', true); // Enable relative dates at site level.
+
+        $course = $this->getDataGenerator()->create_course($courseconfig);
+        $assign = $this->create_instance($course, $assignconfig);
+        $user = $this->getDataGenerator()->create_and_enrol($course, ...array_values($enrolconfig));
+
+        $this->setUser($user);
+        $defaultinstance = $assign->get_default_instance();
+
+        foreach ($expectedproperties as $propertyname => $propertyval) {
+            $this->assertEquals($propertyval, $defaultinstance->$propertyname);
+        }
+    }
+
+    /**
+     * The test_assign_get_default_instance data provider.
+     */
+    public function assign_get_default_instance_provider() {
+        $timenow = time();
+
+        // The get_default_instance() method shouldn't calculate any properties per-user. It should just return the record data.
+        // We'll confirm this works for a few different user types anyway, just like we do for get_instance().
+        return [
+            'Teacher whose enrolment starts after the course start date, relative dates mode enabled' => [
+                'courseconfig' => ['relativedatesmode' => true, 'startdate' => $timenow - 10 * DAYSECS],
+                'assignconfig' => ['duedate' => $timenow + 4 * DAYSECS],
+                'enrolconfig' => ['shortname' => 'teacher', 'userparams' => null, 'method' => 'manual',
+                    'startdate' => $timenow - 8 * DAYSECS],
+                'expectedproperties' => ['duedate' => $timenow + 4 * DAYSECS]
+            ],
+            'Teacher whose enrolment starts before the course start date, relative dates mode enabled' => [
+                'courseconfig' => ['relativedatesmode' => true, 'startdate' => $timenow - 10 * DAYSECS],
+                'assignconfig' => ['duedate' => $timenow + 4 * DAYSECS],
+                'enrolconfig' => ['shortname' => 'teacher', 'userparams' => null, 'method' => 'manual',
+                    'startdate' => $timenow - 12 * DAYSECS],
+                'expectedproperties' => ['duedate' => $timenow + 4 * DAYSECS]
+            ],
+            'Teacher whose enrolment starts after the course start date, relative dates mode disabled' => [
+                'courseconfig' => ['relativedatesmode' => false, 'startdate' => $timenow - 10 * DAYSECS],
+                'assignconfig' => ['duedate' => $timenow + 4 * DAYSECS],
+                'enrolconfig' => ['shortname' => 'teacher', 'userparams' => null, 'method' => 'manual',
+                    'startdate' => $timenow - 8 * DAYSECS],
+                'expectedproperties' => ['duedate' => $timenow + 4 * DAYSECS]
+            ],
+            'Student whose enrolment starts after the course start date, relative dates mode enabled' => [
+                'courseconfig' => ['relativedatesmode' => true, 'startdate' => $timenow - 10 * DAYSECS],
+                'assignconfig' => ['duedate' => $timenow + 4 * DAYSECS],
+                'enrolconfig' => ['shortname' => 'student', 'userparams' => null, 'method' => 'manual',
+                    'startdate' => $timenow - 8 * DAYSECS],
+                'expectedproperties' => ['duedate' => $timenow + 4 * DAYSECS]
+            ],
+        ];
+    }
+
+    /**
+     * Test showing group override duedate for admin
+     */
+    public function test_view_group_override() {
+        global $DB, $PAGE;
+
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course();
+
+        $group1 = $this->getDataGenerator()->create_group(['courseid' => $course->id]);
+        $group2 = $this->getDataGenerator()->create_group(['courseid' => $course->id]);
+
+        $student1 = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $teacher = $this->getDataGenerator()->create_and_enrol($course, 'teacher');
+        groups_add_member($group1, $student1);
+        groups_add_member($group1, $teacher);
+
+        $student2 = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        groups_add_member($group2, $student2);
+
+        $assign = $this->create_instance($course, [
+                'groupmode' => 1,
+                'duedate' => 1558999899,
+            ]);
+        $instance = $assign->get_instance();
+
+        // Overrides for two groups.
+        $overrides = [
+            (object) [
+                'assignid' => $instance->id,
+                'groupid' => $group1->id,
+                'userid' => null,
+                'sortorder' => 1,
+                'duedate' => 1568990258,
+            ],
+            (object) [
+                'assignid' => $instance->id,
+                'groupid' => $group2->id,
+                'userid' => null,
+                'sortorder' => 2,
+                'duedate' => 1559900258,
+            ],
+        ];
+
+        foreach ($overrides as &$override) {
+            $override->id = $DB->insert_record('assign_overrides', $override);
+        }
+
+        $currenturl = new moodle_url('/mod/assign/view.php', array('id' => $assign->get_course_module()->id));
+        $PAGE->set_url($currenturl);
+        $output1 = '';
+        // Other users should see duedate of the assignment.
+        $this->setUser($student2);
+        $summary = $assign->get_assign_grading_summary_renderable($group1->id);
+        $output1 .= $assign->get_renderer()->render($summary);
+        $this->assertContains('Tuesday, 28 May 2019, 7:31 AM', $output1, '', true);
+
+        $output2 = '';
+        // Teacher should be able to see all group override duedate.
+        $this->setUser($teacher);
+        $summary = $assign->get_assign_grading_summary_renderable($group1->id);
+        $output2 .= $assign->get_renderer()->render($summary);
+        $this->assertContains('Friday, 20 September 2019, 10:37 PM', $output2, '', true);
+        $summary = $assign->get_assign_grading_summary_renderable($group2->id);
+        $output3 = '';
+        $output3 .= $assign->get_renderer()->render($summary);
+        $this->assertContains('Friday, 7 June 2019, 5:37 PM', $output3, '', true);
+    }
+
+    /**
+     * Test that cron task uses task API to get its last run time.
+     */
+    public function test_cron_use_task_api_to_get_lastruntime() {
+        global $DB;
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course();
+
+        // Create an assignment which allows submissions from 3 days ago.
+        $assign1 = $this->create_instance($course, [
+            'duedate' => time() + DAYSECS,
+            'alwaysshowdescription' => 0,
+            'allowsubmissionsfromdate' => time() - 3 * DAYSECS,
+            'intro' => 'This one should not be re-created',
+        ]);
+
+        // Create an assignment which allows submissions from 1 day ago.
+        $assign2 = $this->create_instance($course, [
+            'duedate' => time() + DAYSECS,
+            'alwaysshowdescription' => 0,
+            'allowsubmissionsfromdate' => time() - DAYSECS,
+            'intro' => 'This one should be re-created',
+        ]);
+
+        // Set last run time 2 days ago.
+        $DB->set_field('task_scheduled', 'lastruntime', time() - 2 * DAYSECS, ['classname' => '\mod_assign\task\cron_task']);
+
+        // Remove events to make sure cron will update calendar and re-create one of them.
+        $params = array('modulename' => 'assign', 'instance' => $assign1->get_instance()->id);
+        $DB->delete_records('event', $params);
+        $params = array('modulename' => 'assign', 'instance' => $assign2->get_instance()->id);
+        $DB->delete_records('event', $params);
+
+        // Run cron.
+        assign::cron();
+
+        // Assert that calendar hasn't been updated for the first assignment as it's supposed to be
+        // updated as part of previous cron runs (allowsubmissionsfromdate is less than lastruntime).
+        $params = array('modulename' => 'assign', 'instance' => $assign1->get_instance()->id);
+        $event1 = $DB->get_record('event', $params);
+        $this->assertEmpty($event1);
+
+        // Assert that calendar has been updated for the second assignment
+        // because its allowsubmissionsfromdate is greater than lastruntime.
+        $params = array('modulename' => 'assign', 'instance' => $assign2->get_instance()->id);
+        $event2 = $DB->get_record('event', $params);
+        $this->assertNotEmpty($event2);
+        $this->assertSame('This one should be re-created', $event2->description);
     }
 }

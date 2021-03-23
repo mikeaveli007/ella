@@ -377,6 +377,23 @@ class behat_util extends testing_util {
     }
 
     /**
+     * Removes config settings that were added to the main $CFG config within the Behat CLI
+     * run.
+     *
+     * Database storage is already handled by reset_database and existing config values will
+     * be reset automatically by initialise_cfg(), so we only need to remove added ones.
+     */
+    public static function remove_added_config() {
+        global $CFG;
+        if (!empty($CFG->behat_cli_added_config)) {
+            foreach ($CFG->behat_cli_added_config as $key => $value) {
+                unset($CFG->{$key});
+            }
+            unset($CFG->behat_cli_added_config);
+        }
+    }
+
+    /**
      * Reset contents of all database tables to initial values, reset caches, etc.
      */
     public static function reset_all_data() {
@@ -388,6 +405,7 @@ class behat_util extends testing_util {
 
         // Reset all static caches.
         accesslib_clear_all_caches(true);
+        accesslib_reset_role_cache();
         // Reset the nasty strings list used during the last test.
         nasty_strings::reset_used_strings();
 
@@ -405,13 +423,14 @@ class behat_util extends testing_util {
 
         // Initialise $CFG with default values. This is needed for behat cli process, so we don't have modified
         // $CFG values from the old run. @see set_config.
+        self::remove_added_config();
         initialise_cfg();
     }
 
     /**
      * Restore theme CSS stored during behat setup.
      */
-    public static function restore_saved_themes() {
+    public static function restore_saved_themes(): void {
         global $CFG;
 
         $themerev = theme_get_revision();
@@ -446,7 +465,7 @@ class behat_util extends testing_util {
      * @param string $message The message to show when pausing.
      * This will be passed through cli_ansi_format so appropriate ANSI formatting and features are available.
      */
-    public static function pause(Session $session, string $message) {
+    public static function pause(Session $session, string $message): void {
         $posixexists = function_exists('posix_isatty');
 
         // Make sure this step is only used with interactive terminal (if detected).

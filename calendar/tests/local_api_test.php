@@ -125,6 +125,10 @@ class core_calendar_local_api_testcase extends advanced_testcase {
         $result = \core_calendar\local\api::get_action_events_by_timesort(9);
 
         $this->assertEmpty($result);
+
+        $this->setAdminUser();
+        $result = \core_calendar\local\api::get_action_events_by_timesort(5, null, null, 20, false, $user);
+        $this->assertCount(4, $result);
     }
 
     /**
@@ -150,8 +154,8 @@ class core_calendar_local_api_testcase extends advanced_testcase {
             'courseid' => $course->id,
             'modulename' => 'assign',
             'instance' => $moduleinstance->id,
-            'userid' => 1,
-            'eventtype' => 'user',
+            'userid' => 0,
+            'eventtype' => 'due',
             'repeats' => 0,
             'timestart' => 1,
         ];
@@ -201,8 +205,8 @@ class core_calendar_local_api_testcase extends advanced_testcase {
             'courseid' => $course->id,
             'modulename' => 'assign',
             'instance' => $moduleinstance->id,
-            'userid' => 1,
-            'eventtype' => 'user',
+            'userid' => 0,
+            'eventtype' => 'due',
             'repeats' => 0,
             'timestart' => 1,
         ];
@@ -253,8 +257,8 @@ class core_calendar_local_api_testcase extends advanced_testcase {
             'courseid' => $course->id,
             'modulename' => 'assign',
             'instance' => $moduleinstance->id,
-            'userid' => 1,
-            'eventtype' => 'user',
+            'userid' => 0,
+            'eventtype' => 'due',
             'repeats' => 0,
             'timestart' => 1,
         ];
@@ -662,6 +666,7 @@ class core_calendar_local_api_testcase extends advanced_testcase {
             [
                 'name' => 'Start of assignment',
                 'description' => '',
+                'location' => 'Test',
                 'format' => 1,
                 'courseid' => $course->id,
                 'groupid' => 0,
@@ -675,6 +680,7 @@ class core_calendar_local_api_testcase extends advanced_testcase {
             ], [
                 'name' => 'Start of lesson',
                 'description' => '',
+                'location' => 'Test',
                 'format' => 1,
                 'courseid' => $course->id,
                 'groupid' => 0,
@@ -754,6 +760,7 @@ class core_calendar_local_api_testcase extends advanced_testcase {
             [
                 'name' => 'Assignment 1 due date',
                 'description' => '',
+                'location' => 'Test',
                 'format' => 0,
                 'courseid' => $course->id,
                 'groupid' => 0,
@@ -767,6 +774,7 @@ class core_calendar_local_api_testcase extends advanced_testcase {
             ], [
                 'name' => 'Assignment 1 due date - User override',
                 'description' => '',
+                'location' => 'Test',
                 'format' => 1,
                 'courseid' => 0,
                 'groupid' => 0,
@@ -781,6 +789,7 @@ class core_calendar_local_api_testcase extends advanced_testcase {
             ], [
                 'name' => 'Assignment 1 due date - Group A override',
                 'description' => '',
+                'location' => 'Test',
                 'format' => 1,
                 'courseid' => $course->id,
                 'groupid' => $group1->id,
@@ -795,6 +804,7 @@ class core_calendar_local_api_testcase extends advanced_testcase {
             ], [
                 'name' => 'Assignment 1 due date - Group B override',
                 'description' => '',
+                'location' => 'Test',
                 'format' => 1,
                 'courseid' => $course->id,
                 'groupid' => $group2->id,
@@ -854,6 +864,7 @@ class core_calendar_local_api_testcase extends advanced_testcase {
             [
                 'name' => 'Repeating site event',
                 'description' => '',
+                'location' => 'Test',
                 'format' => 1,
                 'courseid' => SITEID,
                 'groupid' => 0,
@@ -869,6 +880,7 @@ class core_calendar_local_api_testcase extends advanced_testcase {
             [
                 'name' => 'Repeating site event',
                 'description' => '',
+                'location' => 'Test',
                 'format' => 1,
                 'courseid' => SITEID,
                 'groupid' => 0,

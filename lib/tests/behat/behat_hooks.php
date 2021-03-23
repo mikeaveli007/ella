@@ -119,8 +119,15 @@ class behat_hooks extends behat_base {
     protected static $runningsuite = '';
 
     /**
-     * Hook to capture BeforeSuite event so as to give access to moodle codebase.
-     * This will try and catch any exception and exists if anything fails.
+     * @var array Array (with tag names in keys) of all tags in current scenario.
+     */
+    protected static $scenariotags;
+
+    /**
+     * Gives access to moodle codebase, ensures all is ready and sets up the test lock.
+     *
+     * Includes config.php to use moodle codebase with $CFG->behat_* instead of $CFG->prefix and $CFG->dataroot, called
+     * once per suite.
      *
      * @BeforeSuite
      * @param BeforeSuiteScope $scope scope passed by event fired before suite.
@@ -278,16 +285,25 @@ EOF;
     /**
      * Helper function to restart the Mink session.
      */
-    protected function restart_session() {
+    protected function restart_session(): void {
         $session = $this->getSession();
         if ($session->isStarted()) {
             $session->restart();
         } else {
-            $session->start();
+            $this->start_session();
         }
         if ($this->running_javascript() && $this->getSession()->getDriver()->getWebDriverSessionId() === 'session') {
             throw new DriverException('Unable to create a valid session');
         }
+    }
+
+    /**
+     * Start the Session, applying any initial configuratino required.
+     */
+    protected function start_session(): void {
+        $this->getSession()->start();
+
+        $this->set_test_timeout_factor(1);
     }
 
     /**
@@ -305,6 +321,50 @@ EOF;
         }
 
         $this->restart_session();
+    }
+
+    /**
+     * Start the session before the first javascript scenario.
+     *
+     * This is treated slightly differently to try to capture when Selenium is not running at all.
+     *
+     * @BeforeScenario @javascript
+     * @param BeforeScenarioScope $scope scope passed by event fired before scenario.
+     */
+    public function before_first_scenario_start_session(BeforeScenarioScope $scope) {
+        if (!self::is_first_javascript_scenario()) {
+            // The first Scenario has started.
+            // The `before_subsequent_scenario_start_session` function will restart the session instead.
+            return;
+        }
+
+        $docsurl = behat_command::DOCS_URL;
+        $driverexceptionmsg = <<<EOF
+
+The Selenium or WebDriver server is not running. You must start it to run tests that involve Javascript.
+See {$docsurl} for more information.
+
+The following debugging information is available:
+
+EOF;
+
+
+        try {
+            $this->restart_session();
+        } catch (CurlExec | DriverException $e) {
+            // The CurlExec Exception is thrown by WebDriver.
+            self::log_and_stop(
+                $driverexceptionmsg . '. ' .
+                $e->getMessage() . "\n\n" .
+                format_backtrace($e->getTrace(), true)
+            );
+        } catch (UnknownError $e) {
+            // Generic 'I have no idea' Selenium error. Custom exception to provide more feedback about possible solutions.
+            self::log_and_stop(
+                $e->getMessage() . "\n\n" .
+                format_backtrace($e->getTrace(), true)
+            );
+        }
     }
 
     /**
@@ -371,11 +431,10 @@ EOF;
             $this->getSession()->getSelectorsHandler()->registerSelector('named_exact', new $namedexactclass());
 
             // Register component named selectors.
-            foreach (\core_component::get_component_list() as $subsystem => $components) {
-                foreach (array_keys($components) as $component) {
-                    $this->register_component_selectors_for_component($component);
-                }
+            foreach (\core_component::get_component_names() as $component) {
+                $this->register_component_selectors_for_component($component);
             }
+
         }
 
         // Reset $SESSION.
@@ -409,6 +468,16 @@ EOF;
 
         // Reset the scenariorunning variable to ensure that Step 0 occurs.
         $this->scenariorunning = false;
+
+        // Set up the tags for current scenario.
+        self::fetch_tags_for_scenario($scope);
+
+        // If scenario requires the Moodle app to be running, set this up.
+        if ($this->has_tag('app')) {
+            $this->execute('behat_app::start_scenario');
+
+            return;
+        }
 
         // Run all test with medium (1024x768) screen size, to avoid responsive problems.
         $this->resize_window('medium');
@@ -461,6 +530,27 @@ EOF;
             }
             $this->scenariorunning = true;
         }
+    }
+
+    /**
+     * Sets up the tags for the current scenario.
+     *
+     * @param \Behat\Behat\Hook\Scope\BeforeScenarioScope $scope Scope
+     */
+    protected static function fetch_tags_for_scenario(\Behat\Behat\Hook\Scope\BeforeScenarioScope $scope) {
+        self::$scenariotags = array_flip(array_merge(
+            $scope->getScenario()->getTags(),
+            $scope->getFeature()->getTags()
+        ));
+    }
+
+    /**
+     * Gets the tags for the current scenario
+     *
+     * @return array Array where key is tag name and value is an integer
+     */
+    public static function get_tags_for_scenario() : array {
+        return self::$scenariotags;
     }
 
     /**
@@ -563,7 +653,7 @@ EOF;
             // the following scenarios. Some browsers already closes the alert, so
             // wrapping in a try & catch.
             try {
-                $this->getSession()->getDriver()->getWebDriverSession()->accept_alert();
+                $this->getSession()->getDriver()->getWebDriver()->switchTo()->alert()->accept();
             } catch (Exception $e) {
                 // Catching the generic one as we never know how drivers reacts here.
             }
@@ -579,7 +669,24 @@ EOF;
      * @AfterScenario
      */
     public function reset_webdriver_between_scenarios(AfterScenarioScope $scope) {
-        $this->getSession()->stop();
+        try {
+            $this->getSession()->stop();
+        } catch (Exception $e) {
+            $error = <<<EOF
+
+Error while stopping WebDriver: %s (%d) '%s'
+Attempting to continue with test run. Stacktrace follows:
+
+%s
+EOF;
+            error_log(sprintf(
+                $error,
+                get_class($e),
+                $e->getCode(),
+                $e->getMessage(),
+                format_backtrace($e->getTrace(), true)
+            ));
+        }
     }
 
     /**
@@ -734,7 +841,7 @@ EOF;
      *
      * @param string $component
      */
-    public function register_component_selectors_for_component(string $component) {
+    public function register_component_selectors_for_component(string $component): void {
         $context = behat_context_helper::get_component_context($component);
 
         if ($context === null) {
@@ -768,7 +875,7 @@ EOF;
      * @param BeforeStepScope $scope
      * @BeforeStep
      */
-    public function first_step_setup_complete(BeforeStepScope $scope) {
+    public function first_step_setup_complete(BeforeStepScope $scope): void {
         self::$initprocessesfinished = true;
     }
 
@@ -777,7 +884,7 @@ EOF;
      *
      * @param   string $message The content to dispaly
      */
-    protected static function log_and_stop(string $message) {
+    protected static function log_and_stop(string $message): void {
         error_log($message);
 
         exit(1);

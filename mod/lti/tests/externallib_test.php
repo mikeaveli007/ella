@@ -89,14 +89,84 @@ class mod_lti_external_testcase extends externallib_advanced_testcase {
     }
 
     /**
+     * Generate a tool type.
+     *
+     * @param string $uniqueid Each tool type needs a different base url. Provide a unique string for every tool type created.
+     * @param int|null $toolproxyid Optional proxy to associate with tool type.
+     * @return stdClass A tool type.
+     */
+    protected function generate_tool_type(string $uniqueid, int $toolproxyid = null) : stdClass {
+        // Create a tool type.
+        $type = new stdClass();
+        $type->state = LTI_TOOL_STATE_CONFIGURED;
+        $type->name = "Test tool $uniqueid";
+        $type->description = "Example description $uniqueid";
+        $type->toolproxyid = $toolproxyid;
+        $type->baseurl = $this->getExternalTestFileUrl("/test$uniqueid.html");
+        lti_add_type($type, new stdClass());
+        return $type;
+    }
+
+    /**
+     * Generate a tool proxy.
+     *
+     * @param string $uniqueid Each tool proxy needs a different reg url. Provide a unique string for every tool proxy created.
+     * @return stdClass A tool proxy.
+     */
+    protected function generate_tool_proxy(string $uniqueid) : stdClass {
+        // Create a tool proxy.
+        $proxy = mod_lti_external::create_tool_proxy("Test proxy $uniqueid",
+                $this->getExternalTestFileUrl("/proxy$uniqueid.html"), array(), array());
+        $proxy = (object)external_api::clean_returnvalue(mod_lti_external::create_tool_proxy_returns(), $proxy);
+        return $proxy;
+    }
+
+    /**
+     * Test get_tool_proxies.
+     */
+    public function test_mod_lti_get_tool_proxies() {
+        // Create two tool proxies. One to associate with tool, and one to leave orphaned.
+        $this->setAdminUser();
+        $proxy = $this->generate_tool_proxy("1");
+        $orphanedproxy = $this->generate_tool_proxy("2");
+        $this->generate_tool_type("1", $proxy->id); // Associate proxy 1 with tool type.
+
+        // Fetch all proxies.
+        $proxies = mod_lti_external::get_tool_proxies(false);
+        $proxies = external_api::clean_returnvalue(mod_lti_external::get_tool_proxies_returns(), $proxies);
+
+        $this->assertCount(2, $proxies);
+        $this->assertEqualsCanonicalizing([(array) $proxy, (array) $orphanedproxy], $proxies);
+    }
+
+    /**
+     * Test get_tool_proxies with orphaned proxies only.
+     */
+    public function test_mod_lti_get_orphaned_tool_proxies() {
+        // Create two tool proxies. One to associate with tool, and one to leave orphaned.
+        $this->setAdminUser();
+        $proxy = $this->generate_tool_proxy("1");
+        $orphanedproxy = $this->generate_tool_proxy("2");
+        $this->generate_tool_type("1", $proxy->id); // Associate proxy 1 with tool type.
+
+        // Fetch all proxies.
+        $proxies = mod_lti_external::get_tool_proxies(true);
+        $proxies = external_api::clean_returnvalue(mod_lti_external::get_tool_proxies_returns(), $proxies);
+
+        $this->assertCount(1, $proxies);
+        $this->assertEqualsCanonicalizing([(array) $orphanedproxy], $proxies);
+    }
+
+    /**
      * Test get_tool_launch_data.
      */
     public function test_get_tool_launch_data() {
         global $USER;
 
-        $td = $this->setup_test_data();
-        $lti = $td['lti'];
-        $course = $td['course'];
+        [
+            'course' => $course,
+            'lti' => $lti
+        ] = $this->setup_test_data();
 
         $result = mod_lti_external::get_tool_launch_data($lti->id);
         $result = external_api::clean_returnvalue(mod_lti_external::get_tool_launch_data_returns(), $result);
@@ -126,12 +196,13 @@ class mod_lti_external_testcase extends externallib_advanced_testcase {
      * Test get_ltis_by_courses.
      */
     public function test_mod_lti_get_ltis_by_courses() {
-        $td  = $this->setup_test_data();
-        $course = $td['course'];
-        $lti = $td['lti'];
-        $student = $td['student'];
-        $teacher = $td['teacher'];
-        $studentrole = $td['studentrole'];
+        [
+            'course' => $course,
+            'lti' => $lti,
+            'student' => $student,
+            'teacher' => $teacher,
+            'studentrole' => $studentrole,
+        ] = $this->setup_test_data();
 
         // Create additional course.
         $course2 = self::getDataGenerator()->create_course();
@@ -264,8 +335,9 @@ class mod_lti_external_testcase extends externallib_advanced_testcase {
      * Test view_lti as a user who is not enrolled in the course.
      */
     public function test_view_lti_no_enrolment() {
-        $td = $this->setup_test_data();
-        $lti = $td['lti'];
+        [
+            'lti' => $lti
+        ] = $this->setup_test_data();
 
         // Test not-enrolled user.
         $usernotenrolled = self::getDataGenerator()->create_user();
@@ -279,11 +351,12 @@ class mod_lti_external_testcase extends externallib_advanced_testcase {
      * Test view_lti for a user without the mod/lti:view capability.
      */
     public function test_view_lti_no_capability() {
-        $td = $this->setup_test_data();
-        $lti = $td['lti'];
-        $student = $td['student'];
-        $studentrole = $td['studentrole'];
-        $context = $td['context'];
+        [
+            'lti' => $lti,
+            'student' => $student,
+            'studentrole' => $studentrole,
+            'context' => $context,
+        ] = $this->setup_test_data();
 
         $this->setUser($student);
 
@@ -301,11 +374,12 @@ class mod_lti_external_testcase extends externallib_advanced_testcase {
      * Test view_lti for a user with the mod/lti:view capability in the course.
      */
     public function test_view_lti() {
-        $td = $this->setup_test_data();
-        $lti = $td['lti'];
-        $context = $td['context'];
-        $cm = $td['cm'];
-        $student = $td['student'];
+        [
+            'lti' => $lti,
+            'context' => $context,
+            'cm' => $cm,
+            'student' => $student,
+        ] = $this->setup_test_data();
 
         // Test user with full capabilities.
         $this->setUser($student);

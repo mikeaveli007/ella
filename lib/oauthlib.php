@@ -108,7 +108,11 @@ class oauth_helper {
             $this->access_token_secret = $args['access_token_secret'];
         }
         $this->http = new curl(array('debug'=>false));
-        $this->http_options = array();
+        if (!empty($args['http_options'])) {
+            $this->http_options = $args['http_options'];
+        } else {
+            $this->http_options = array();
+        }
     }
 
     /**
@@ -396,7 +400,7 @@ abstract class oauth2_client extends curl {
     /** @var string $scope of the authentication request */
     protected $scope = '';
     /** @var stdClass $accesstoken access token object */
-    private $accesstoken = null;
+    protected $accesstoken = null;
     /** @var string $refreshtoken refresh token string */
     protected $refreshtoken = '';
     /** @var string $mocknextresponse string */
@@ -507,14 +511,22 @@ abstract class oauth2_client extends curl {
     public function get_login_url() {
 
         $callbackurl = self::callback_url();
+        $defaultparams = [
+            'client_id' => $this->clientid,
+            'response_type' => 'code',
+            'redirect_uri' => $callbackurl->out(false),
+            'state' => $this->returnurl->out_as_local_url(false),
+
+        ];
+        if (!empty($this->scope)) {
+            // The scope should only be included if a value is set.
+            // If none provided, the server MUST process the request and provide an appropriate documented response.
+            // See spec https://tools.ietf.org/html/rfc6749#section-3.3
+            $defaultparams['scope'] = $this->scope;
+        }
+
         $params = array_merge(
-            [
-                'client_id' => $this->clientid,
-                'response_type' => 'code',
-                'redirect_uri' => $callbackurl->out(false),
-                'state' => $this->returnurl->out_as_local_url(false),
-                'scope' => $this->scope,
-            ],
+            $defaultparams,
             $this->get_additional_login_parameters()
         );
 

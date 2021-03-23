@@ -46,8 +46,7 @@ class qtype_ddimageortext_walkthrough_test extends qbehaviour_walkthrough_test_b
      * @return question_contains_tag_with_attributes the required expectation.
      */
     protected function get_contains_drag_image_home_expectation($dragitemno, $choice, $group) {
-        $class = 'group' . $group;
-        $class .= ' draghome dragitemhomes' . $dragitemno. ' choice'.$choice.' yui3-cssfonts';
+        $class = 'group' . $group . ' draghome choice' . $choice;
 
         $expectedattrs = array();
         $expectedattrs['class'] = $class;
@@ -867,8 +866,8 @@ class qtype_ddimageortext_walkthrough_test extends qbehaviour_walkthrough_test_b
         $this->check_current_state(question_state::$todo);
         $this->check_current_mark(null);
         $this->check_current_output(
-                new question_pattern_expectation('~<div class="group1 draghome dragitemhomes1 choice1 yui3-cssfonts"><span lang="fr">la</span></div>~'),
-                new question_pattern_expectation('~<div class="group1 draghome dragitemhomes2 choice2 yui3-cssfonts"><span lang="fr">ma</span></div>~')
+                new question_pattern_expectation('~<div class="group1 draghome choice1"><span lang="fr">la</span></div>~'),
+                new question_pattern_expectation('~<div class="group1 draghome choice2"><span lang="fr">ma</span></div>~')
         );
     }
 }

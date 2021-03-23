@@ -101,15 +101,6 @@ td.selected {
     border-color: blue;
 }
 
-#page-mod-questionnaire-complete .surveyTitle,
-#page-mod-questionnaire-complete .surveySubtitle,
-#page-mod-questionnaire-complete .addInfo {
-    clear: both;
-    margin: 0;
-    margin-bottom: 4px;
-    padding: 10px;
-}
-
 .surveyPage {
     background-color: #eee;
     border-bottom-color: #000;
@@ -189,6 +180,43 @@ td.selected {
     float: right;
 }
 
+/* progress bar styling */
+
+#page-mod-questionnaire-complete .questionnaire-progressbar {
+    height: 14px;
+    margin-top: 5px;
+    border: 1px solid #dedede;
+    border-radius: 5px;
+    width: auto;
+    overflow: hidden;
+}
+
+#page-mod-questionnaire-complete .questionnaire-progressbar-progress {
+    background-color: #1177d1;
+    height: 100%;
+    border-bottom-left-radius: 5px;
+    border-top-left-radius: 5px;
+}
+
+#page-mod-questionnaire-complete .questionnaire-progressbar-info {
+    float: right;
+}
+
+#page-mod-questionnaire-complete #questionnaire-progressbar-percent {
+    margin-left: 5px;
+    margin-right: 5px;
+    min-width: 25px;
+    text-align: center;
+}
+
+#page-mod-questionnaire-complete .questionnaire-progressbar-wrapper {
+    margin-top: 15px;
+    margin-bottom: 15px;
+    margin-left: 10px;
+    height: auto;
+    overflow: hidden;
+}
+
 .qn-legend {
     float: left;
     font-size: inherit;
@@ -262,6 +290,14 @@ td.selected {
     overflow: auto;
 }
 
+.qn-answer input[type=radio] {
+    margin-left: 0.5em;
+}
+
+.qn-answer > label + input[type=radio] {
+    margin-left: 0;
+}
+
 #notice .qn-question {
     margin: 0;
 }
@@ -305,11 +341,6 @@ td.selected {
     color: red;
     display: none;
 }
-.qn-container {
-    color: black;
-    display: inherit;
-    margin-left: 10px;
-}
 
 #page-mod-questionnaire-fbsections .c0,
 #page-mod-questionnaire-fbsections .c1 {
@@ -352,4 +383,8 @@ td.selected {
 
 #page-mod-questionnaire-questions #region-main .mform .fitem .felement {
     margin-bottom: 0;
+}
+
+.qn-indent {
+    margin-left: 20px;
 }

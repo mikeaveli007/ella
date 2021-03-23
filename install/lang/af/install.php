@@ -89,6 +89,7 @@ $string['welcomep10'] = '{$a->installername} ({$a->installerversion})';
 $string['welcomep20'] = 'Jy sien hierdie blad omdat jy die <strong>{$a->packname} {$a->packversion}</strong>-pakket suksesvol geïnstalleer en op jou rekenaar laat loop het. Baie geluk!';
 $string['welcomep30'] = 'Hierdie vrystelling van die <strong>{$a->installername}</strong> sluit die toepassings in om \'n omgewing te skep waarbinne <strong>Moodle</strong> gaan funksioneer, naamlik:';
 $string['welcomep40'] = 'Die pakket sluit ook <strong>Moodle {$a->moodlerelease} ({$a->moodleversion})</strong> in.';
+$string['welcomep50'] = 'Die gebruik van al die toepassings in hierdie pakket word beheer deur hul onderskeie lisensies. Die volledige <strong>{$a->installername}</strong>-pakket is <a href="https://www.opensource.org/docs/definition_plain.html">-oopbron</a> en word versprei onder die  <a href="https://www.gnu.org/copyleft/gpl.html">GPL</a>-lisensie.';
 $string['welcomep60'] = 'Die volgende blaaie gaan jou deur \'n paar maklik volgbare stappe lei om <strong>Moodle</strong> op jou rekenaar te konfigureer en op te stel. Jy kan die verstekinstellings aanvaar of, opsioneel, hulle wysig om by jou eie behoeftes te pas.';
 $string['welcomep70'] = 'Klik die "Volgende"-knoppie hieronder om voort te gaan met die opstelling van <strong>Moodle</strong>.';
 $string['wwwroot'] = 'Webadres';

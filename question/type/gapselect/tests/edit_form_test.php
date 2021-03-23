@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Unit tests for the select missing words question definition class.
+ * Unit tests for the select missing words question edit form.
  *
  * @package   qtype_gapselect
  * @copyright 2012 The Open University
@@ -38,25 +38,6 @@ require_once($CFG->dirroot . '/question/type/gapselect/edit_gapselect_form.php')
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_gapselect_edit_form_base_testable extends qtype_gapselect_edit_form_base {
-    public function __construct() {
-        $syscontext = context_system::instance();
-        $category = question_make_default_categories(array($syscontext));
-        $fakequestion = new stdClass();
-        $fakequestion->qtype = 'stack';
-        $fakequestion->contextid = $syscontext->id;
-        $fakequestion->createdby = 2;
-        $fakequestion->category = $category->id;
-        $fakequestion->questiontext = 'Test [[1]] question [[2]]';
-        $fakequestion->options = new stdClass();
-        $fakequestion->options->answers = array();
-        $fakequestion->formoptions = new stdClass();
-        $fakequestion->formoptions->movecontext = null;
-        $fakequestion->formoptions->repeatelements = true;
-        $fakequestion->inputs = null;
-        parent::__construct(new moodle_url('/'), $fakequestion, $category,
-                new question_edit_contexts($syscontext));
-    }
-
     public function get_illegal_tag_error($text) {
         return parent::get_illegal_tag_error($text);
     }
@@ -72,7 +53,7 @@ class qtype_gapselect_edit_form_base_testable extends qtype_gapselect_edit_form_
 
 
 /**
- * Unit tests for Stack question editing form.
+ * Unit tests for select missing words question edit form.
  *
  * @copyright  2012 The Open University
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -81,17 +62,41 @@ class qtype_gapselect_edit_form_test extends advanced_testcase {
 
     /**
      * Helper method.
-     * @return qtype_gapselect_edit_form_base_testable a new form instance that can be tested.
+     *
+     * @param string $classname the question form class to instantiate.
+     *
+     *
+     * @return array with two elements:
+     *      question_edit_form great a question form instance that can be tested.
+     *      stdClass the question category.
      */
-    protected function get_form() {
+    protected function get_form($classname) {
         $this->setAdminUser();
         $this->resetAfterTest();
 
-        return new qtype_gapselect_edit_form_base_testable();
+        $syscontext = context_system::instance();
+        $category = question_make_default_categories(array($syscontext));
+        $fakequestion = new stdClass();
+        $fakequestion->qtype = 'gapselect'; // Does not actually matter if this is wrong.
+        $fakequestion->contextid = $syscontext->id;
+        $fakequestion->createdby = 2;
+        $fakequestion->category = $category->id;
+        $fakequestion->questiontext = 'Test [[1]] question [[2]]';
+        $fakequestion->options = new stdClass();
+        $fakequestion->options->answers = array();
+        $fakequestion->formoptions = new stdClass();
+        $fakequestion->formoptions->movecontext = null;
+        $fakequestion->formoptions->repeatelements = true;
+        $fakequestion->inputs = null;
+
+        $form = new $classname(new moodle_url('/'), $fakequestion, $category,
+                new question_edit_contexts($syscontext));
+
+        return [$form, $category];
     }
 
     public function test_get_illegal_tag_error() {
-        $form = $this->get_form();
+        list($form) = $this->get_form('qtype_gapselect_edit_form_base_testable');
 
         $this->assertEquals('', $form->get_illegal_tag_error('frog'));
         $this->assertEquals('', $form->get_illegal_tag_error('<i>toad</i>'));
@@ -129,29 +134,24 @@ class qtype_gapselect_edit_form_test extends advanced_testcase {
     }
 
     /**
+     * Test the form shows the right number of groups of choices.
+     */
+    public function test_number_of_choice_groups() {
+        list($form) = $this->get_form('qtype_gapselect_edit_form');
+        // Use reflection to get the protected property we need.
+        $property = new ReflectionProperty('qtype_gapselect_edit_form', '_form');
+        $property->setAccessible(true);
+        $mform = $property->getValue($form);
+        $choices = $mform->getElement('choices[0]');
+        $groupoptions = $choices->_elements[1];
+        $this->assertCount(20, $groupoptions->_options);
+    }
+
+    /**
      * Test the form correctly validates the HTML allowed in choices.
      */
     public function test_choices_validation() {
-        $this->setAdminUser();
-        $this->resetAfterTest();
-
-        $syscontext = context_system::instance();
-        $category = question_make_default_categories(array($syscontext));
-        $fakequestion = new stdClass();
-        $fakequestion->qtype = 'gapselect';
-        $fakequestion->contextid = $syscontext->id;
-        $fakequestion->createdby = 2;
-        $fakequestion->category = $category->id;
-        $fakequestion->questiontext = 'Test [[1]] question [[2]]';
-        $fakequestion->options = new stdClass();
-        $fakequestion->options->answers = array();
-        $fakequestion->formoptions = new stdClass();
-        $fakequestion->formoptions->movecontext = null;
-        $fakequestion->formoptions->repeatelements = true;
-        $fakequestion->inputs = null;
-
-        $form = new qtype_gapselect_edit_form(new moodle_url('/'), $fakequestion, $category,
-                new question_edit_contexts($syscontext));
+        list($form, $category) = $this->get_form('qtype_gapselect_edit_form');
 
         $submitteddata = [
                 'category' => $category->id,

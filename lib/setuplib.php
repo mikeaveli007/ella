@@ -98,6 +98,8 @@ class moodle_exception extends Exception {
      * @param string $debuginfo optional debugging information
      */
     function __construct($errorcode, $module='', $link='', $a=NULL, $debuginfo=null) {
+        global $CFG;
+
         if (empty($module) || $module == 'moodle' || $module == 'core') {
             $module = 'error';
         }
@@ -116,11 +118,21 @@ class moodle_exception extends Exception {
             $haserrorstring = false;
         }
 
-        if (defined('PHPUNIT_TEST') and PHPUNIT_TEST and $debuginfo) {
-            $message = "$message ($debuginfo)";
+        $isinphpunittest = (defined('PHPUNIT_TEST') && PHPUNIT_TEST);
+        $hasdebugdeveloper = (
+            isset($CFG->debugdisplay) &&
+            isset($CFG->debug) &&
+            $CFG->debugdisplay &&
+            $CFG->debug === DEBUG_DEVELOPER
+        );
+
+        if ($debuginfo) {
+            if ($isinphpunittest || $hasdebugdeveloper) {
+                $message = "$message ($debuginfo)";
+            }
         }
 
-        if (!$haserrorstring and defined('PHPUNIT_TEST') and PHPUNIT_TEST) {
+        if (!$haserrorstring and $isinphpunittest) {
             // Append the contents of $a to $debuginfo so helpful information isn't lost.
             // This emulates what {@link get_exception_info()} does. Unfortunately that
             // function is not used by phpunit.
@@ -350,14 +362,18 @@ function default_exception_handler($ex) {
 
     $info = get_exception_info($ex);
 
-    if (debugging('', DEBUG_MINIMAL)) {
-        $logerrmsg = "Default exception handler: ".$info->message.' Debug: '.$info->debuginfo."\n".format_backtrace($info->backtrace, true);
-        error_log($logerrmsg);
-    }
+    // If we already tried to send the header remove it, the content length
+    // should be either empty or the length of the error page.
+    @header_remove('Content-Length');
 
     if (is_early_init($info->backtrace)) {
         echo bootstrap_renderer::early_error($info->message, $info->moreinfourl, $info->link, $info->backtrace, $info->debuginfo, $info->errorcode);
     } else {
+        if (debugging('', DEBUG_MINIMAL)) {
+            $logerrmsg = "Default exception handler: ".$info->message.' Debug: '.$info->debuginfo."\n".format_backtrace($info->backtrace, true);
+            error_log($logerrmsg);
+        }
+
         try {
             if ($DB) {
                 // If you enable db debugging and exception is thrown, the print footer prints a lot of rubbish
@@ -535,7 +551,7 @@ function get_exception_info($ex) {
     // Remove some absolute paths from message and debugging info.
     $searches = array();
     $replaces = array();
-    $cfgnames = array('tempdir', 'cachedir', 'localcachedir', 'themedir', 'dataroot', 'dirroot');
+    $cfgnames = array('backuptempdir', 'tempdir', 'cachedir', 'localcachedir', 'themedir', 'dataroot', 'dirroot');
     foreach ($cfgnames as $cfgname) {
         if (property_exists($CFG, $cfgname)) {
             $searches[] = $CFG->$cfgname;
@@ -557,7 +573,12 @@ function get_exception_info($ex) {
     if (!empty($CFG->errordocroot)) {
         $errordoclink = $CFG->errordocroot . '/en/';
     } else {
-        $errordoclink = get_docs_url();
+        // Only if the function is available. May be not for early errors.
+        if (function_exists('current_language')) {
+            $errordoclink = get_docs_url();
+        } else {
+            $errordoclink = 'https://docs.moodle.org/en/';
+        }
     }
 
     if ($module === 'error') {
@@ -608,39 +629,14 @@ function get_exception_info($ex) {
  *
  * @see https://tools.ietf.org/html/rfc4122
  *
+ * @deprecated since Moodle 3.8 MDL-61038 - please do not use this function any more.
+ * @see \core\uuid::generate()
+ *
  * @return string The uuid.
  */
 function generate_uuid() {
-    $uuid = '';
-
-    // Check if PECL UUID extension is available.
-    if (function_exists('uuid_time')) {
-        // Create a V4 UUID.
-        $uuid = uuid_create(UUID_TYPE_RANDOM);
-    } else {
-        // Fallback uuid generation based on:
-        // "http://www.php.net/manual/en/function.uniqid.php#94959".
-        $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-
-            // 32 bits for "time_low".
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
-
-            // 16 bits for "time_mid".
-            mt_rand(0, 0xffff),
-
-            // 16 bits for "time_hi_and_version",
-            // four most significant bits holds version number 4.
-            mt_rand(0, 0x0fff) | 0x4000,
-
-            // 16 bits, 8 bits for "clk_seq_hi_res",
-            // 8 bits for "clk_seq_low",
-            // two most significant bits holds zero and one for variant DCE1.1.
-            mt_rand(0, 0x3fff) | 0x8000,
-
-            // 48 bits for "node".
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff));
-    }
-    return trim($uuid);
+    debugging('generate_uuid() is deprecated. Please use \core\uuid::generate() instead.', DEBUG_DEVELOPER);
+    return \core\uuid::generate();
 }
 
 /**
@@ -1395,7 +1391,7 @@ function disable_output_buffering() {
  */
 function is_major_upgrade_required() {
     global $CFG;
-    $lastmajordbchanges = 2017092900.00;
+    $lastmajordbchanges = 2019050100.01;
 
     $required = empty($CFG->version);
     $required = $required || (float)$CFG->version < $lastmajordbchanges;
@@ -1501,7 +1497,7 @@ function make_unique_writable_directory($basedir, $exceptiononerror = true) {
 
     do {
         // Generate a new (hopefully unique) directory name.
-        $uniquedir = $basedir . DIRECTORY_SEPARATOR . generate_uuid();
+        $uniquedir = $basedir . DIRECTORY_SEPARATOR . \core\uuid::generate();
     } while (
             // Ensure that basedir is still writable - if we do not check, we could get stuck in a loop here.
             is_writable($basedir) &&
@@ -1621,15 +1617,22 @@ function make_upload_directory($directory, $exceptiononerror = true) {
  *
  * The directory is automatically cleaned up during the shutdown handler.
  *
- * @param bool $exceptiononerror throw exception if error encountered
- * @return string|false Returns full path to directory if successful, false if not; may throw exception
+ * @param   bool    $exceptiononerror throw exception if error encountered
+ * @param   bool    $forcecreate Force creation of a new parent directory
+ * @return  string  Returns full path to directory if successful, false if not; may throw exception
  */
-function get_request_storage_directory($exceptiononerror = true) {
+function get_request_storage_directory($exceptiononerror = true, bool $forcecreate = false) {
     global $CFG;
 
     static $requestdir = null;
 
-    if (!$requestdir || !file_exists($requestdir) || !is_dir($requestdir) || !is_writable($requestdir)) {
+    $writabledirectoryexists = (null !== $requestdir);
+    $writabledirectoryexists = $writabledirectoryexists && file_exists($requestdir);
+    $writabledirectoryexists = $writabledirectoryexists && is_dir($requestdir);
+    $writabledirectoryexists = $writabledirectoryexists && is_writable($requestdir);
+    $createnewdirectory = $forcecreate || !$writabledirectoryexists;
+
+    if ($createnewdirectory) {
         if ($CFG->localcachedir !== "$CFG->dataroot/localcache") {
             check_dir_exists($CFG->localcachedir, true, true);
             protect_directory($CFG->localcachedir);
@@ -1637,10 +1640,12 @@ function get_request_storage_directory($exceptiononerror = true) {
             protect_directory($CFG->dataroot);
         }
 
-        if ($requestdir = make_unique_writable_directory($CFG->localcachedir, $exceptiononerror)) {
+        if ($dir = make_unique_writable_directory($CFG->localcachedir, $exceptiononerror)) {
             // Register a shutdown handler to remove the directory.
-            \core_shutdown_manager::register_function('remove_dir', array($requestdir));
+            \core_shutdown_manager::register_function('remove_dir', [$dir]);
         }
+
+        $requestdir = $dir;
     }
 
     return $requestdir;
@@ -1651,13 +1656,18 @@ function get_request_storage_directory($exceptiononerror = true) {
  * This can only be used during the current request and will be tidied away
  * automatically afterwards.
  *
- * A new, unique directory is always created within the current request directory.
+ * A new, unique directory is always created within a shared base request directory.
  *
- * @param bool $exceptiononerror throw exception if error encountered
- * @return string full path to directory if successful, false if not; may throw exception
+ * In some exceptional cases an alternative base directory may be required. This can be accomplished using the
+ * $forcecreate parameter. Typically this will only be requried where the file may be required during a shutdown handler
+ * which may or may not be registered after a previous request directory has been created.
+ *
+ * @param   bool    $exceptiononerror throw exception if error encountered
+ * @param   bool    $forcecreate Force creation of a new parent directory
+ * @return  string  The full path to directory if successful, false if not; may throw exception
  */
-function make_request_directory($exceptiononerror = true) {
-    $basedir = get_request_storage_directory($exceptiononerror);
+function make_request_directory($exceptiononerror = true, bool $forcecreate = false) {
+    $basedir = get_request_storage_directory($exceptiononerror, $forcecreate);
     return make_unique_writable_directory($basedir, $exceptiononerror);
 }
 
@@ -1970,7 +1980,15 @@ width: 80%; -moz-border-radius: 20px; padding: 15px">
         $debug = $debug || (!empty($CFG->config_php_settings['debug'])  && $CFG->config_php_settings['debug'] >= DEBUG_DEVELOPER );
         if ($debug) {
             if (!empty($debuginfo)) {
-                $debuginfo = s($debuginfo); // removes all nasty JS
+                // Remove all nasty JS.
+                if (function_exists('s')) { // Function may be not available for some early errors.
+                    $debuginfo = s($debuginfo);
+                } else {
+                    // Because weblib is not available for these early errors, we
+                    // just duplicate s() code here to be safe.
+                    $debuginfo = preg_replace('/&amp;#(\d+|x[0-9a-f]+);/i', '&#$1;',
+                    htmlspecialchars($debuginfo, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE));
+                }
                 $debuginfo = str_replace("\n", '<br />', $debuginfo); // keep newlines
                 $content .= '<div class="notifytiny">Debug info: ' . $debuginfo . '</div>';
             }
@@ -2106,9 +2124,11 @@ width: 80%; -moz-border-radius: 20px; padding: 15px">
         }
 
         $footer = '';
-        if (MDL_PERF_TEST) {
-            $perfinfo = get_performance_info();
-            $footer = '<footer>' . $perfinfo['html'] . '</footer>';
+        if (function_exists('get_performance_info')) { // Function may be not available for some early errors.
+            if (MDL_PERF_TEST) {
+                $perfinfo = get_performance_info();
+                $footer = '<footer>' . $perfinfo['html'] . '</footer>';
+            }
         }
 
         return '<!DOCTYPE html>

@@ -114,6 +114,7 @@ class block_online_users extends block_base {
         //Now, we have in users, the list of users to show
         //Because they are online
         if (!empty($users)) {
+            $this->page->requires->js_call_amd('block_online_users/change_user_visibility', 'init');
             //Accessibility: Don't want 'Alt' text for the user picture; DO want it for the envelope/message link (existing lang string).
             //Accessibility: Converted <div> to <ul>, inherit existing classes & styles.
             $this->content->text .= "<ul class='list'>\n";
@@ -131,18 +132,33 @@ class block_online_users extends block_base {
                     $this->content->text .= '<div class="user">'.$OUTPUT->user_picture($user, array('size'=>16, 'alttext'=>false));
                     $this->content->text .= get_string('guestuser').'</div>';
 
-                } else {
+                } else { // Not a guest user.
                     $this->content->text .= '<div class="user">';
                     $this->content->text .= '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$user->id.'&amp;course='.$this->page->course->id.'" title="'.$timeago.'">';
-                    $this->content->text .= $OUTPUT->user_picture($user, array('size'=>16, 'alttext'=>false, 'link'=>false)) .$user->fullname.'</a></div>';
-                }
-                if ($canshowicon and ($USER->id != $user->id) and !isguestuser($user)) {  // Only when logged in and messaging active etc
-                    $anchortagcontents = $OUTPUT->pix_icon('t/message', get_string('messageselectadd'));
-                    $anchorurl = new moodle_url('/message/index.php', array('id' => $user->id));
-                    $anchortag = html_writer::link($anchorurl, $anchortagcontents,
-                        array('title' => get_string('messageselectadd')));
+                    $avataroptions = ['size' => 16, 'visibletoscreenreaders' => false, 'link' => false];
+                    $this->content->text .= $OUTPUT->user_picture($user, $avataroptions) . $user->fullname . '</a></div>';
 
-                    $this->content->text .= '<div class="message">'.$anchortag.'</div>';
+                    if ($USER->id == $user->id) {
+                        if ($CFG->block_online_users_onlinestatushiding) {
+                            $action = ($user->uservisibility != null && $user->uservisibility == 0) ? 'show' : 'hide';
+                            $anchortagcontents = $OUTPUT->pix_icon('t/' . $action,
+                                get_string('online_status:' . $action, 'block_online_users'));
+                            $anchortag = html_writer::link("", $anchortagcontents,
+                                array('title' => get_string('online_status:' . $action, 'block_online_users'),
+                                    'data-action' => $action, 'data-userid' => $user->id, 'id' => 'change-user-visibility'));
+
+                            $this->content->text .= '<div class="uservisibility">' . $anchortag . '</div>';
+                        }
+                    } else {
+                        if ($canshowicon) {  // Only when logged in and messaging active etc.
+                            $anchortagcontents = $OUTPUT->pix_icon('t/message', get_string('messageselectadd'));
+                            $anchorurl = new moodle_url('/message/index.php', array('id' => $user->id));
+                            $anchortag = html_writer::link($anchorurl, $anchortagcontents,
+                                array('title' => get_string('messageselectadd')));
+
+                            $this->content->text .= '<div class="message">'.$anchortag.'</div>';
+                        }
+                    }
                 }
                 $this->content->text .= "</li>\n";
             }
@@ -158,6 +174,27 @@ class block_online_users extends block_base {
         }
 
         return $this->content;
+    }
+
+    /**
+     * Return the plugin config settings for external functions.
+     *
+     * @return stdClass the configs for both the block instance and plugin
+     * @since Moodle 3.8
+     */
+    public function get_config_for_external() {
+        global $CFG;
+
+        // Return all settings for all users since it is safe (no private keys, etc..).
+        $configs = (object) [
+            'timetosee' => $CFG->block_online_users_timetosee,
+            'onlinestatushiding' => $CFG->block_online_users_onlinestatushiding
+        ];
+
+        return (object) [
+            'instance' => new stdClass(),
+            'plugin' => $configs,
+        ];
     }
 }
 

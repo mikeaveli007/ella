@@ -43,6 +43,20 @@ define('VISIBLEGROUPS', 2);
  */
 define('USERSWITHOUTGROUP', -1);
 
+/**
+ * 'None' join type, used when filtering by groups (logical NOT)
+ */
+define('GROUPS_JOIN_NONE', 0);
+
+/**
+ * 'Any' join type, used when filtering by groups (logical OR)
+ */
+define('GROUPS_JOIN_ANY', 1);
+
+/**
+ * 'All' join type, used when filtering by groups (logical AND)
+ */
+define('GROUPS_JOIN_ALL', 2);
 
 /**
  * Determines if a group with a given groupid exists.
@@ -298,152 +312,6 @@ function groups_get_all_groups($courseid, $userid=0, $groupingid=0, $fields='g.*
     foreach ($groupmembers as $gm) {
         $groups[$gm->groupid]->members[$gm->userid] = $gm->userid;
     }
-    return $groups;
-}
-
-/**
- * Gets array of all groups in a set of course.
- *
- * @category group
- * @param array $courses Array of course objects or course ids.
- * @return array Array of groups indexed by course id.
- */
-function groups_get_all_groups_for_courses($courses) {
-    global $DB;
-
-    if (empty($courses)) {
-        return [];
-    }
-
-    $groups = [];
-    $courseids = [];
-
-    foreach ($courses as $course) {
-        $courseid = is_object($course) ? $course->id : $course;
-        $groups[$courseid] = [];
-        $courseids[] = $courseid;
-    }
-
-    $groupfields = [
-        'g.id as gid',
-        'g.courseid',
-        'g.idnumber',
-        'g.name',
-        'g.description',
-        'g.descriptionformat',
-        'g.enrolmentkey',
-        'g.picture',
-        'g.hidepicture',
-        'g.timecreated',
-        'g.timemodified'
-    ];
-
-    $groupsmembersfields = [
-        'gm.id as gmid',
-        'gm.groupid',
-        'gm.userid',
-        'gm.timeadded',
-        'gm.component',
-        'gm.itemid'
-    ];
-
-    $concatidsql = $DB->sql_concat_join("'-'", ['g.id', 'COALESCE(gm.id, 0)']) . ' AS uniqid';
-    list($courseidsql, $params) = $DB->get_in_or_equal($courseids);
-    $groupfieldssql = implode(',', $groupfields);
-    $groupmembersfieldssql = implode(',', $groupsmembersfields);
-    $sql = "SELECT {$concatidsql}, {$groupfieldssql}, {$groupmembersfieldssql}
-              FROM {groups} g
-         LEFT JOIN {groups_members} gm
-                ON gm.groupid = g.id
-             WHERE g.courseid {$courseidsql}";
-
-    $results = $DB->get_records_sql($sql, $params);
-
-    // The results will come back as a flat dataset thanks to the left
-    // join so we will need to do some post processing to blow it out
-    // into a more usable data structure.
-    //
-    // This loop will extract the distinct groups from the result set
-    // and add it's list of members to the object as a property called
-    // 'members'. Then each group will be added to the result set indexed
-    // by it's course id.
-    //
-    // The resulting data structure for $groups should be:
-    // $groups = [
-    //      '1' = [
-    //          '1' => (object) [
-    //              'id' => 1,
-    //              <rest of group properties>
-    //              'members' => [
-    //                  '1' => (object) [
-    //                      <group member properties>
-    //                  ],
-    //                  '2' => (object) [
-    //                      <group member properties>
-    //                  ]
-    //              ]
-    //          ],
-    //          '2' => (object) [
-    //              'id' => 2,
-    //              <rest of group properties>
-    //              'members' => [
-    //                  '1' => (object) [
-    //                      <group member properties>
-    //                  ],
-    //                  '3' => (object) [
-    //                      <group member properties>
-    //                  ]
-    //              ]
-    //          ]
-    //      ]
-    // ]
-    //
-    foreach ($results as $key => $result) {
-        $groupid = $result->gid;
-        $courseid = $result->courseid;
-        $coursegroups = $groups[$courseid];
-        $groupsmembersid = $result->gmid;
-        $reducefunc = function($carry, $field) use ($result) {
-            // Iterate over the groups properties and pull
-            // them out into a separate object.
-            list($prefix, $field) = explode('.', $field);
-
-            if (property_exists($result, $field)) {
-                $carry[$field] = $result->{$field};
-            }
-
-            return $carry;
-        };
-
-        if (isset($coursegroups[$groupid])) {
-            $group = $coursegroups[$groupid];
-        } else {
-            $initial = [
-                'id' => $groupid,
-                'members' => []
-            ];
-            $group = (object) array_reduce(
-                $groupfields,
-                $reducefunc,
-                $initial
-            );
-        }
-
-        if (!empty($groupsmembersid)) {
-            $initial = ['id' => $groupsmembersid];
-            $groupsmembers = (object) array_reduce(
-                $groupsmembersfields,
-                $reducefunc,
-                $initial
-            );
-
-            $group->members[$groupsmembers->userid] = $groupsmembers;
-        }
-
-        $coursegroups[$groupid] = $group;
-        $groups[$courseid] = $coursegroups;
-    }
-
     return $groups;
 }
 
@@ -1125,15 +993,20 @@ function groups_group_visible($groupid, $course, $cm = null, $userid = null) {
 }
 
 /**
- * Get sql and parameters that will return user ids for a group
+ * Get sql and parameters that will return user ids for a group or groups
  *
- * @param int $groupid
+ * @param int|array $groupids Where this is an array of multiple groups, it will match on members of any of the groups
  * @param context $context Course context or a context within a course. Mandatory when $groupid = USERSWITHOUTGROUP
+ * @param int $groupsjointype Join type logic used. Defaults to 'Any' (logical OR).
  * @return array($sql, $params)
  * @throws coding_exception if empty or invalid context submitted when $groupid = USERSWITHOUTGROUP
  */
-function groups_get_members_ids_sql($groupid, context $context = null) {
-    $groupjoin = groups_get_members_join($groupid, 'u.id', $context);
+function groups_get_members_ids_sql($groupids, context $context = null, $groupsjointype = GROUPS_JOIN_ANY) {
+    if (!is_array($groupids)) {
+        $groupids = [$groupids];
+    }
+
+    $groupjoin = groups_get_members_join($groupids, 'u.id', $context, $groupsjointype);
 
     $sql = "SELECT DISTINCT u.id
               FROM {user} u
@@ -1149,39 +1022,119 @@ function groups_get_members_ids_sql($groupid, context $context = null) {
 /**
  * Get sql join to return users in a group
  *
- * @param int $groupid The groupid, 0 means all groups and USERSWITHOUTGROUP no group
+ * @param int|array $groupids The groupids, 0 or [] means all groups and USERSWITHOUTGROUP no group
  * @param string $useridcolumn The column of the user id from the calling SQL, e.g. u.id
- * @param context $context Course context or a context within a course. Mandatory when $groupid = USERSWITHOUTGROUP
+ * @param context $context Course context or a context within a course. Mandatory when $groupids includes USERSWITHOUTGROUP
+ * @param int $jointype Join type logic used. Defaults to 'Any' (logical OR).
  * @return \core\dml\sql_join Contains joins, wheres, params
  * @throws coding_exception if empty or invalid context submitted when $groupid = USERSWITHOUTGROUP
  */
-function groups_get_members_join($groupid, $useridcolumn, context $context = null) {
+function groups_get_members_join($groupids, $useridcolumn, context $context = null, int $jointype = GROUPS_JOIN_ANY) {
+    global $DB;
+
     // Use unique prefix just in case somebody makes some SQL magic with the result.
     static $i = 0;
     $i++;
     $prefix = 'gm' . $i . '_';
 
+    if (!is_array($groupids)) {
+        $groupids = $groupids ? [$groupids] : [];
+    }
+
+    $join = '';
+    $where = '';
+    $param = [];
+
     $coursecontext = (!empty($context)) ? $context->get_course_context() : null;
-    if ($groupid == USERSWITHOUTGROUP && empty($coursecontext)) {
+    if (in_array(USERSWITHOUTGROUP, $groupids) && empty($coursecontext)) {
         // Throw an exception if $context is empty or invalid because it's needed to get the users without any group.
         throw new coding_exception('Missing or wrong $context parameter in an attempt to get members without any group');
     }
 
-    if ($groupid == USERSWITHOUTGROUP) {
+    // Handle cases where we need to include/exclude users not in any groups.
+    if (($nogroupskey = array_search(USERSWITHOUTGROUP, $groupids)) !== false) {
         // Get members without any group.
-        $join = "LEFT JOIN (
-                    SELECT g.courseid, m.groupid, m.userid
-                    FROM {groups_members} m
-                    JOIN {groups} g ON g.id = m.groupid
-                ) {$prefix}gm ON ({$prefix}gm.userid = $useridcolumn AND {$prefix}gm.courseid = :{$prefix}gcourseid)";
-        $where = "{$prefix}gm.userid IS NULL";
-        $param = array("{$prefix}gcourseid" => $coursecontext->instanceid);
-    } else {
-        // Get members of defined groupid.
-        $join = "JOIN {groups_members} {$prefix}gm
-                ON ({$prefix}gm.userid = $useridcolumn AND {$prefix}gm.groupid = :{$prefix}gmid)";
-        $where = '';
-        $param = array("{$prefix}gmid" => $groupid);
+        $join .= "LEFT JOIN (
+                     SELECT g.courseid, m.groupid, m.userid
+                       FROM {groups_members} m
+                       JOIN {groups} g ON g.id = m.groupid
+                  ) {$prefix}gm ON ({$prefix}gm.userid = {$useridcolumn} AND {$prefix}gm.courseid = :{$prefix}gcourseid)";
+
+        // Join type 'None' when filtering by 'no groups' means match users in at least one group.
+        if ($jointype == GROUPS_JOIN_NONE) {
+            $where = "{$prefix}gm.userid IS NOT NULL";
+        } else {
+            // All other cases need to match users not in any group.
+            $where = "{$prefix}gm.userid IS NULL";
+        }
+
+        $param = ["{$prefix}gcourseid" => $coursecontext->instanceid];
+        unset($groupids[$nogroupskey]);
+    }
+
+    // Handle any specified groups that need to be included.
+    if (!empty($groupids)) {
+        switch ($jointype) {
+            case GROUPS_JOIN_ALL:
+                // Handle matching all of the provided groups (logical AND).
+                $joinallwheres = [];
+                $aliaskey = 0;
+                foreach ($groupids as $groupid) {
+                    $gmalias = "{$prefix}gm{$aliaskey}";
+                    $aliaskey++;
+                    $join .= "LEFT JOIN {groups_members} {$gmalias}
+                                     ON ({$gmalias}.userid = {$useridcolumn} AND {$gmalias}.groupid = :{$gmalias}param)";
+                    $joinallwheres[] = "{$gmalias}.userid IS NOT NULL";
+                    $param["{$gmalias}param"] = $groupid;
+                }
+
+                // Members of all of the specified groups only.
+                if (empty($where)) {
+                    $where = '(' . implode(' AND ', $joinallwheres) . ')';
+                } else {
+                    // Members of the specified groups and also no groups.
+                    // NOTE: This will always return no results, because you cannot be in specified groups and also be in no groups.
+                    $where = '(' . $where . ' AND ' . implode(' AND ', $joinallwheres) . ')';
+                }
+
+                break;
+
+            case GROUPS_JOIN_ANY:
+                // Handle matching any of the provided groups (logical OR).
+                list($groupssql, $groupsparams) = $DB->get_in_or_equal($groupids, SQL_PARAMS_NAMED, $prefix);
+
+                $join .= "LEFT JOIN {groups_members} {$prefix}gm2
+                                 ON ({$prefix}gm2.userid = {$useridcolumn} AND {$prefix}gm2.groupid {$groupssql})";
+                $param = array_merge($param, $groupsparams);
+
+                // Members of any of the specified groups only.
+                if (empty($where)) {
+                    $where = "{$prefix}gm2.userid IS NOT NULL";
+                } else {
+                    // Members of any of the specified groups or no groups.
+                    $where = "({$where} OR {$prefix}gm2.userid IS NOT NULL)";
+                }
+
+                break;
+
+            case GROUPS_JOIN_NONE:
+                // Handle matching none of the provided groups (logical NOT).
+                list($groupssql, $groupsparams) = $DB->get_in_or_equal($groupids, SQL_PARAMS_NAMED, $prefix);
+
+                $join .= "LEFT JOIN {groups_members} {$prefix}gm2
+                                 ON ({$prefix}gm2.userid = {$useridcolumn} AND {$prefix}gm2.groupid {$groupssql})";
+                $param = array_merge($param, $groupsparams);
+
+                // Members of none of the specified groups only.
+                if (empty($where)) {
+                    $where = "{$prefix}gm2.userid IS NULL";
+                } else {
+                    // Members of any unspecified groups (not a member of the specified groups, and not a member of no groups).
+                    $where = "({$where} AND {$prefix}gm2.userid IS NULL)";
+                }
+
+                break;
+        }
     }
 
     return new \core\dml\sql_join($join, $where, $param);

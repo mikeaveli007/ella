@@ -105,6 +105,7 @@ function page_add_instance($data, $mform = null) {
     }
     $displayoptions['printheading'] = $data->printheading;
     $displayoptions['printintro']   = $data->printintro;
+    $displayoptions['printlastmodified'] = $data->printlastmodified;
     $data->displayoptions = serialize($displayoptions);
 
     if ($mform) {
@@ -154,6 +155,7 @@ function page_update_instance($data, $mform) {
     }
     $displayoptions['printheading'] = $data->printheading;
     $displayoptions['printintro']   = $data->printintro;
+    $displayoptions['printlastmodified'] = $data->printlastmodified;
     $data->displayoptions = serialize($displayoptions);
 
     $data->content       = $data->page['text'];
@@ -487,6 +489,7 @@ function page_dndupload_handle($uploadinfo) {
     $data->popupwidth = $config->popupwidth;
     $data->printheading = $config->printheading;
     $data->printintro = $config->printintro;
+    $data->printlastmodified = $config->printlastmodified;
 
     return page_add_instance($data, null);
 }
@@ -567,4 +570,28 @@ function mod_page_core_calendar_provide_event_action(calendar_event $event,
         1,
         true
     );
+}
+
+/**
+ * Given an array with a file path, it returns the itemid and the filepath for the defined filearea.
+ *
+ * @param  string $filearea The filearea.
+ * @param  array  $args The path (the part after the filearea and before the filename).
+ * @return array The itemid and the filepath inside the $args path, for the defined filearea.
+ */
+function mod_page_get_path_from_pluginfile(string $filearea, array $args) : array {
+    // Page never has an itemid (the number represents the revision but it's not stored in database).
+    array_shift($args);
+
+    // Get the filepath.
+    if (empty($args)) {
+        $filepath = '/';
+    } else {
+        $filepath = '/' . implode('/', $args) . '/';
+    }
+
+    return [
+        'itemid' => 0,
+        'filepath' => $filepath,
+    ];
 }

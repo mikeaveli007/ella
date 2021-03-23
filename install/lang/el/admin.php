@@ -38,7 +38,7 @@ $string['clitypevaluedefault'] = 'πληκτρολογήστε μια τιμή·
 $string['cliunknowoption'] = 'Μη αναγνωρίσιμες επιλογές:
  {$a}<br />
 Παρακαλούμε χρησιμοποιήστε την επιλογή --help (βοήθεια)';
-$string['cliyesnoprompt'] = 'πατώντας y (σημαίνει yes=ναι) αλλιώς πατώντας n (σημαίνει no=όχι)';
+$string['cliyesnoprompt'] = 'πατήστε y (σημαίνει yes=ναι) ή πατήστε n (σημαίνει no=όχι)';
 $string['environmentrequireinstall'] = 'απαιτείται να εγκατασταθεί και να ενεργοποιηθεί';
 $string['environmentrequireversion'] = 'απαιτείται η έκδοση {$a->needed} ενώ εσείς έχετε την {$a->current}';
 $string['upgradekeyset'] = 'Κλειδί αναβάθμισης (αφήστε κενό για να μην το ορίσετε)';

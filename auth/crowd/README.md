@@ -1,1 +1,0 @@
-# moodle-crowd-auth

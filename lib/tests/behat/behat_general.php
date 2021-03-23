@@ -159,21 +159,30 @@ class behat_general extends behat_base {
      * Switches to the specified iframe.
      *
      * @Given /^I switch to "(?P<iframe_name_string>(?:[^"]|\\")*)" iframe$/
-     * @param string $iframename
+     * @Given /^I switch to "(?P<iframe_name_string>(?:[^"]|\\")*)" class iframe$/
+     * @param string $name The name of the iframe
      */
-    public function switch_to_iframe($iframename) {
-
+    public function switch_to_iframe($name) {
         // We spin to give time to the iframe to be loaded.
         // Using extended timeout as we don't know about which
         // kind of iframe will be loaded.
         $this->spin(
-            function($context, $iframename) {
+            function($context) use ($name){
+                $iframe = $context->find('iframe', $name);
+                if ($iframe->hasAttribute('name')) {
+                    $iframename = $iframe->getAttribute('name');
+                } else {
+                    if (!$this->running_javascript()) {
+                        throw new \coding_exception('iframe must have a name attribute to use the switchTo command.');
+                    }
+                    $iframename = uniqid();
+                    $this->execute_js_on_node($iframe, "{{ELEMENT}}.name = '{$iframename}';");
+                }
                 $context->getSession()->switchToIFrame($iframename);
 
                 // If no exception we are done.
                 return true;
             },
-            $iframename,
             behat_base::get_extended_timeout()
         );
     }
@@ -194,13 +203,11 @@ class behat_general extends behat_base {
      * @param string $windowname
      */
     public function switch_to_window($windowname) {
-        // In Behat, some browsers (e.g. Chrome) are unable to switch to a
-        // window without a name, and by default the main browser window does
-        // not have a name. To work-around this, when we switch away from an
-        // unnamed window (presumably the main window) to some other named
-        // window, then we first set the main window name to a conventional
-        // value that we can later use this name to switch back.
-        $this->execute_script('if (window.name == "") window.name = "' . self::MAIN_WINDOW_NAME . '"');
+        if ($windowname === self::MAIN_WINDOW_NAME) {
+            // When switching to the main window normalise the window name to null.
+            // This is normalised further in the Mink driver to the root window ID.
+            $windowname = null;
+        }
 
         $this->getSession()->switchToWindow($windowname);
     }
@@ -211,7 +218,31 @@ class behat_general extends behat_base {
      * @Given /^I switch to the main window$/
      */
     public function switch_to_the_main_window() {
-        $this->getSession()->switchToWindow(self::MAIN_WINDOW_NAME);
+        $this->switch_to_window(self::MAIN_WINDOW_NAME);
+    }
+
+    /**
+     * Closes all extra windows opened during the navigation.
+     *
+     * This assumes all popups are opened by the main tab and you will now get back.
+     *
+     * @Given /^I close all opened windows$/
+     * @throws DriverException If there aren't exactly 1 tabs open when finish or no javascript running
+     */
+    public function i_close_all_opened_windows() {
+        if (!$this->running_javascript()) {
+            throw new DriverException('Closing windows steps require javascript');
+        }
+        $names = $this->getSession()->getWindowNames();
+        for ($index = 1; $index < count($names); $index ++) {
+            $this->getSession()->switchToWindow($names[$index]);
+            $this->execute_script("window.open('', '_self').close();");
+        }
+        $names = $this->getSession()->getWindowNames();
+        if (count($names) !== 1) {
+            throw new DriverException('Expected to see 1 tabs open, not ' . count($names));
+        }
+        $this->getSession()->switchToWindow($names[0]);
     }
 
     /**
@@ -219,7 +250,7 @@ class behat_general extends behat_base {
      * @Given /^I accept the currently displayed dialog$/
      */
     public function accept_currently_displayed_alert_dialog() {
-        $this->getSession()->getDriver()->getWebDriverSession()->accept_alert();
+        $this->getSession()->getDriver()->getWebDriver()->switchTo()->alert()->accept();
     }
 
     /**
@@ -227,7 +258,7 @@ class behat_general extends behat_base {
      * @Given /^I dismiss the currently displayed dialog$/
      */
     public function dismiss_currently_displayed_alert_dialog() {
-        $this->getSession()->getDriver()->getWebDriverSession()->dismiss_alert();
+        $this->getSession()->getDriver()->getWebDriver()->switchTo()->alert()->dismiss();
     }
 
     /**
@@ -315,9 +346,9 @@ class behat_general extends behat_base {
      * @param string $selectortype The type of what we look for
      */
     public function i_hover($element, $selectortype) {
-
         // Gets the node based on the requested selector type and locator.
         $node = $this->get_selected_node($selectortype, $element);
+        $this->execute_js_on_node($node, '{{ELEMENT}}.scrollIntoView();');
         $node->mouseOver();
     }
 
@@ -366,7 +397,8 @@ class behat_general extends behat_base {
      */
     public function i_click_on_confirming_the_dialogue($element, $selectortype) {
         $this->i_click_on($element, $selectortype);
-        $this->accept_currently_displayed_alert_dialog();
+        $this->execute('behat_general::accept_currently_displayed_alert_dialog', []);
+        $this->wait_until_the_page_is_ready();
     }
 
     /**
@@ -379,7 +411,8 @@ class behat_general extends behat_base {
      */
     public function i_click_on_dismissing_the_dialogue($element, $selectortype) {
         $this->i_click_on($element, $selectortype);
-        $this->dismiss_currently_displayed_alert_dialog();
+        $this->execute('behat_general::dismiss_currently_displayed_alert_dialog', []);
+        $this->wait_until_the_page_is_ready();
     }
 
     /**
@@ -775,8 +808,8 @@ class behat_general extends behat_base {
         string $preselectortype,
         string $postelement,
         string $postselectortype,
-        $containerelement = null,
-        $containerselectortype = null
+        ?string $containerelement = null,
+        ?string $containerselectortype = null
     ) {
         $msg = "'{$preelement}' '{$preselectortype}' does not appear before '{$postelement}' '{$postselectortype}'";
         $this->check_element_order(
@@ -808,8 +841,8 @@ class behat_general extends behat_base {
         string $postselectortype,
         string $preelement,
         string $preselectortype,
-        $containerelement = null,
-        $containerselectortype = null
+        ?string $containerelement = null,
+        ?string $containerselectortype = null
     ) {
         $msg = "'{$postelement}' '{$postselectortype}' does not appear after '{$preelement}' '{$preselectortype}'";
         $this->check_element_order(
@@ -835,8 +868,8 @@ class behat_general extends behat_base {
      * @param string $msg Message to output if this fails
      */
     protected function check_element_order(
-        $containerelement,
-        $containerselectortype,
+        ?string $containerelement,
+        ?string $containerselectortype,
         string $preelement,
         string $preselectortype,
         string $postelement,
@@ -1507,6 +1540,46 @@ EOF;
     }
 
     /**
+     * Checks that the image on the page is the same as one of the fixture files
+     *
+     * @Then /^the image at "(?P<element_string>(?:[^"]|\\")*)" "(?P<selector_string>[^"]*)" should be identical to "(?P<filepath_string>(?:[^"]|\\")*)"$/
+     * @throws ExpectationException
+     * @param string $element The locator of the image
+     * @param string $selectortype The selector type
+     * @param string $filepath path to the fixture file
+     */
+    public function the_image_at_should_be_identical_to($element, $selectortype, $filepath) {
+        global $CFG;
+
+        // Get the container node (exception if it doesn't exist).
+        $containernode = $this->get_selected_node($selectortype, $element);
+        $url = $containernode->getAttribute('src');
+        if ($url == null) {
+            throw new ExpectationException('Element does not have src attribute',
+                $this->getSession());
+        }
+        $session = $this->getSession()->getCookie('MoodleSession');
+        $content = download_file_content($url, array('Cookie' => 'MoodleSession=' . $session));
+
+        // Get the content of the fixture file.
+        // Replace 'admin/' if it is in start of path with $CFG->admin .
+        if (substr($filepath, 0, 6) === 'admin/') {
+            $filepath = $CFG->admin . DIRECTORY_SEPARATOR . substr($filepath, 6);
+        }
+        $filepath = str_replace('/', DIRECTORY_SEPARATOR, $filepath);
+        $filepath = $CFG->dirroot . DIRECTORY_SEPARATOR . $filepath;
+        if (!is_readable($filepath)) {
+            throw new ExpectationException('The file to compare to does not exist.', $this->getSession());
+        }
+        $expectedcontent = file_get_contents($filepath);
+
+        if ($content !== $expectedcontent) {
+            throw new ExpectationException('Image is not identical to the fixture. Received ' .
+            strlen($content) . ' bytes and expected ' . strlen($expectedcontent) . ' bytes', $this->getSession());
+        }
+    }
+
+    /**
      * Prepare to detect whether or not a new page has loaded (or the same page reloaded) some time in the future.
      *
      * @Given /^I start watching to see if a new page loads$/
@@ -1639,7 +1712,7 @@ EOF;
      * @When    I type :keys
      * @param   string $keys The key, or list of keys, to type
      */
-    public function i_type(string $keys) {
+    public function i_type(string $keys): void {
         behat_base::type_keys($this->getSession(), str_split($keys));
     }
 
@@ -1681,7 +1754,7 @@ EOF;
      * @param   string $modifiers A list of keyboard modifiers, separated by the `+` character
      * @param   string $key The name of the key to press
      */
-    public function i_press_named_key(string $modifiers, string $key) {
+    public function i_press_named_key(string $modifiers, string $key): void {
         behat_base::require_javascript_in_session($this->getSession());
 
         $keys = [];
@@ -1710,16 +1783,16 @@ EOF;
         $modifier = trim($key);
         switch (strtoupper($key)) {
             case 'UP':
-                $keys[] = behat_keys::UP_ARROW;
+                $keys[] = behat_keys::ARROW_UP;
                 break;
             case 'DOWN':
-                $keys[] = behat_keys::DOWN_ARROW;
+                $keys[] = behat_keys::ARROW_DOWN;
                 break;
             case 'LEFT':
-                $keys[] = behat_keys::LEFT_ARROW;
+                $keys[] = behat_keys::ARROW_LEFT;
                 break;
             case 'RIGHT':
-                $keys[] = behat_keys::RIGHT_ARROW;
+                $keys[] = behat_keys::ARROW_RIGHT;
                 break;
             case 'HOME':
                 $keys[] = behat_keys::HOME;
@@ -1760,9 +1833,6 @@ EOF;
                 throw new \coding_exception("Unknown key '$key'}");
         }
 
-        // Always send the NULL key as the last key.
-        $keys[] = behat_keys::NULL_KEY;
-
         behat_base::type_keys($this->getSession(), $keys);
     }
 
@@ -1790,7 +1860,8 @@ EOF;
             list($modifier, $char) = preg_split('/-/', $key, 2);
             $modifier = strtolower($modifier);
             if (!in_array($modifier, $validmodifiers)) {
-                throw new ExpectationException(sprintf('Unknown key modifier: %s.', $modifier));
+                throw new ExpectationException(sprintf('Unknown key modifier: %s.', $modifier),
+                    $this->getSession());
             }
         }
         if (is_numeric($char)) {
@@ -1923,6 +1994,58 @@ EOF;
     }
 
     /**
+     * Trigger click on node via javascript instead of actually clicking on it via pointer.
+     * This function resolves the issue of nested elements.
+     *
+     * @When /^I click on "(?P<element_string>(?:[^"]|\\")*)" "(?P<selector_string>[^"]*)" skipping visibility check$/
+     * @param string $element
+     * @param string $selectortype
+     */
+    public function i_click_on_skipping_visibility_check($element, $selectortype) {
+
+        // Gets the node based on the requested selector type and locator.
+        $node = $this->get_selected_node($selectortype, $element);
+        $this->js_trigger_click($node);
+    }
+
+    /**
+     * Checks, that the specified element contains the specified text a certain amount of times.
+     * When running Javascript tests it also considers that texts may be hidden.
+     *
+     * @Then /^I should see "(?P<elementscount_number>\d+)" occurrences of "(?P<text_string>(?:[^"]|\\")*)" in the "(?P<element_string>(?:[^"]|\\")*)" "(?P<text_selector_string>[^"]*)"$/
+     * @throws ElementNotFoundException
+     * @throws ExpectationException
+     * @param int    $elementscount How many occurrences of the element we look for.
+     * @param string $text
+     * @param string $element Element we look in.
+     * @param string $selectortype The type of element where we are looking in.
+     */
+    public function i_should_see_occurrences_of_in_element($elementscount, $text, $element, $selectortype) {
+
+        // Getting the container where the text should be found.
+        $container = $this->get_selected_node($selectortype, $element);
+
+        // Looking for all the matching nodes without any other descendant matching the
+        // same xpath (we are using contains(., ....).
+        $xpathliteral = behat_context_helper::escape($text);
+        $xpath = "/descendant-or-self::*[contains(., $xpathliteral)]" .
+                "[count(descendant::*[contains(., $xpathliteral)]) = 0]";
+
+        $nodes = $this->find_all('xpath', $xpath, false, $container);
+
+        if ($this->running_javascript()) {
+            $nodes = array_filter($nodes, function($node) {
+                return $node->isVisible();
+            });
+        }
+
+        if ($elementscount != count($nodes)) {
+            throw new ExpectationException('Found '.count($nodes).' elements in column. Expected '.$elementscount,
+                    $this->getSession());
+        }
+    }
+
+    /**
      * Manually press enter key.
      *
      * @When /^I press enter/
@@ -1939,8 +2062,19 @@ EOF;
      *
      * @param string|moodle_url $localurl The URL relative to the behat_wwwroot to visit.
      */
-    public function i_visit($localurl) {
+    public function i_visit($localurl): void {
         $localurl = new moodle_url($localurl);
         $this->getSession()->visit($this->locate_path($localurl->out_as_local_url(false)));
+    }
+
+    /**
+     * Increase the webdriver timeouts.
+     *
+     * This should be reset between scenarios, or can be called again to decrease the timeouts.
+     *
+     * @Given I mark this test as slow setting a timeout factor of :factor
+     */
+    public function i_mark_this_test_as_long_running(int $factor = 2): void {
+        $this->set_test_timeout_factor($factor);
     }
 }

@@ -58,7 +58,7 @@ abstract class question_behaviour {
      */
     public function __construct(question_attempt $qa, $preferredbehaviour) {
         $this->qa = $qa;
-        $this->question = $qa->get_question();
+        $this->question = $qa->get_question(false);
         if (!$this->is_compatible_question($this->question)) {
             throw new coding_exception('This behaviour (' . $this->get_name() .
                     ') cannot work with this question (' . get_class($this->question) . ')');
@@ -100,10 +100,10 @@ abstract class question_behaviour {
      * options using {@link adjust_display_options()} and then calls
      * {@link core_question_renderer::question()} to do the work.
      * @param question_display_options $options controls what should and should not be displayed.
-     * @param unknown_type $number the question number to display.
+     * @param string|null $number the question number to display.
      * @param core_question_renderer $qoutput the question renderer that will coordinate everything.
      * @param qtype_renderer $qtoutput the question type renderer that will be helping.
-     * @return HTML fragment.
+     * @return string HTML fragment.
      */
     public function render(question_display_options $options, $number,
             core_question_renderer $qoutput, qtype_renderer $qtoutput) {
@@ -784,7 +784,7 @@ abstract class question_cbm {
             // errors for people who have used TGM's patches.
             return 0;
         }
-        if ($fraction <= 0.00000005) {
+        if ($fraction <= question_utils::MARK_TOLERANCE) {
             return self::$wrongscore[$certainty];
         } else {
             return self::$rightscore[$certainty] * $fraction;

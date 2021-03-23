@@ -67,9 +67,11 @@ class behat_forms extends behat_base {
         // Ensures the button is present, before pressing.
         $buttonnode = $this->find_button($button);
         $buttonnode->press();
+        $this->wait_for_pending_js();
+        $this->look_for_exceptions();
 
         // Switch to main window.
-        $this->getSession()->switchToWindow(behat_general::MAIN_WINDOW_NAME);
+        $this->execute('behat_general::switch_to_the_main_window');
     }
 
     /**
@@ -635,7 +637,7 @@ class behat_forms extends behat_base {
      * @param NodeElement $fieldnode
      * @param string $value
      */
-    public function set_field_node_value(NodeElement $fieldnode, string $value) {
+    public function set_field_node_value(NodeElement $fieldnode, string $value): void {
         $this->ensure_node_is_visible($fieldnode);
         $field = behat_field_manager::get_form_field($fieldnode, $this->getSession());
         $field->set_value($value);
@@ -722,5 +724,19 @@ class behat_forms extends behat_base {
         $node = $this->get_node_in_container('css_element', $csstarget, 'form_row', $field);
         $this->ensure_node_is_visible($node);
         $node->click();
+    }
+
+    /**
+     * Assert the given option exist in the given autocomplete list
+     *
+     * @Given /^I should see "(?P<option_string>(?:[^"]|\\")*)" in the list of options for the "(?P<field_string>(?:[^"]|\\")*)" autocomplete$$/
+     *
+     * @param string $option Name of option
+     * @param string $field Field name
+     */
+    public function i_should_see_in_the_list_of_option_for_the_autocomplete($option, $field) {
+        $xpathtarget = "//div[contains(@class, 'form-autocomplete-selection') and contains(.//div, '" . $option . "')]";
+        $node = $this->get_node_in_container('xpath_element', $xpathtarget, 'form_row', $field);
+        $this->ensure_node_is_visible($node);
     }
 }

@@ -43,6 +43,7 @@ class mod_subcourse_mod_form extends moodleform_mod {
         global $CFG, $DB, $COURSE;
 
         $mform = $this->_form;
+        $config = get_config('mod_subcourse');
 
         $mform->addElement('header', 'general', get_string('general', 'form'));
 
@@ -108,7 +109,7 @@ class mod_subcourse_mod_form extends moodleform_mod {
             $includekeepref = true;
         }
 
-        $options = array();
+        $options = array(get_string('none'));
 
         if (empty($mycourses)) {
             if (empty($includekeepref)) {
@@ -127,32 +128,42 @@ class mod_subcourse_mod_form extends moodleform_mod {
                 $catlist = coursecat::make_categories_list('', 0, ' / ');
             }
             foreach ($mycourses as $mycourse) {
-                if (empty($options[$catlist[$mycourse->category]])) {
-                    $options[$catlist[$mycourse->category]] = array();
-                }
-                $courselabel = $mycourse->fullname.' ('.$mycourse->shortname.')';
-                $options[$catlist[$mycourse->category]][$mycourse->id] = $courselabel;
+                $courselabel = $catlist[$mycourse->category] . ' / ' . $mycourse->fullname.' ('.$mycourse->shortname.')';
+                $options[$mycourse->id] = $courselabel;
                 if (empty($mycourse->visible)) {
                     $hiddenlabel = ' '.get_string('hiddencourse', 'subcourse');
-                    $options[$catlist[$mycourse->category]][$mycourse->id] .= $hiddenlabel;
+                    $options[$mycourse->id] .= $hiddenlabel;
                 }
             }
-            if (!empty($includenoref)) {
-                $options['---'] = array(0 => get_string('none'));
-            }
 
-            $mform->addElement('selectgroups', 'refcourse', get_string('refcourselabel', 'subcourse'), $options);
+            $mform->addElement('autocomplete', 'refcourse', get_string('refcourselabel', 'subcourse'), $options);
 
             if (!empty($includekeepref)) {
                 $mform->disabledIf('refcourse', 'refcoursecurrent', 'checked');
             }
         }
 
+        $mform->addElement('header', 'section-gradesfetching', get_string('gradesfetching', 'subcourse'));
+
+        $mform->addElement('select', 'fetchpercentage', get_string('fetchgradesmode', 'subcourse'), [
+            0 => get_string('fetchgradesmode0', 'subcourse'),
+            1 => get_string('fetchgradesmode1', 'subcourse'),
+        ]);
+        $mform->addHelpButton('fetchpercentage', 'fetchgradesmode', 'subcourse');
+
+        $mform->addElement('header', 'section-subcourselink', get_string('linkcontrol', 'subcourse'));
+
         $mform->addElement('checkbox', 'instantredirect', get_string('instantredirect', 'subcourse'));
         $mform->addHelpButton('instantredirect', 'instantredirect', 'subcourse');
 
         $mform->addElement('checkbox', 'blankwindow', get_string('blankwindow', 'subcourse'));
         $mform->addHelpButton('blankwindow', 'blankwindow', 'subcourse');
+
+        $mform->addElement('header', 'optionssection', get_string('appearance'));
+        $mform->addElement('checkbox', 'coursepageprintprogress', get_string('displayoption:coursepageprintprogress', 'subcourse'));
+        $mform->setDefault('coursepageprintprogress', $config->coursepageprintprogress);
+        $mform->addElement('checkbox', 'coursepageprintgrade', get_string('displayoption:coursepageprintgrade', 'subcourse'));
+        $mform->setDefault('coursepageprintgrade', $config->coursepageprintgrade);
 
         $this->standard_coursemodule_elements();
         $this->add_action_buttons();

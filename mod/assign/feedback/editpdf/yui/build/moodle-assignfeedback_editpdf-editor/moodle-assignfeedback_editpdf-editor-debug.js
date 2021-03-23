@@ -49,6 +49,8 @@ var AJAXBASE = M.cfg.wwwroot + '/mod/assign/feedback/editpdf/ajax.php',
         UNSAVEDCHANGESINPUT: 'input[name="assignfeedback_editpdf_haschanges"]',
         STAMPSBUTTON: '.currentstampbutton',
         USERINFOREGION: '[data-region="user-info"]',
+        ROTATELEFTBUTTON: '.rotateleftbutton',
+        ROTATERIGHTBUTTON: '.rotaterightbutton',
         DIALOGUE: '.' + CSS.DIALOGUE
     },
     SELECTEDBORDERCOLOUR = 'rgba(200, 200, 255, 0.9)',
@@ -417,7 +419,6 @@ M.assignfeedback_editpdf.edit = EDIT;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global SELECTOR */
 
 /**
  * Provides an in browser PDF editor.
@@ -530,7 +531,6 @@ M.assignfeedback_editpdf.drawable = DRAWABLE;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global STROKEWEIGHT, SELECTOR, SELECTEDBORDERCOLOUR, SELECTEDFILLCOLOUR */
 
 /**
  * Provides an in browser PDF editor.
@@ -730,7 +730,6 @@ Y.extend(ANNOTATION, Y.Base, {
 
             drawingregion.append(deletelink);
             deletelink.setData('annotation', this);
-            deletelink.setStyle('zIndex', '200');
 
             deletelink.on('click', this.remove, this);
             deletelink.on('key', this.remove, 'space,enter', this);
@@ -871,7 +870,6 @@ M.assignfeedback_editpdf.annotation = ANNOTATION;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global STROKEWEIGHT, ANNOTATIONCOLOUR */
 
 /**
  * Provides an in browser PDF editor.
@@ -992,7 +990,6 @@ M.assignfeedback_editpdf.annotationline = ANNOTATIONLINE;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global STROKEWEIGHT, ANNOTATIONCOLOUR */
 
 /**
  * Provides an in browser PDF editor.
@@ -1107,7 +1104,6 @@ M.assignfeedback_editpdf.annotationrectangle = ANNOTATIONRECTANGLE;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global STROKEWEIGHT, ANNOTATIONCOLOUR */
 
 /**
  * Provides an in browser PDF editor.
@@ -1222,7 +1218,6 @@ M.assignfeedback_editpdf.annotationoval = ANNOTATIONOVAL;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global STROKEWEIGHT, ANNOTATIONCOLOUR */
 
 /**
  * Provides an in browser PDF editor.
@@ -1383,13 +1378,12 @@ M.assignfeedback_editpdf.annotationpen = ANNOTATIONPEN;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global ANNOTATIONCOLOUR */
 
 /**
  * Provides an in browser PDF editor.
  *
  * @module moodle-assignfeedback_editpdf-editor
- */
+*/
 
 /**
  * Class representing a highlight.
@@ -1481,13 +1475,13 @@ Y.extend(ANNOTATIONHIGHLIGHT, M.assignfeedback_editpdf.annotation, {
         shape = this.editor.graphic.addShape({
             type: Y.Rect,
             width: bounds.width,
-            height: 16,
+            height: 20,
             stroke: false,
             fill: {
                color: highlightcolour
             },
             x: bounds.x,
-            y: edit.start.y
+            y: edit.start.y - 10
         });
 
         drawable.shapes.push(shape);
@@ -1510,9 +1504,9 @@ Y.extend(ANNOTATIONHIGHLIGHT, M.assignfeedback_editpdf.annotation, {
         this.gradeid = this.editor.get('gradeid');
         this.pageno = this.editor.currentpage;
         this.x = bounds.x;
-        this.y = edit.start.y;
+        this.y = edit.start.y - 10;
         this.endx = bounds.x + bounds.width;
-        this.endy = edit.start.y + 16;
+        this.endy = edit.start.y + 10;
         this.colour = edit.annotationcolour;
         this.page = '';
 
@@ -1537,7 +1531,6 @@ M.assignfeedback_editpdf.annotationhighlight = ANNOTATIONHIGHLIGHT;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global SELECTOR */
 
 /**
  * Provides an in browser PDF editor.
@@ -1568,24 +1561,24 @@ Y.extend(ANNOTATIONSTAMP, M.assignfeedback_editpdf.annotation, {
      */
     draw: function() {
         var drawable = new M.assignfeedback_editpdf.drawable(this.editor),
-            drawingregion = this.editor.get_dialogue_element(SELECTOR.DRAWINGREGION),
+            drawingcanvas = this.editor.get_dialogue_element(SELECTOR.DRAWINGCANVAS),
             node,
             position;
 
         position = this.editor.get_window_coordinates(new M.assignfeedback_editpdf.point(this.x, this.y));
         node = Y.Node.create('<div/>');
-        // If these are absolutely positioned, they escape their scroll container.
+        node.addClass('annotation');
+        node.addClass('stamp');
         node.setStyles({
-            'position': 'relative',
+            'position': 'absolute',
             'display': 'inline-block',
             'backgroundImage': 'url(' + this.editor.get_stamp_image_url(this.path) + ')',
             'width': (this.endx - this.x),
             'height': (this.endy - this.y),
-            'backgroundSize': '100% 100%',
-            'zIndex': 50
+            'backgroundSize': '100% 100%'
         });
 
-        drawingregion.append(node);
+        drawingcanvas.append(node);
         node.setX(position.x);
         node.setY(position.y);
         drawable.store_position(node, position.x, position.y);
@@ -1622,14 +1615,15 @@ Y.extend(ANNOTATIONSTAMP, M.assignfeedback_editpdf.annotation, {
         position = this.editor.get_window_coordinates(new M.assignfeedback_editpdf.point(bounds.x, bounds.y));
 
         node = Y.Node.create('<div/>');
+        node.addClass('annotation');
+        node.addClass('stamp');
         node.setStyles({
             'position': 'absolute',
             'display': 'inline-block',
             'backgroundImage': 'url(' + this.editor.get_stamp_image_url(edit.stamp) + ')',
             'width': bounds.width,
             'height': bounds.height,
-            'backgroundSize': '100% 100%',
-            'zIndex': 50
+            'backgroundSize': '100% 100%'
         });
 
         drawingregion.append(node);
@@ -2201,7 +2195,6 @@ Y.extend(COMMENTMENU, M.assignfeedback_editpdf.dropdown, {
 M.assignfeedback_editpdf = M.assignfeedback_editpdf || {};
 M.assignfeedback_editpdf.commentmenu = COMMENTMENU;
 /* eslint-disable no-unused-vars */
-/* global SELECTOR */
 var COMMENTSEARCHNAME = "commentsearch",
     COMMENTSEARCH;
 
@@ -2394,7 +2387,6 @@ M.assignfeedback_editpdf.commentsearch = COMMENTSEARCH;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global SELECTOR, COMMENTCOLOUR, COMMENTTEXTCOLOUR */
 
 /**
  * Provides an in browser PDF editor.
@@ -2542,7 +2534,7 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
     this.draw = function(focus) {
         var drawable = new M.assignfeedback_editpdf.drawable(this.editor),
             node,
-            drawingregion = this.editor.get_dialogue_element(SELECTOR.DRAWINGREGION),
+            drawingcanvas = this.editor.get_dialogue_element(SELECTOR.DRAWINGCANVAS),
             container,
             label,
             marker,
@@ -2585,8 +2577,8 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
             color: COMMENTTEXTCOLOUR
         });
 
-        drawingregion.append(container);
-        container.setStyle('position', 'relative');
+        drawingcanvas.append(container);
+        container.setStyle('position', 'absolute');
         container.setX(position.x);
         container.setY(position.y);
         drawable.store_position(container, position.x, position.y);
@@ -3000,6 +2992,23 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
         return (bounds.has_min_width() && bounds.has_min_height());
     };
 
+    /**
+     * Update comment position when rotating page.
+     * @public
+     * @method updatePosition
+     */
+    this.updatePosition = function() {
+        var node = this.drawable.nodes[0].one('textarea');
+        var container = node.ancestor('div');
+
+        var newlocation = new M.assignfeedback_editpdf.point(this.x, this.y);
+        var windowlocation = this.editor.get_window_coordinates(newlocation);
+
+        container.setX(windowlocation.x);
+        container.setY(windowlocation.y);
+        this.drawable.store_position(container, windowlocation.x, windowlocation.y);
+    };
+
 };
 
 M.assignfeedback_editpdf = M.assignfeedback_editpdf || {};
@@ -3082,7 +3091,6 @@ M.assignfeedback_editpdf.quickcomment = QUICKCOMMENT;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global AJAXBASE */
 
 /**
  * Provides an in browser PDF editor.
@@ -3291,7 +3299,6 @@ M.assignfeedback_editpdf.quickcommentlist = QUICKCOMMENTLIST;
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 /* eslint-disable no-unused-vars */
-/* global SELECTOR, TOOLSELECTOR, AJAXBASE, COMMENTCOLOUR, ANNOTATIONCOLOUR, AJAXBASEPROGRESS, CLICKTIMEOUT */
 
 /**
  * Provides an in browser PDF editor.
@@ -3312,6 +3319,11 @@ var EDITOR = function() {
     EDITOR.superclass.constructor.apply(this, arguments);
 };
 EDITOR.prototype = {
+
+    /**
+     * Store old coordinates of the annotations before rotation happens.
+     */
+    oldannotationcoordinates: null,
 
     /**
      * The dialogue used for all action menu displays.
@@ -3544,7 +3556,7 @@ EDITOR.prototype = {
      * @method refresh_button_state
      */
     refresh_button_state: function() {
-        var button, currenttoolnode, imgurl, drawingregion;
+        var button, currenttoolnode, imgurl, drawingregion, stampimgurl, drawingcanvas;
 
         // Initalise the colour buttons.
         button = this.get_dialogue_element(SELECTOR.COMMENTCOLOURBUTTON);
@@ -3569,9 +3581,28 @@ EDITOR.prototype = {
         drawingregion.setAttribute('data-currenttool', this.currentedit.tool);
 
         button = this.get_dialogue_element(SELECTOR.STAMPSBUTTON);
-        button.one('img').setAttrs({'src': this.get_stamp_image_url(this.currentedit.stamp),
+        stampimgurl = this.get_stamp_image_url(this.currentedit.stamp);
+        button.one('img').setAttrs({'src': stampimgurl,
                                     'height': '16',
                                     'width': '16'});
+
+        drawingcanvas = this.get_dialogue_element(SELECTOR.DRAWINGCANVAS);
+        switch (this.currentedit.tool) {
+            case 'drag':
+                drawingcanvas.setStyle('cursor', 'move');
+                break;
+            case 'highlight':
+                drawingcanvas.setStyle('cursor', 'text');
+                break;
+            case 'select':
+                drawingcanvas.setStyle('cursor', 'default');
+                break;
+            case 'stamp':
+                drawingcanvas.setStyle('cursor', 'url(' + stampimgurl + '), crosshair');
+                break;
+            default:
+                drawingcanvas.setStyle('cursor', 'crosshair');
+        }
     },
 
     /**
@@ -3621,7 +3652,7 @@ EDITOR.prototype = {
      * @method open_in_panel
      */
     open_in_panel: function(panel) {
-        var drawingcanvas, drawingregion;
+        var drawingcanvas;
 
         this.panel = panel;
         panel.append(this.get('body'));
@@ -3631,9 +3662,6 @@ EDITOR.prototype = {
 
         drawingcanvas = this.get_dialogue_element(SELECTOR.DRAWINGCANVAS);
         this.graphic = new Y.Graphic({render: drawingcanvas});
-
-        drawingregion = this.get_dialogue_element(SELECTOR.DRAWINGREGION);
-        drawingregion.on('scroll', this.move_canvas, this);
 
         if (!this.get('readonly')) {
             drawingcanvas.on('gesturemovestart', this.edit_start, null, this);
@@ -3651,7 +3679,7 @@ EDITOR.prototype = {
      * @method link_handler
      */
     link_handler: function(e) {
-        var drawingcanvas, drawingregion;
+        var drawingcanvas;
         var resize = true;
         e.preventDefault();
 
@@ -3673,9 +3701,6 @@ EDITOR.prototype = {
 
             drawingcanvas = this.get_dialogue_element(SELECTOR.DRAWINGCANVAS);
             this.graphic = new Y.Graphic({render: drawingcanvas});
-
-            drawingregion = this.get_dialogue_element(SELECTOR.DRAWINGREGION);
-            drawingregion.on('scroll', this.move_canvas, this);
 
             if (!this.get('readonly')) {
                 drawingcanvas.on('gesturemovestart', this.edit_start, null, this);
@@ -4056,6 +4081,8 @@ EDITOR.prototype = {
             annotationcolourbutton,
             searchcommentsbutton,
             expcolcommentsbutton,
+            rotateleftbutton,
+            rotaterightbutton,
             currentstampbutton,
             stampfiles,
             picker,
@@ -4072,6 +4099,17 @@ EDITOR.prototype = {
         if (this.get('readonly')) {
             return;
         }
+
+        // Rotate Left.
+        rotateleftbutton = this.get_dialogue_element(SELECTOR.ROTATELEFTBUTTON);
+        rotateleftbutton.on('click', this.rotatePDF, this, true);
+        rotateleftbutton.on('key', this.rotatePDF, 'down:13', this, true);
+
+        // Rotate Right.
+        rotaterightbutton = this.get_dialogue_element(SELECTOR.ROTATERIGHTBUTTON);
+        rotaterightbutton.on('click', this.rotatePDF, this, false);
+        rotaterightbutton.on('key', this.rotatePDF, 'down:13', this, false);
+
         this.disable_touch_scroll();
 
         // Setup the tool buttons.
@@ -4331,15 +4369,21 @@ EDITOR.prototype = {
      * @method edit_move
      */
     edit_move: function(e) {
-        e.preventDefault();
         var bounds = this.get_canvas_bounds(),
             canvas = this.get_dialogue_element(SELECTOR.DRAWINGCANVAS),
             drawingregion = this.get_dialogue_element(SELECTOR.DRAWINGREGION),
             clientpoint = new M.assignfeedback_editpdf.point(e.clientX + canvas.get('docScrollX'),
                                                              e.clientY + canvas.get('docScrollY')),
             point = this.get_canvas_coordinates(clientpoint),
+            activeelement = document.activeElement,
             diffX,
             diffY;
+
+        if (activeelement.type === 'textarea') {
+            return;
+        }
+
+        e.preventDefault();
 
         // Ignore events out of the canvas area.
         if (point.x < 0 || point.x > bounds.width || point.y < 0 || point.y > bounds.height) {
@@ -4725,6 +4769,103 @@ EDITOR.prototype = {
         for (i = 0; i < this.drawables.length; i++) {
             this.drawables[i].scroll_update(x, y);
         }
+    },
+
+    /**
+     * Calculate degree to rotate.
+     * @protected
+     * @param {Object} e javascript event
+     * @param {boolean} left  true if rotating left, false if rotating right
+     * @method rotatepdf
+     */
+    rotatePDF: function(e, left) {
+        e.preventDefault();
+
+        if (this.get('destroyed')) {
+            return;
+        }
+        var self = this;
+        // Save old coordinates.
+        var i;
+        this.oldannotationcoordinates = [];
+        var annotations = this.pages[this.currentpage].annotations;
+        for (i = 0; i < annotations.length; i++) {
+            var oldannotation = annotations[i];
+            this.oldannotationcoordinates.push([oldannotation.x, oldannotation.y]);
+        }
+
+        var ajaxurl = AJAXBASE;
+        var config = {
+            method: 'post',
+            context: this,
+            sync: false,
+            data: {
+                'sesskey': M.cfg.sesskey,
+                'action': 'rotatepage',
+                'index': this.currentpage,
+                'userid': this.get('userid'),
+                'attemptnumber': this.get('attemptnumber'),
+                'assignmentid': this.get('assignmentid'),
+                'rotateleft': left
+            },
+            on: {
+                success: function(tid, response) {
+                    var jsondata;
+                    try {
+                        jsondata = Y.JSON.parse(response.responseText);
+                        var page = self.pages[self.currentpage];
+                        page.url = jsondata.page.url;
+                        page.width = jsondata.page.width;
+                        page.height = jsondata.page.height;
+                        self.loadingicon.hide();
+
+                        // Change canvas size to fix the new page.
+                        var drawingcanvas = self.get_dialogue_element(SELECTOR.DRAWINGCANVAS);
+                        drawingcanvas.setStyle('backgroundImage', 'url("' + page.url + '")');
+                        drawingcanvas.setStyle('width', page.width + 'px');
+                        drawingcanvas.setStyle('height', page.height + 'px');
+
+                        /**
+                         * Move annotation to old position.
+                         * Reason: When canvas size change
+                         * > Shape annotations move with relation to canvas coordinates
+                         * > Nodes of stamp annotations move with relation to canvas coordinates
+                         * > Presentation (picture) of stamp annotations  stay to document coordinates (stick to its own position)
+                         * > Without relocating the node and presentation of a stamp annotation to the same x,y position,
+                         * the stamp annotation cannot be chosen when using "drag" tool.
+                         * The following code brings all annotations to their old positions with relation to the canvas coordinates.
+                         */
+                        var i;
+                        // Annotations.
+                        var annotations = page.annotations;
+                        for (i = 0; i < annotations.length; i++) {
+                            if (self.oldannotationcoordinates && self.oldannotationcoordinates[i]) {
+                                var oldX = self.oldannotationcoordinates[i][0];
+                                var oldY = self.oldannotationcoordinates[i][1];
+                                var annotation = annotations[i];
+                                annotation.move(oldX, oldY);
+                            }
+                        }
+                        /**
+                         * Update Position of comments with relation to canvas coordinates.
+                         * Without this code, the comments will stay at their positions in windows/document coordinates.
+                         */
+                        var oldcomments = page.comments;
+                        for (i = 0; i < oldcomments.length; i++) {
+                            oldcomments[i].updatePosition();
+                        }
+                        // Save Annotations.
+                        return self.save_current_page();
+                    } catch (e) {
+                        return new M.core.exception(e);
+                    }
+                },
+                failure: function(tid, response) {
+                    return new M.core.exception(response.responseText);
+                }
+            }
+        };
+        Y.io(ajaxurl, config);
     },
 
     /**

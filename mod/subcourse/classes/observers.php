@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Provides the {@link mod_subcourse\observers} class.
+ * Provides the {@see mod_subcourse\observers} class.
  *
  * @package    mod_subcourse
  * @copyright  2014 Vadim Dvorovenko (Vadimon@mail.ru)
@@ -50,11 +50,11 @@ class observers {
         $courseid = $event->courseid;
         $userid = $event->relateduserid;
 
-        $subcourses = $DB->get_records('subcourse', array('refcourse' => $courseid));
+        $subcourses = $DB->get_records('subcourse', ['refcourse' => $courseid], '', 'id, course, refcourse, fetchpercentage');
 
         foreach ($subcourses as $subcourse) {
-            $result = subcourse_grades_update($subcourse->course, $subcourse->id, $subcourse->refcourse,
-                null, false, false, $userid);
+            subcourse_grades_update($subcourse->course, $subcourse->id, $subcourse->refcourse,
+                null, false, false, $userid, $subcourse->fetchpercentage);
         }
     }
 
@@ -73,11 +73,11 @@ class observers {
         $courseid = $event->courseid;
         $userid = $event->relateduserid;
 
-        $subcourses = $DB->get_records('subcourse', array('course' => $courseid));
+        $subcourses = $DB->get_records('subcourse', ['course' => $courseid], '', 'id, course, refcourse, fetchpercentage');
 
         foreach ($subcourses as $subcourse) {
-            $result = subcourse_grades_update($subcourse->course, $subcourse->id, $subcourse->refcourse,
-                null, false, false, $userid);
+            subcourse_grades_update($subcourse->course, $subcourse->id, $subcourse->refcourse,
+                null, false, false, $userid, $subcourse->fetchpercentage);
         }
     }
 

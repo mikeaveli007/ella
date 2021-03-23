@@ -101,7 +101,7 @@ class block_login extends block_base {
                 $this->content->text .= '<div><a href="'.$forgot.'">'.get_string('forgotaccount').'</a></div>';
             }
 
-            $authsequence = get_enabled_auth_plugins(true); // Get all auths, in sequence.
+            $authsequence = get_enabled_auth_plugins(); // Get all auths, in sequence.
             $potentialidps = array();
             foreach ($authsequence as $authname) {
                 $authplugin = get_auth_plugin($authname);
@@ -114,10 +114,10 @@ class block_login extends block_base {
                 $this->content->text .= '<div class="potentialidplist">';
                 foreach ($potentialidps as $idp) {
                     $this->content->text .= '<div class="potentialidp">';
-                    $this->content->text .= '<a class="btn btn-default btn-block" ';
+                    $this->content->text .= '<a class="btn btn-secondary btn-block" ';
                     $this->content->text .= 'href="' . $idp['url']->out() . '" title="' . s($idp['name']) . '">';
                     if (!empty($idp['iconurl'])) {
-                        $this->content->text .= '<img src="' . s($idp['iconurl']) . '" width="24" height="24" class="m-r-1"/>';
+                        $this->content->text .= '<img src="' . s($idp['iconurl']) . '" width="24" height="24" class="mr-1"/>';
                     }
                     $this->content->text .= s($idp['name']) . '</a></div>';
                 }

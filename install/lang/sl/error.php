@@ -43,7 +43,7 @@ $string['cannotunzipfile'] = 'Datoteke ni mogoče razširiti.';
 $string['componentisuptodate'] = 'Komponenta je posodobljena';
 $string['dmlexceptiononinstall'] = '<p>Prišlo je do napake podatkovne zbirke [{$a->errorcode}].<br />{$a->debuginfo}</p>';
 $string['downloadedfilecheckfailed'] = 'Preverjanje prenesene datoteke ni uspelo.';
-$string['invalidmd5'] = 'Napačno preverjena spremenljivka - poskusite ponovno';
+$string['invalidmd5'] = 'Spremenljivka preverjanja je bila napačna - poskusite ponovno';
 $string['missingrequiredfield'] = 'Eno izmed zahtevanih polj manjka';
 $string['remotedownloaderror'] = '<p>Prenos komponente na vaš strežnik ni uspel. Prosimo, da preverite nastavitve prehodnega strežnika. Priporočamo uporabo razširitve cURL za PHP.<br /><br />Datoteko <a href="{$a->url}">{$a->url}</a> morate prenesti ročno - skopirajte jo v imenik "{$a->dest}" in razširite.</p>';
 $string['wrongdestpath'] = 'Napačna ciljna pot';

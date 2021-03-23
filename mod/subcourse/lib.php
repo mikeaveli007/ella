@@ -47,6 +47,8 @@ function subcourse_supports($feature) {
             return true;
         case FEATURE_BACKUP_MOODLE2:
             return true;
+        case FEATURE_COMPLETION_TRACKS_VIEWS:
+            return true;
         case FEATURE_COMPLETION_HAS_RULES:
             return true;
         default:
@@ -74,6 +76,14 @@ function subcourse_add_instance(stdClass $subcourse) {
 
     if (empty($subcourse->blankwindow)) {
         $subcourse->blankwindow = 0;
+    }
+
+    if (empty($subcourse->coursepageprintprogress)) {
+        $subcourse->coursepageprintprogress = 0;
+    }
+
+    if (empty($subcourse->coursepageprintgrade)) {
+        $subcourse->coursepageprintgrade = 0;
     }
 
     $newid = $DB->insert_record("subcourse", $subcourse);
@@ -120,11 +130,20 @@ function subcourse_update_instance(stdClass $subcourse) {
         $subcourse->blankwindow = 0;
     }
 
+    if (empty($subcourse->coursepageprintprogress)) {
+        $subcourse->coursepageprintprogress = 0;
+    }
+
+    if (empty($subcourse->coursepageprintgrade)) {
+        $subcourse->coursepageprintgrade = 0;
+    }
+
     $DB->update_record('subcourse', $subcourse);
 
     if (!empty($subcourse->refcourse)) {
         if (has_capability('mod/subcourse:fetchgrades', context_module::instance($cmid))) {
-            subcourse_grades_update($subcourse->course, $subcourse->id, $subcourse->refcourse, $subcourse->name);
+            subcourse_grades_update($subcourse->course, $subcourse->id, $subcourse->refcourse, $subcourse->name,
+                false, false, [], $subcourse->fetchpercentage);
             subcourse_update_timefetched($subcourse->id);
         }
     }
@@ -254,19 +273,31 @@ function subcourse_scale_used_anywhere($scaleid) {
  */
 function mod_subcourse_cm_info_view(cm_info $cm) {
     global $CFG, $USER, $DB;
-    require_once($CFG->libdir.'/gradelib.php');
+
+    if (isset($cm->customdata->coursepageprintgrade) && isset($cm->customdata->coursepageprintprogress)) {
+        $displayoptions = (object) [
+            'coursepageprintgrade' => $cm->customdata->coursepageprintgrade,
+            'coursepageprintprogress' => $cm->customdata->coursepageprintprogress,
+        ];
+
+    } else {
+        // This is unexpected - the customdata should be set in {@see subcourse_get_coursemodule_info()}.
+        $displayoptions = $DB->get_record('subcourse', ['id' => $cm->instance], 'coursepageprintgrade, coursepageprintprogress');
+    }
 
     $html = '';
 
-    $sql = "SELECT r.*
-              FROM {course} r
-              JOIN {subcourse} s ON s.refcourse = r.id
-             WHERE s.id = :subcourseid";
+    if ($displayoptions->coursepageprintprogress) {
+        $sql = "SELECT r.*
+                  FROM {course} r
+                  JOIN {subcourse} s ON s.refcourse = r.id
+                 WHERE s.id = :subcourseid";
 
-    $refcourse = $DB->get_record_sql($sql, ['subcourseid' => $cm->instance], IGNORE_MISSING);
-
-    if ($refcourse) {
-        $percentage = \core_completion\progress::get_course_progress_percentage($refcourse);
+        $refcourse = $DB->get_record_sql($sql, ['subcourseid' => $cm->instance], IGNORE_MISSING);
+        $percentage = null;
+        if ($refcourse) {
+            $percentage = \core_completion\progress::get_course_progress_percentage($refcourse);
+        }
         if ($percentage !== null) {
             $percentage = floor($percentage);
             $html .= html_writer::tag('div', get_string('currentprogress', 'subcourse', $percentage),
@@ -274,11 +305,13 @@ function mod_subcourse_cm_info_view(cm_info $cm) {
         }
     }
 
-    $currentgrade = grade_get_grades($cm->course, 'mod', 'subcourse', $cm->instance, $USER->id);
+    if ($displayoptions->coursepageprintgrade) {
+        require_once($CFG->libdir.'/gradelib.php');
 
-    if (!empty($currentgrade->items[0]->grades)) {
-        $currentgrade = reset($currentgrade->items[0]->grades);
-        if (isset($currentgrade->grade) and !($currentgrade->hidden)) {
+        $grades = grade_get_grades($cm->course, 'mod', 'subcourse', $cm->instance, $USER->id);
+        $currentgrade = (empty($grades->items[0]->grades)) ? null : reset($grades->items[0]->grades);
+
+        if (($currentgrade !== null) and isset($currentgrade->grade) and !($currentgrade->hidden)) {
             $strgrade = $currentgrade->str_grade;
             $html .= html_writer::tag('div', get_string('currentgrade', 'subcourse', $strgrade),
                 ['class' => 'contentafterlink']);
@@ -348,7 +381,7 @@ function mod_subcourse_core_calendar_provide_event_action(calendar_event $event,
  * "extra" information that may be needed when printing
  * this activity in a course listing.
  *
- * See {@link get_array_of_activities()} in course/lib.php
+ * See {@see get_array_of_activities()} in course/lib.php
  *
  * @param object $coursemodule
  * @return cached_cm_info info
@@ -357,7 +390,7 @@ function subcourse_get_coursemodule_info($coursemodule) {
     global $CFG, $DB;
 
     $subcourse = $DB->get_record('subcourse', ['id' => $coursemodule->instance],
-        'id, name, intro, introformat, instantredirect, blankwindow');
+        'id, name, intro, introformat, instantredirect, blankwindow, coursepageprintgrade, coursepageprintprogress');
 
     if (!$subcourse) {
         return null;
@@ -365,6 +398,10 @@ function subcourse_get_coursemodule_info($coursemodule) {
 
     $info = new cached_cm_info();
     $info->name = $subcourse->name;
+    $info->customdata = (object) [
+        'coursepageprintgrade' => $subcourse->coursepageprintgrade,
+        'coursepageprintprogress' => $subcourse->coursepageprintprogress,
+    ];
 
     if ($subcourse->instantredirect && $subcourse->blankwindow) {
         $url = new moodle_url('/mod/subcourse/view.php', ['id' => $coursemodule->id, 'isblankwindow' => 1]);

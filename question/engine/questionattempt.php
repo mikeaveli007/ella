@@ -68,18 +68,31 @@ class question_attempt {
 
     /**
      * @var string means first try at a question during an attempt by a user.
+     * Constant used when calling classify response.
      */
     const FIRST_TRY = 'firsttry';
 
     /**
      * @var string means last try at a question during an attempt by a user.
+     * Constant used when calling classify response.
      */
     const LAST_TRY = 'lasttry';
 
     /**
      * @var string means all tries at a question during an attempt by a user.
+     * Constant used when calling classify response.
      */
     const ALL_TRIES = 'alltries';
+
+    /**
+     * @var bool used to manage the lazy-initialisation of question objects.
+     */
+    const QUESTION_STATE_NOT_APPLIED = false;
+
+    /**
+     * @var bool used to manage the lazy-initialisation of question objects.
+     */
+    const QUESTION_STATE_APPLIED = true;
 
     /** @var integer if this attempts is stored in the question_attempts table, the id of that row. */
     protected $id = null;
@@ -98,6 +111,12 @@ class question_attempt {
 
     /** @var question_definition the question this is an attempt at. */
     protected $question;
+
+    /**
+     * @var bool tracks whether $question has had {@link question_definition::start_attempt()} or
+     * {@link question_definition::apply_attempt_state()} called.
+     */
+    protected $questioninitialised;
 
     /** @var int which variant of the question to use. */
     protected $variant;
@@ -132,6 +151,11 @@ class question_attempt {
      * Intended for reporting purposes.
      */
     protected $responsesummary = null;
+
+    /**
+     * @var int last modified time.
+     */
+    public $timemodified = null;
 
     /**
      * @var string plain text summary of the correct response to this question
@@ -179,6 +203,7 @@ class question_attempt {
     public function __construct(question_definition $question, $usageid,
             question_usage_observer $observer = null, $maxmark = null) {
         $this->question = $question;
+        $this->questioninitialised = self::QUESTION_STATE_NOT_APPLIED;
         $this->usageid = $usageid;
         if (is_null($observer)) {
             $observer = new question_usage_null_observer();
@@ -200,9 +225,27 @@ class question_attempt {
         return $this;
     }
 
-    /** @return question_definition the question this is an attempt at. */
-    public function get_question() {
+    /**
+     * Get the question that is being attempted.
+     *
+     * @param bool $requirequestioninitialised set this to false if you don't need
+     *      the behaviour initialised, which may improve performance.
+     * @return question_definition the question this is an attempt at.
+     */
+    public function get_question($requirequestioninitialised = true) {
+        if ($requirequestioninitialised && !empty($this->steps)) {
+            $this->ensure_question_initialised();
+        }
         return $this->question;
+    }
+
+    /**
+     * Get the id of the question being attempted.
+     *
+     * @return int question id.
+     */
+    public function get_question_id() {
+        return $this->question->id;
     }
 
     /**
@@ -274,9 +317,15 @@ class question_attempt {
 
     /**
      * For internal use only.
+     *
+     * @param bool $requirequestioninitialised set this to false if you don't need
+     *      the behaviour initialised, which may improve performance.
      * @return question_behaviour the behaviour that is controlling this attempt.
      */
-    public function get_behaviour() {
+    public function get_behaviour($requirequestioninitialised = true) {
+        if ($requirequestioninitialised && !empty($this->steps)) {
+            $this->ensure_question_initialised();
+        }
         return $this->behaviour;
     }
 
@@ -298,7 +347,7 @@ class question_attempt {
      * Get the name (in the sense a HTML name="" attribute, or a $_POST variable
      * name) to use for the field that indicates whether this question is flagged.
      *
-     * @return string  The field name to use.
+     * @return string The field name to use.
      */
     public function get_flag_field_name() {
         return $this->get_control_field_name('flagged');
@@ -311,8 +360,8 @@ class question_attempt {
      * See the comment on {@link question_attempt_step} for an explanation of
      * question type and behaviour variables.
      *
-     * @param $varname The short form of the variable name.
-     * @return string  The field name to use.
+     * @param string $varname The short form of the variable name.
+     * @return string The field name to use.
      */
     public function get_qt_field_name($varname) {
         return $this->get_field_prefix() . $varname;
@@ -325,8 +374,8 @@ class question_attempt {
      * See the comment on {@link question_attempt_step} for an explanation of
      * question type and behaviour variables.
      *
-     * @param $varname The short form of the variable name.
-     * @return string  The field name to use.
+     * @param string $varname The short form of the variable name.
+     * @return string The field name to use.
      */
     public function get_behaviour_field_name($varname) {
         return $this->get_field_prefix() . '-' . $varname;
@@ -338,8 +387,8 @@ class question_attempt {
      *
      * Examples are :sequencecheck and :flagged
      *
-     * @param $varname The short form of the variable name.
-     * @return string  The field name to use.
+     * @param string $varname The short form of the variable name.
+     * @return string The field name to use.
      */
     public function get_control_field_name($varname) {
         return $this->get_field_prefix() . ':' . $varname;
@@ -352,8 +401,7 @@ class question_attempt {
      * You should not use this method directly. This is an implementation detail
      * anyway, but if you must access it, use {@link question_usage_by_activity::get_field_prefix()}.
      *
-     * @param $varname The short form of the variable name.
-     * @return string  The field name to use.
+     * @return string The field name to use.
      */
     public function get_field_prefix() {
         return 'q' . $this->usageid . ':' . $this->slot . '_';
@@ -364,12 +412,10 @@ class question_attempt {
      * outer div of the question. It can be used to uniquely reference
      * the question from JavaScript.
      *
-     * Note, this is not truly unique. It will be changed in Moodle 3.7. See MDL-65029.
-     *
      * @return string id added to the outer <div class="que ..."> when the question is rendered.
      */
     public function get_outer_question_div_unique_id() {
-        return 'q' . $this->slot;
+        return 'question-' . $this->usageid . '-' . $this->slot;
     }
 
     /**
@@ -461,7 +507,6 @@ class question_attempt {
      * Get the qt data from the latest step that has any qt data. Return $default
      * array if it is no step has qt data.
      *
-     * @param string $name the name of the variable to get.
      * @param mixed default the value to return no step has qt data.
      *      (Optional, defaults to an empty array.)
      * @return array|mixed the data, or $default if there is not any.
@@ -530,6 +575,7 @@ class question_attempt {
      * type question_attempt::PARAM_FILES.
      *
      * @param string $name the name of the associated variable.
+     * @param int $contextid the context to which the files are linked.
      * @return array of {@link stored_files}.
      */
     public function get_last_qt_files($name, $contextid) {
@@ -649,7 +695,7 @@ class question_attempt {
     /** @return bool whether this question attempt has a non-zero maximum mark. */
     public function has_marks() {
         // Since grades are stored in the database as NUMBER(12,7).
-        return $this->maxmark >= 0.00000005;
+        return $this->maxmark >= question_utils::MARK_TOLERANCE;
     }
 
     /**
@@ -735,8 +781,10 @@ class question_attempt {
     }
 
     /**
-     * The current mark, formatted to the stated number of decimal places. Uses
+     * The a mark, formatted to the stated number of decimal places. Uses
      * {@link format_float()} to format floats according to the current locale.
+     *
+     * @param number $fraction a fraction.
      * @param int $dp number of decimal places.
      * @return string formatted mark.
      */
@@ -765,10 +813,11 @@ class question_attempt {
 
     /**
      * Produce a plain-text summary of what the user did during a step.
-     * @param question_attempt_step $step the step in quetsion.
+     * @param question_attempt_step $step the step in question.
      * @return string a summary of what was done during that step.
      */
     public function summarise_action(question_attempt_step $step) {
+        $this->ensure_question_initialised();
         return $this->behaviour->summarise_action($step);
     }
 
@@ -812,7 +861,7 @@ class question_attempt {
      * @param string $component the component name (normally 'question' or 'qtype_...')
      * @param string $filearea the name of the file area.
      * @param int $itemid the item id.
-     * @return srting the content with the URLs rewritten.
+     * @return string the content with the URLs rewritten.
      */
     public function rewrite_pluginfile_urls($text, $component, $filearea, $itemid) {
         return question_rewrite_question_urls($text, 'pluginfile.php',
@@ -828,7 +877,7 @@ class question_attempt {
      * @param int $contextid the id of the context the quba belongs to.
      * @param string $name the variable name the files belong to.
      * @param question_attempt_step $step the step the response is coming from.
-     * @return srting the content with the URLs rewritten.
+     * @return string the content with the URLs rewritten.
      */
     public function rewrite_response_pluginfile_urls($text, $contextid, $name,
             question_attempt_step $step) {
@@ -840,11 +889,15 @@ class question_attempt {
      * Get the {@link core_question_renderer}, in collaboration with appropriate
      * {@link qbehaviour_renderer} and {@link qtype_renderer} subclasses, to generate the
      * HTML to display this question attempt in its current state.
+     *
      * @param question_display_options $options controls how the question is rendered.
      * @param string|null $number The question number to display.
+     * @param moodle_page|null $page the page the question is being redered to.
+     *      (Optional. Defaults to $PAGE.)
      * @return string HTML fragment representing the question.
      */
     public function render($options, $number, $page = null) {
+        $this->ensure_question_initialised();
         if (is_null($page)) {
             global $PAGE;
             $page = $PAGE;
@@ -860,6 +913,7 @@ class question_attempt {
      * @return string HTML fragment.
      */
     public function render_head_html($page = null) {
+        $this->ensure_question_initialised();
         if (is_null($page)) {
             global $PAGE;
             $page = $PAGE;
@@ -877,9 +931,12 @@ class question_attempt {
      * @param question_display_options $options controls how the question is rendered.
      * @param string|null $number The question number to display. 'i' is a special
      *      value that gets displayed as Information. Null means no number is displayed.
+     * @param string $preferredbehaviour the preferred behaviour. It is slightly
+     *      annoying that this needs to be passed, but unavoidable for now.
      * @return string HTML fragment representing the question.
      */
     public function render_at_step($seq, $options, $number, $preferredbehaviour) {
+        $this->ensure_question_initialised();
         $restrictedqa = new question_attempt_with_restricted_history($this, $seq, $preferredbehaviour);
         return $restrictedqa->render($options, $number);
     }
@@ -894,6 +951,7 @@ class question_attempt {
      * @return bool true if the user can access this file.
      */
     public function check_file_access($options, $component, $filearea, $args, $forcedownload) {
+        $this->ensure_question_initialised();
         return $this->behaviour->check_file_access($options, $component, $filearea, $args, $forcedownload);
     }
 
@@ -967,7 +1025,7 @@ class question_attempt {
      * {@link question_usage_by_activity::start_question()} instead.
      *
      * @param string|question_behaviour $preferredbehaviour the name of the
-     *      desired archetypal behaviour, or an actual model instance.
+     *      desired archetypal behaviour, or an actual behaviour instance.
      * @param int $variant the variant of the question to start. Between 1 and
      *      $this->get_question()->get_num_variants() inclusive.
      * @param array $submitteddata optional, used when re-starting to keep the same initial state.
@@ -1005,6 +1063,7 @@ class question_attempt {
         } else {
             $this->behaviour->init_first_step($firststep, $variant);
         }
+        $this->questioninitialised = self::QUESTION_STATE_APPLIED;
         $this->add_step($firststep);
 
         // Record questionline and correct answer.
@@ -1032,6 +1091,7 @@ class question_attempt {
      * @return array name => value pairs.
      */
     protected function get_resume_data() {
+        $this->ensure_question_initialised();
         $resumedata = $this->behaviour->get_resume_data();
         foreach ($resumedata as $name => $value) {
             if ($value instanceof question_file_loader) {
@@ -1071,13 +1131,20 @@ class question_attempt {
                     $var = null;
                 }
 
+                if ($var !== null) {
+                    // Ensure that, if set, $var is a string. This is because later, after
+                    // it has been saved to the database and loaded back it will be a string,
+                    // so better if the type is predictably always a string.
+                    $var = (string) $var;
+                }
+
                 return $var;
         }
     }
 
     /**
      * Validate the manual mark for a question.
-     * @param unknown $currentmark the user input (e.g. '1,0', '1,0' or 'invalid'.
+     * @param string $currentmark the user input (e.g. '1,0', '1,0' or 'invalid'.
      * @return string any errors with the value, or '' if it is OK.
      */
     public function validate_manual_mark($currentmark) {
@@ -1091,7 +1158,8 @@ class question_attempt {
         }
 
         $maxmark = $this->get_max_mark();
-        if ($mark > $maxmark * $this->get_max_fraction() || $mark < $maxmark * $this->get_min_fraction()) {
+        if ($mark > $maxmark * $this->get_max_fraction() + question_utils::MARK_TOLERANCE ||
+                $mark < $maxmark * $this->get_min_fraction() - question_utils::MARK_TOLERANCE) {
             return get_string('manualgradeoutofrange', 'question');
         }
 
@@ -1128,7 +1196,9 @@ class question_attempt {
 
     /**
      * Get any data from the request that matches the list of expected params.
+     *
      * @param array $expected variable name => PARAM_... constant.
+     * @param null|array $postdata null to use real post data, otherwise an array of data to use.
      * @param string $extraprefix '-' or ''.
      * @return array name => value.
      */
@@ -1147,6 +1217,8 @@ class question_attempt {
     /**
      * Get all the submitted question type data for this question, whithout checking
      * that it is valid or cleaning it in any way.
+     *
+     * @param null|array $postdata null to use real post data, otherwise an array of data to use.
      * @return array name => value.
      */
     public function get_all_submitted_qt_vars($postdata) {
@@ -1175,6 +1247,8 @@ class question_attempt {
      * @return array name => value pairs that could be passed to {@link process_action()}.
      */
     public function get_submitted_data($postdata = null) {
+        $this->ensure_question_initialised();
+
         $submitteddata = $this->get_expected_data(
                 $this->behaviour->get_expected_data(), $postdata, '-');
 
@@ -1213,6 +1287,7 @@ class question_attempt {
      * @return array|null name => value pairs that could be passed to {@link process_action()}.
      */
     public function get_correct_response() {
+        $this->ensure_question_initialised();
         $response = $this->question->get_correct_response();
         if (is_null($response)) {
             return null;
@@ -1228,7 +1303,7 @@ class question_attempt {
      * Change the quetsion summary. Note, that this is almost never necessary.
      * This method was only added to work around a limitation of the Opaque
      * protocol, which only sends questionLine at the end of an attempt.
-     * @param $questionsummary the new summary to set.
+     * @param string $questionsummary the new summary to set.
      */
     public function set_question_summary($questionsummary) {
         $this->questionsummary = $questionsummary;
@@ -1263,6 +1338,7 @@ class question_attempt {
      * @return boolean whether this attempt can finish naturally.
      */
     public function can_finish_during_attempt() {
+        $this->ensure_question_initialised();
         return $this->behaviour->can_finish_during_attempt();
     }
 
@@ -1274,6 +1350,7 @@ class question_attempt {
      * @param int $existingstepid used by the regrade code.
      */
     public function process_action($submitteddata, $timestamp = null, $userid = null, $existingstepid = null) {
+        $this->ensure_question_initialised();
         $pendingstep = new question_attempt_pending_step($submitteddata, $timestamp, $userid, $existingstepid);
         $this->discard_autosaved_step();
         if ($this->behaviour->process_action($pendingstep) == self::KEEP) {
@@ -1295,6 +1372,7 @@ class question_attempt {
      * @return bool whether anything was saved.
      */
     public function process_autosave($submitteddata, $timestamp = null, $userid = null) {
+        $this->ensure_question_initialised();
         $pendingstep = new question_attempt_pending_step($submitteddata, $timestamp, $userid);
         if ($this->behaviour->process_autosave($pendingstep) == self::KEEP) {
             $this->add_autosaved_step($pendingstep);
@@ -1313,6 +1391,7 @@ class question_attempt {
      * @param int $userid the user to attribute the aciton to. (If not given, use the current user.)
      */
     public function finish($timestamp = null, $userid = null) {
+        $this->ensure_question_initialised();
         $this->convert_autosaved_step_to_real_step();
         $this->process_action(array('-finish' => 1), $timestamp, $userid);
     }
@@ -1325,6 +1404,7 @@ class question_attempt {
      *      after the regrade, or whether it may still be in progress (default false).
      */
     public function regrade(question_attempt $oldqa, $finished) {
+        $oldqa->ensure_question_initialised();
         $first = true;
         foreach ($oldqa->get_step_iterator() as $step) {
             $this->observer->notify_step_deleted($step, $this);
@@ -1349,8 +1429,13 @@ class question_attempt {
 
             } else {
                 // This is the normal case. Replay the next step of the attempt.
-                $this->process_action($step->get_submitted_data(),
-                        $step->get_timecreated(), $step->get_user_id(), $step->get_id());
+                if ($step === $oldqa->autosavedstep) {
+                    $this->process_autosave($step->get_submitted_data(),
+                            $step->get_timecreated(), $step->get_user_id());
+                } else {
+                    $this->process_action($step->get_submitted_data(),
+                            $step->get_timecreated(), $step->get_user_id(), $step->get_id());
+                }
             }
         }
 
@@ -1379,6 +1464,7 @@ class question_attempt {
      * @param int $userid the user to attribute the aciton to. (If not given, use the current user.)
      */
     public function manual_grade($comment, $mark, $commentformat = null, $timestamp = null, $userid = null) {
+        $this->ensure_question_initialised();
         $submitteddata = array('-comment' => $comment);
         if (is_null($commentformat)) {
             debugging('You should pass $commentformat to manual_grade.', DEBUG_DEVELOPER);
@@ -1421,8 +1507,8 @@ class question_attempt {
      * This is used by the manual grading code, particularly in association with
      * validation. If there is a comment submitted in the request, then use that,
      * otherwise use the latest comment for this question.
-     * @return number the current mark for this question.
-     * {@link get_fraction()} * {@link get_max_mark()}.
+     *
+     * @return array with three elements, comment, commentformat and mark.
      */
     public function get_current_manual_comment() {
         $comment = $this->get_submitted_var($this->get_behaviour_field_name('comment'), PARAM_RAW);
@@ -1442,15 +1528,16 @@ class question_attempt {
      * Break down a student response by sub part and classification. See also {@link question::classify_response}.
      * Used for response analysis.
      *
-     * @param string $whichtries         which tries to analyse for response analysis. Will be one of
-     *                                   question_attempt::FIRST_TRY, LAST_TRY or ALL_TRIES.
-     *                                   Defaults to question_attempt::LAST_TRY.
-     * @return (question_classified_response|array)[] If $whichtries is question_attempt::FIRST_TRY or LAST_TRY index is subpartid
-     *                                   and values are question_classified_response instances.
-     *                                   If $whichtries is question_attempt::ALL_TRIES then first key is submitted response no
-     *                                   and the second key is subpartid.
+     * @param string $whichtries which tries to analyse for response analysis. Will be one of
+     *      question_attempt::FIRST_TRY, LAST_TRY or ALL_TRIES. Defaults to question_attempt::LAST_TRY.
+     * @return question_classified_response[]|question_classified_response[][] If $whichtries is
+     *      question_attempt::FIRST_TRY or LAST_TRY index is subpartid and values are
+     *      question_classified_response instances.
+     *      If $whichtries is question_attempt::ALL_TRIES then first key is submitted response no
+     *      and the second key is subpartid.
      */
     public function classify_response($whichtries = self::LAST_TRY) {
+        $this->ensure_question_initialised();
         return $this->behaviour->classify_response($whichtries);
     }
 
@@ -1461,13 +1548,15 @@ class question_attempt {
      *
      * @param Iterator $records Raw records loaded from the database.
      * @param int $questionattemptid The id of the question_attempt to extract.
+     * @param question_usage_observer $observer the observer that will be monitoring changes in us.
+     * @param string $preferredbehaviour the preferred behaviour under which we are operating.
      * @return question_attempt The newly constructed question_attempt.
      */
     public static function load_from_records($records, $questionattemptid,
             question_usage_observer $observer, $preferredbehaviour) {
         $record = $records->current();
         while ($record->questionattemptid != $questionattemptid) {
-            $record = $records->next();
+            $records->next();
             if (!$records->valid()) {
                 throw new coding_exception("Question attempt {$questionattemptid} not found in the database.");
             }
@@ -1514,7 +1603,8 @@ class question_attempt {
         $autosavedsequencenumber = null;
         while ($record && $record->questionattemptid == $questionattemptid && !is_null($record->attemptstepid)) {
             $sequencenumber = $record->sequencenumber;
-            $nextstep = question_attempt_step::load_from_records($records, $record->attemptstepid, $qa->get_question()->get_type_name());
+            $nextstep = question_attempt_step::load_from_records($records, $record->attemptstepid,
+                    $qa->get_question(false)->get_type_name());
 
             if ($sequencenumber < 0) {
                 if (!$autosavedstep) {
@@ -1526,9 +1616,6 @@ class question_attempt {
                 }
             } else {
                 $qa->steps[$i] = $nextstep;
-                if ($i == 0) {
-                    $question->apply_attempt_state($qa->steps[0]);
-                }
                 $i++;
             }
 
@@ -1549,6 +1636,26 @@ class question_attempt {
         }
 
         return $qa;
+    }
+
+    /**
+     * This method is part of the lazy-initialisation of question objects.
+     *
+     * Methods which require $this->question to be fully initialised
+     * (to have had init_first_step or apply_attempt_state called on it)
+     * should call this method before proceeding.
+     */
+    protected function ensure_question_initialised() {
+        if ($this->questioninitialised === self::QUESTION_STATE_APPLIED) {
+            return; // Already done.
+        }
+
+        if (empty($this->steps)) {
+            throw new coding_exception('You must call start() before doing anything to a question_attempt().');
+        }
+
+        $this->question->apply_attempt_state($this->steps[0]);
+        $this->questioninitialised = self::QUESTION_STATE_APPLIED;
     }
 
     /**
@@ -1583,7 +1690,7 @@ class question_attempt_with_restricted_history extends question_attempt {
      * @param question_attempt $baseqa The question_attempt to make a restricted version of.
      * @param int $lastseq the index of the last step to include.
      * @param string $preferredbehaviour the preferred behaviour. It is slightly
-     *      annoyting that this needs to be passed, but unavoidable for now.
+     *      annoying that this needs to be passed, but unavoidable for now.
      */
     public function __construct(question_attempt $baseqa, $lastseq, $preferredbehaviour) {
         $this->baseqa = $baseqa->get_full_qa();
@@ -1622,29 +1729,29 @@ class question_attempt_with_restricted_history extends question_attempt {
     }
 
     protected function add_step(question_attempt_step $step) {
-        coding_exception('Cannot modify a question_attempt_with_restricted_history.');
+        throw new coding_exception('Cannot modify a question_attempt_with_restricted_history.');
     }
     public function process_action($submitteddata, $timestamp = null, $userid = null, $existingstepid = null) {
-        coding_exception('Cannot modify a question_attempt_with_restricted_history.');
+        throw new coding_exception('Cannot modify a question_attempt_with_restricted_history.');
     }
     public function start($preferredbehaviour, $variant, $submitteddata = array(), $timestamp = null, $userid = null, $existingstepid = null) {
-        coding_exception('Cannot modify a question_attempt_with_restricted_history.');
+        throw new coding_exception('Cannot modify a question_attempt_with_restricted_history.');
     }
 
     public function set_database_id($id) {
-        coding_exception('Cannot modify a question_attempt_with_restricted_history.');
+        throw new coding_exception('Cannot modify a question_attempt_with_restricted_history.');
     }
     public function set_flagged($flagged) {
-        coding_exception('Cannot modify a question_attempt_with_restricted_history.');
+        throw new coding_exception('Cannot modify a question_attempt_with_restricted_history.');
     }
     public function set_slot($slot) {
-        coding_exception('Cannot modify a question_attempt_with_restricted_history.');
+        throw new coding_exception('Cannot modify a question_attempt_with_restricted_history.');
     }
     public function set_question_summary($questionsummary) {
-        coding_exception('Cannot modify a question_attempt_with_restricted_history.');
+        throw new coding_exception('Cannot modify a question_attempt_with_restricted_history.');
     }
     public function set_usage_id($usageid) {
-        coding_exception('Cannot modify a question_attempt_with_restricted_history.');
+        throw new coding_exception('Cannot modify a question_attempt_with_restricted_history.');
     }
 }
 

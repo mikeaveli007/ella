@@ -36,7 +36,8 @@
     { "inputID": 1, "suggestionsId": 2, "selectionId": 3, "downArrowId": 4, "placeholder": "Select something" }
 }}
 {{#showSuggestions}}
-<input type="text"{{!
+<div class="d-md-inline-block mr-md-2 position-relative">
+    <input type="text"{{!
     }} id="{{inputId}}"{{!
     }} class="form-control"{{!
     }} list="{{suggestionsId}}"{{!
@@ -48,20 +49,24 @@
     }} autocapitalize="off"{{!
     }} aria-autocomplete="list"{{!
     }} aria-owns="{{suggestionsId}} {{selectionId}}"{{!
-    }}{{#tags}} data-tags="1"{{/tags}}{{!
-    }}{{#multiple}} data-multiple="multiple"{{/multiple}}{{!
+    }} {{#tags}}data-tags="1"{{/tags}}{{!
+    }} {{#multiple}}data-multiple="multiple"{{/multiple}}{{!
     }}>
     <span class="form-autocomplete-downarrow position-absolute p-1" id="{{downArrowId}}">&#x25BC;</span>
+</div>
 {{/showSuggestions}}
 {{^showSuggestions}}
-<input type="text"{{!
+<div class="d-md-inline-block mr-md-2">
+    <input type="text"{{!
     }} id="{{inputId}}"{{!
+    }} class="form-control"{{!
     }} placeholder="{{placeholder}}"{{!
     }} role="textbox"{{!
     }} aria-owns="{{selectionId}}"{{!
-    }}{{#tags}} data-tags="1"{{/tags}}{{!
-    }}{{#multiple}} data-multiple="multiple"{{/multiple}}{{!
+    }} {{#tags}}data-tags="1"{{/tags}}{{!
+    }} {{#multiple}}data-multiple="multiple"{{/multiple}}{{!
     }}>
+</div>
 {{/showSuggestions}}
 
 {{#js}}

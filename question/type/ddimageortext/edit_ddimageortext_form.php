@@ -108,20 +108,7 @@ class qtype_ddimageortext_edit_form extends qtype_ddtoimage_edit_form_base {
 
     public function js_call() {
         global $PAGE;
-        $maxsizes = new stdClass();
-        $maxsizes->bgimage = new stdClass();
-        $maxsizes->bgimage->width = QTYPE_DDIMAGEORTEXT_BGIMAGE_MAXWIDTH;
-        $maxsizes->bgimage->height = QTYPE_DDIMAGEORTEXT_BGIMAGE_MAXHEIGHT;
-        $maxsizes->dragimage = new stdClass();
-        $maxsizes->dragimage->width = QTYPE_DDIMAGEORTEXT_DRAGIMAGE_MAXWIDTH;
-        $maxsizes->dragimage->height = QTYPE_DDIMAGEORTEXT_DRAGIMAGE_MAXHEIGHT;
-
-        $params = array('maxsizes' => $maxsizes,
-                        'topnode' => 'fieldset#id_previewareaheader');
-
-        $PAGE->requires->yui_module('moodle-qtype_ddimageortext-form',
-                                        'M.qtype_ddimageortext.init_form',
-                                        array($params));
+        $PAGE->requires->js_call_amd('qtype_ddimageortext/form', 'init');
     }
 
     // Drag items.
@@ -129,8 +116,7 @@ class qtype_ddimageortext_edit_form extends qtype_ddtoimage_edit_form_base {
     protected function definition_draggable_items($mform, $itemrepeatsatstart) {
         $mform->addElement('header', 'draggableitemheader',
                                 get_string('draggableitems', 'qtype_ddimageortext'));
-        $mform->addElement('advcheckbox', 'shuffleanswers', ' ',
-                                get_string('shuffleimages', 'qtype_'.$this->qtype()));
+        $mform->addElement('advcheckbox', 'shuffleanswers', get_string('shuffleimages', 'qtype_'.$this->qtype()));
         $mform->setDefault('shuffleanswers', 0);
         $this->repeat_elements($this->draggable_item($mform), $itemrepeatsatstart,
                 $this->draggable_items_repeated_options(),
@@ -150,14 +136,13 @@ class qtype_ddimageortext_edit_form extends qtype_ddtoimage_edit_form_base {
                                             array('class' => 'dragitemtype'));
         $options = array();
         for ($i = 1; $i <= self::MAX_GROUPS; $i += 1) {
-            $options[$i] = $i;
+            $options[$i] = question_utils::int_to_letter($i);
         }
         $grouparray[] = $mform->createElement('select', 'draggroup',
                                                 get_string('group', 'qtype_gapselect'),
                                                 $options,
                                                 array('class' => 'draggroup'));
-        $grouparray[] = $mform->createElement('advcheckbox', 'infinite', ' ',
-                get_string('infinite', 'qtype_ddimageortext'));
+        $grouparray[] = $mform->createElement('advcheckbox', 'infinite', get_string('infinite', 'qtype_ddimageortext'));
         $draggableimageitem[] = $mform->createElement('group', 'drags',
                 get_string('draggableitemheader', 'qtype_ddimageortext', '{no}'), $grouparray);
 
@@ -166,7 +151,7 @@ class qtype_ddimageortext_edit_form extends qtype_ddtoimage_edit_form_base {
 
         $draggableimageitem[] = $mform->createElement('text', 'draglabel',
                                                 get_string('label', 'qtype_ddimageortext'),
-                                                array('size' => 30, 'class' => 'tweakcss'));
+                                                array('size' => 30, 'class' => 'tweakcss draglabel'));
         $mform->setType('draglabel', PARAM_RAW); // These are validated manually.
         return $draggableimageitem;
     }
