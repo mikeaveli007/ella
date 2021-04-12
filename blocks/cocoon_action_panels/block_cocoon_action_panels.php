@@ -23,10 +23,12 @@ class block_cocoon_action_panels extends block_base
         $this->config->panel_1_text = 'Teach what you love. Dove Schooll gives you the tools to create an online course.';
         $this->config->panel_1_button_text = 'Start Teaching';
         $this->config->panel_1_button_url = '#';
+        $this->config->panel_1_button_target = '_self';
         $this->config->panel_2_title = 'Dove School For Business';
         $this->config->panel_2_text = 'Get unlimited access to 2,500 of Udemy’s top courses for your team.';
         $this->config->panel_2_button_text = 'Doing Business';
         $this->config->panel_2_button_url = '#';
+        $this->config->panel_2_button_target = '_self';
         $this->config->panel_1_color_bg = '#f9f9f9';
         $this->config->panel_1_color_title = '#0a0a0a';
         $this->config->panel_1_color_body = '#6f7074';
@@ -69,6 +71,11 @@ class block_cocoon_action_panels extends block_base
         } else {
           $this->content->panel_1_button_url = '';
         }
+        if(!empty($this->config->panel_1_button_target)){
+          $this->content->panel_1_button_target = format_text($this->config->panel_1_button_target, FORMAT_HTML, array('filter' => true));
+        } else {
+          $this->content->panel_1_button_target = '_self';
+        }
         if(!empty($this->config->panel_2_title)){
           $this->content->panel_2_title = format_text($this->config->panel_2_title, FORMAT_HTML, array('filter' => true));
         } else {
@@ -85,9 +92,14 @@ class block_cocoon_action_panels extends block_base
           $this->content->panel_2_button_text = '';
         }
         if(!empty($this->config->panel_2_button_url)){
-          $this->content->panel_2_button_url = format_text($this->config->panel_2_button_url, FORMAT_HTML, array('filter' => true));;
+          $this->content->panel_2_button_url = format_text($this->config->panel_2_button_url, FORMAT_HTML, array('filter' => true));
         } else {
           $this->content->panel_2_button_url = '';
+        }
+        if(!empty($this->config->panel_2_button_target)){
+          $this->content->panel_2_button_target = format_text($this->config->panel_2_button_target, FORMAT_HTML, array('filter' => true));
+        } else {
+          $this->content->panel_2_button_target = '_self';
         }
         if(!empty($this->config->panel_1_color_bg)){$this->content->panel_1_color_bg = $this->config->panel_1_color_bg;} else {$this->content->panel_1_color_bg = '#f9f9f9';}
         if(!empty($this->config->panel_1_color_title)){$this->content->panel_1_color_title = $this->config->panel_1_color_title;} else {$this->content->panel_1_color_title = '#0a0a0a';}
@@ -121,7 +133,7 @@ class block_cocoon_action_panels extends block_base
                                             >'.format_text($this->content->panel_1_text, FORMAT_HTML, array('filter' => true)).'</p>';
                 }
                 if (!empty($this->content->panel_1_button_url) && !empty($this->content->panel_1_button_text)){
-                  $this->content->text .='<a class="btn btn-thm" href="'.format_text($this->content->panel_1_button_url, FORMAT_HTML, array('filter' => true)).'"
+                  $this->content->text .='<a target="'.$this->content->panel_1_button_target.'" class="btn btn-thm" href="'.format_text($this->content->panel_1_button_url, FORMAT_HTML, array('filter' => true)).'"
                                             data-ccn="panel_1_button_text"
                                             data-ccn-c="panel_1_color_btn"
                                             data-ccn-co="ccnBg, ccnBd"
@@ -155,7 +167,7 @@ class block_cocoon_action_panels extends block_base
                                             >'.format_text($this->content->panel_2_text, FORMAT_HTML, array('filter' => true)).'</p>';
                 }
                 if (!empty($this->content->panel_2_button_url) && !empty($this->content->panel_2_button_text)){
-                  $this->content->text .='<a class="btn btn-dark" href="'.format_text($this->content->panel_2_button_url, FORMAT_HTML, array('filter' => true)).'"
+                  $this->content->text .='<a target="'.$this->content->panel_2_button_target.'" class="btn btn-dark" href="'.format_text($this->content->panel_2_button_url, FORMAT_HTML, array('filter' => true)).'"
                                             data-ccn="panel_2_button_text"
                                             data-ccn-c="panel_2_color_btn"
                                             data-ccn-co="ccnBg, ccnBd"

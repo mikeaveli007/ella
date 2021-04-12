@@ -17,16 +17,7 @@ class block_cocoon_slider_3 extends block_base {
          return $ccnBlockHandler->ccnGetBlockApplicability(array('all'));
      }
 
-
-    /**
-     * Customize the block title dynamically.
-     */
     function specialization() {
-        // if (isset($this->config->title)) {
-        //     $this->title = $this->title = format_string($this->config->title, true, ['context' => $this->context]);
-        // } else {
-        //     $this->title = get_string('newcustomsliderblock', 'block_cocoon_slider_3');
-        // }
         global $CFG, $DB;
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
 
@@ -36,9 +27,9 @@ class block_cocoon_slider_3 extends block_base {
           $this->config->slide_subtitle1 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
           $this->config->slide_btn_text1 = 'Ready to Get Started?';
           $this->config->slide_btn_url1 = '#';
-          $this->config->file_slide1 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
-          $this->config->file_slide2 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
-          $this->config->file_slide3 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
+          // $this->config->file_slide1 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
+          // $this->config->file_slide2 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
+          // $this->config->file_slide3 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
           $this->config->slide_title2 = 'Self Education Resources and Infos';
           $this->config->slide_subtitle2 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
           $this->config->slide_btn_text2 = 'Ready to Get Started?';
@@ -95,16 +86,23 @@ class block_cocoon_slider_3 extends block_base {
         if(!empty($this->config->next_2)){$this->content->next_2 = $this->config->next_2;} else { $this->content->next_2 = '';}
         if(!empty($this->config->prev)){$this->content->prev = $this->config->prev;} else { $this->content->prev = '';}
         if(!empty($this->config->next)){$this->content->next = $this->config->next;}else { $this->content->next = '';}
-        if(!empty($this->config->arrow_style)){$this->content->arrow_style = $this->config->arrow_style;}
+        if(!empty($this->config->arrow_style)){$this->content->arrow_style = $this->config->arrow_style;} else { $this->content->arrow_style = '0'; }
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/config/config_ccn_carousel.php');
         $text = '';
+        $bannerstyle = '';
+        if ($data->slidesnumber > 1) {
+          $bannerstyle .= 'banner-style-two--multiple';
+        } else {
+          $bannerstyle .= 'banner-style-two--single';
+        }
+
         if ($data->slidesnumber > 0) {
             $text = '		<div class="home-seven home2-slider p0">
 		<div class="container-fluid p0">
 			<div class="row">
 				<div class="col-lg-12">
 					<div class="main-banner-wrapper home7">
-					    <div class="banner-style-two owl-theme owl-carousel" '.$ccnConfigDataCarousel.'>';
+					    <div class="banner-style-two owl-theme owl-carousel '.$bannerstyle.' " '.$ccnConfigDataCarousel.'>';
             $fs = get_file_storage();
             for ($i = 1; $i <= $data->slidesnumber; $i++) {
                 $sliderimage = 'file_slide' . $i;

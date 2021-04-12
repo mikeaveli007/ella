@@ -40,7 +40,7 @@ class block_cocoon_course_intro extends block_base {
         if(!empty($this->config->teacher)){$this->content->teacher = $this->config->teacher;}
         if(!empty($this->config->accent)){$this->content->accent = $this->config->accent;}
         if(!empty($this->config->video)){$this->content->video = $this->config->video;}
-        if(!empty($this->config->video_url)){$this->content->video_url = $this->config->video_url;}
+        if(!empty($this->config->video_url)){$this->content->video_url = $this->config->video_url;} else {$this->content->video_url = '';}
         if(!empty($this->config->style)){$this->content->style = $this->config->style;}
         if(!empty($this->config->show_teacher)){$this->content->show_teacher = $this->config->show_teacher;}
 
@@ -86,8 +86,8 @@ class block_cocoon_course_intro extends block_base {
               <div class="ccn-identify-course-intro">
                 <div class="cs_instructor">
                   <ul class="cs_instrct_list float-left mb0">';
-                  $this->content->text .= $renderImage;
                   if($this->content->show_teacher == '1'){
+                    $this->content->text .= $renderImage;
                     $this->content->text .= $renderName;
                   }
                   if($PAGE->theme->settings->coursecat_modified != 1){
@@ -103,8 +103,6 @@ class block_cocoon_course_intro extends block_base {
                 <ul class="cs_review_seller">';
                     $this->content->text .= $renderAccent;
                     $this->content->text .= $ccnCourse->ccnRender->starRating;
-
-
                   $this->content->text .='
                 </ul>';
                 if($PAGE->theme->settings->coursecat_enrolments != 1 || $PAGE->theme->settings->coursecat_announcements != 1){
@@ -113,7 +111,7 @@ class block_cocoon_course_intro extends block_base {
                   $this->content->text .='<li class="list-inline-item"><a class="'.$white.'" href="#"><span class="flaticon-profile"></span> '. count_enrolled_users($context) .' '.get_string('students_enrolled', 'theme_edumy').'</a></li>';
                 }
                 if($PAGE->theme->settings->coursecat_announcements != 1){
-                  $this->content->text .='<li class="list-inline-item"><a class="'.$white.'" href="#"><span class="flaticon-comment"></span> '. $COURSE->newsitems .' '.get_string('topics', 'theme_edumy').'</a></li>';
+                  $this->content->text .='<li class="list-inline-item"><a class="'.$white.'" href="#"><span class="flaticon-comment"></span> '. $ccnCourse->numberOfSections .' '.get_string('topics', 'theme_edumy').'</a></li>';
                 }
                 $this->content->text .='</ul>';
               }
@@ -124,13 +122,6 @@ class block_cocoon_course_intro extends block_base {
                   <div class="courses_big_thumb">
                     <div class="thumb">
                       <iframe class="iframe_video" src="'.$ccnVideo.'" frameborder="0" allowfullscreen></iframe>
-                    </div>
-                  </div>';
-              } else if(!empty($this->content->video)) { //legacy Edumy versions
-                $this->content->text .='
-                  <div class="courses_big_thumb">
-                    <div class="thumb">
-                      <iframe class="iframe_video" src="'.format_text($this->content->video, FORMAT_HTML, array('filter' => true)).'" frameborder="0" allowfullscreen></iframe>
                     </div>
                   </div>';
               }

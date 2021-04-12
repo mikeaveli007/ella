@@ -37,9 +37,10 @@ use context_system;
 
 require_once($CFG->dirroot . '/course/renderer.php');
 require_once($CFG->dirroot . '/theme/edumy/ccn/course_handler/ccn_course_handler.php');
+require_once($CFG->dirroot . '/theme/edumy/ccn/mdl_handler/ccn_mdl_handler.php');
 
 use ccnCourseHandler;
-
+use ccnMdlHandler;
 
 class course_renderer extends \core_course_renderer {
 
@@ -934,7 +935,7 @@ class course_renderer extends \core_course_renderer {
 
           $modclasses = 'activity ' . $mod->modname . ' modtype_' . $mod->modname . ' ' . $mod->extraclasses;
 
-          if(strpos($ccnUriForCourseFocus, $ccnUri)) {
+          if(strpos($ccnUriForCourseFocus, $ccnUri) || $ccnUriForCourseFocus == $ccnUri) {
             $modclasses .= ' active';
           }
           $output .= html_writer::tag('li', $modulehtml, array('class' => $modclasses, 'id' => 'module-' . $mod->id));
@@ -1348,5 +1349,83 @@ class course_renderer extends \core_course_renderer {
       return $output;
   }
 
+  // /**
+  //  * Renders html to display a course search form
+  //  *
+  //  * @param string $value default value to populate the search field
+  //  * @return string
+  //  */
+  // public function course_search_form($value = '') {
+  //
+  //     $data = [
+  //         'action' => \core_search\manager::get_course_search_url(),
+  //         'btnclass' => 'btn-primary',
+  //         'inputname' => 'q',
+  //         'searchstring' => get_string('searchcourses'),
+  //         'hiddenfields' => (object) ['name' => 'areaids', 'value' => 'core_course-course'],
+  //         'query' => $value
+  //     ];
+  //     return $this->render_from_template('theme_edumy/ccn_mdl_310/ccn_course_search_form', $data);
+  // }
+
+
+  /**
+   * Renders html to display a course search form
+   *
+   * @param string $value default value to populate the search field
+   * @return string
+   */
+  public function course_search_form($value = '', $format = 'plain') {
+
+    $ccnMdlHandler = new ccnMdlHandler();
+    $ccnGetCoreVersion = $ccnMdlHandler->ccnGetCoreVersion();
+
+    if($ccnGetCoreVersion == '310'){
+      $data = [
+          'action' => \core_search\manager::get_course_search_url(),
+          'btnclass' => 'btn-primary',
+          'inputname' => 'q',
+          'searchstring' => get_string('searchcourses'),
+          'hiddenfields' => (object) ['name' => 'areaids', 'value' => 'core_course-course'],
+          'query' => $value
+      ];
+      return $this->render_from_template('theme_edumy/ccn_mdl_310/ccn_course_search_form', $data);
+    } else {
+      static $count = 0;
+      $formid = 'coursesearch';
+      if ((++$count) > 1) {
+          $formid .= $count;
+      }
+
+      switch ($format) {
+          case 'navbar' :
+              $formid = 'coursesearchnavbar';
+              $inputid = 'navsearchbox';
+              $inputsize = 20;
+              break;
+          case 'short' :
+              $inputid = 'shortsearchbox';
+              $inputsize = 12;
+              break;
+          default :
+              $inputid = 'coursesearchbox';
+              $inputsize = 30;
+      }
+
+      $data = (object) [
+              'searchurl' => (new moodle_url('/course/search.php'))->out(false),
+              'id' => $formid,
+              'inputid' => $inputid,
+              'inputsize' => $inputsize,
+              'value' => $value
+      ];
+      if ($format != 'navbar') {
+          $helpicon = new \help_icon('coursesearch', 'core');
+          $data->helpicon = $helpicon->export_for_template($this);
+      }
+
+      return $this->render_from_template('core_course/course_search_form', $data);
+    }
+  }
 
 }

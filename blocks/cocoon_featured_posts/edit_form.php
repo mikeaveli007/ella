@@ -25,6 +25,21 @@ class block_cocoon_featured_posts_edit_form extends block_edit_form {
             $data->slidesnumber = 0;
         }
 
+        $searchareas = \core_search\manager::get_search_areas_list(true);
+        $areanames = array();
+        foreach ($searchareas as $areaid => $searcharea) {
+            $areanames[$areaid] = $searcharea->get_visible_name();
+        }
+
+        $bloglisting = new blog_listing();
+
+        $entries = $bloglisting->get_entries();
+        $entrieslist = array();
+
+        foreach ($entries as $entryid => $entry) {
+          $entrieslist[$entry->id] = $entry->subject;
+        }
+
         // Fields for editing HTML block title and contents.
         $mform->addElement('header', 'configheader', get_string('blocksettings', 'block'));
 
@@ -32,6 +47,13 @@ class block_cocoon_featured_posts_edit_form extends block_edit_form {
         $mform->addElement('text', 'config_title', get_string('config_title', 'block_cocoon_featured_posts'));
         $mform->setDefault('config_title', 'Featured Posts');
         $mform->setType('config_title', PARAM_RAW);
+
+        $options = array(
+            'multiple' => true,
+        );
+        $mform->addElement('autocomplete', 'config_posts' . $i, get_string('posts'), $entrieslist, $options);
+
+
 
         $slidesrange = range(0, 12);
         $mform->addElement('select', 'config_slidesnumber', get_string('slides_number', 'block_cocoon_featured_posts'), $slidesrange);

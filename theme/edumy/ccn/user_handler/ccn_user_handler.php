@@ -89,9 +89,11 @@ class ccnUserHandler {
 
         $teachingStudentCount = 0;
         $teacherCourseRatings = array();
+        $teachingCoursesIds = array();
         foreach($teachingCourses as $key => $course) {
           $courseID = $course->id;
           if ($DB->record_exists('course', array('id' => $courseID))) {
+            $teachingCoursesIds[] = $courseID;
             $context = context_course::instance($courseID);
             $numberOfUsers = count_enrolled_users($context);
             $teachingStudentCount+= $numberOfUsers;
@@ -105,6 +107,7 @@ class ccnUserHandler {
         }
 
         $teacherRating = null;
+        $ccnRenderStars = '';
         if($teacherCourseRatings){
           $teacherRatingCount = count($teacherCourseRatings);
           $teacherRating = array_sum($teacherCourseRatings) / $teacherRatingCount;
@@ -127,7 +130,6 @@ class ccnUserHandler {
             // Not a real exception - user just needs to update theme and run DB installer correctly
           }
 
-          $ccnRenderStars = '';
           /* @ccnComm: Rating */
           if($PAGE->theme->settings->course_ratings == 1){ //@ccnComm: decorative
             $ccnRenderStars =  '<ul class="review_list">
@@ -138,8 +140,7 @@ class ccnUserHandler {
                                   <li class="list-inline-item"><i class="fa fa-star"></i></li>
                                 </ul>';
           } elseif($PAGE->theme->settings->course_ratings == 2){ //@ccnComm: database
-              $ccnRenderStars = $ccnProcessRatingRenderFunction;
-              // print_object($ccnRenderStars);
+            $ccnRenderStars = $ccnProcessRatingRenderFunction;
           }
         }
 
@@ -178,6 +179,7 @@ class ccnUserHandler {
         $ccnUser->isTeacher = $isTeacher;
         $ccnUser->teachingCoursesCount = $teachingCoursesCount;
         $ccnUser->teachingStudentCount = $teachingStudentCount;
+        $ccnUser->teachingCoursesIds = $teachingCoursesIds;
         $ccnUser->teacherRating = $teacherRating;
         $ccnUser->profileCount = $ccnProfileCount;
         $ccnUser->printAvatar = $printUserAvatar;
@@ -197,10 +199,8 @@ class ccnUserHandler {
 
         return $ccnUser;
       }
-
-
-  }
-  return null;
+    }
+    return null;
   }
 
   public function ccnOutputUserSocials($userId, $htmlElement, $htmlElementClass) {
@@ -209,11 +209,15 @@ class ccnUserHandler {
     $render = '';
 
     $userData = get_complete_user_data('id', $userId);
-    $userIcq = $userData->icq;
-    $userSkype = $userData->skype;
-    $userYahoo = $userData->yahoo;
-    $userAim = $userData->aim;
-    $userMsn = $userData->msn;
+    $userIcq = $userSkype = $userYahoo = $userAim = $userMsn = NULL;
+
+    if($userData){
+      $userIcq = $userData->icq;
+      $userSkype = $userData->skype;
+      $userYahoo = $userData->yahoo;
+      $userAim = $userData->aim;
+      $userMsn = $userData->msn;
+    }
 
     if($userSkype){
       $render .= '<'.$htmlElement.' class="'.$htmlElementClass.'"><span data-toggle="tooltip" data-placement="top" data-original-title="'.get_string('skypeid').': '.$userSkype.'"><i class="fa fa-skype"></i></span></'.$htmlElement.'>';
@@ -303,6 +307,21 @@ class ccnUserHandler {
       return TRUE;
     }
     return FALSE;
+  }
+
+  public function ccnGetAllUsers(){
+
+    return NULL;
+
+    // global $CFG, $DB;
+    //
+    // $ccnUsers = $DB->get_records('user', array(), $sort='', $fields='*', $limitfrom=0, $limitnum=$maxNum);
+    //
+    // $ccnReturn = array();
+    // foreach ($ccnUsers as $key => $ccnUser) {
+    //   $ccnReturn[] = $this->ccnGetUserDetails($ccnUser->id);
+    // }
+    // return $ccnReturn;
   }
 
 }

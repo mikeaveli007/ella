@@ -1,7 +1,7 @@
 <?php
 
-
 require_once($CFG->dirroot . "/blog/renderer.php");
+require_once($CFG->dirroot . "/theme/edumy/ccn/blog_handler/ccn_blog_handler.php");
 
 class theme_edumy_core_blog_renderer extends core_blog_renderer {
 
@@ -15,6 +15,9 @@ class theme_edumy_core_blog_renderer extends core_blog_renderer {
 
       global $CFG, $PAGE;
 
+      $ccnBlogHandler = new ccnBlogHandler();
+      $ccnGetPostDetails = $ccnBlogHandler->ccnGetPostDetails($entry->id);
+
       $syscontext = context_system::instance();
 
       $stredit = get_string('edit');
@@ -23,25 +26,14 @@ class theme_edumy_core_blog_renderer extends core_blog_renderer {
       // Header.
       $mainclass = 'ccn_post';
       if ($entry->renderable->unassociatedentry) {
-          $mainclass .= 'draft';
+        $mainclass .= 'draft';
       } else {
-          $mainclass .= $entry->publishstate;
+        $mainclass .= $entry->publishstate;
       }
-   //   $o = $this->output->container_start($mainclass, 'b' . $entry->id);
-   //   $o .= $this->output->container_start('row header clearfix');
 
-      // User picture.
-     // $o .= $this->output->container_start('left picture header');
-     // $o .= $this->output->user_picture($entry->renderable->user);
-     // $o .= $this->output->container_end();
-
-      // $o .= $this->output->container_start('topic starter header clearfix');
-
-      // Title.
       $titlelink = html_writer::link(new moodle_url('/blog/index.php',
                                                      array('entryid' => $entry->id)),
                                                      format_string($entry->subject));
-      // $o .= $this->output->container($titlelink, 'subject');
 
       // Post by.
       $by = new stdClass();
@@ -62,16 +54,6 @@ class theme_edumy_core_blog_renderer extends core_blog_renderer {
       if (!empty($entry->renderable->externalblogtext)) {
           // $o .= $this->output->container($entry->renderable->externalblogtext, 'externalblog');
       }
-
-      // Closing subject tag and header tag.
-      // $o .= $this->output->container_end();
-      // $o .= $this->output->container_end();
-
-      // Post content.
-      // $o .= $this->output->container_start('row maincontent clearfix');
-
-      // Entry.
-      // $o .= $this->output->container_start('no-overflow content ');
 
       // Determine text for publish state.
       switch ($entry->publishstate) {
@@ -101,6 +83,7 @@ class theme_edumy_core_blog_renderer extends core_blog_renderer {
 
 
       // CCN Attachments
+      $image = $CFG->wwwroot .'/theme/edumy/images/ccnBgMd.png';
       if ($entry->renderable->attachments) {
         foreach($entry->renderable->attachments as $attachment) {
           $image = $attachment->url;
@@ -158,21 +141,20 @@ class theme_edumy_core_blog_renderer extends core_blog_renderer {
       }
 
       if ($entry->renderable->unassociatedentry) {
-       //   $o .= $this->output->container(get_string('associationunviewable', 'blog'), 'noticebox');
+         // $o .= $this->output->container(get_string('associationunviewable', 'blog'), 'noticebox');
       }
 
       // Commands.
       //$o .= $this->output->container_start('commands');
       if ($entry->renderable->usercanedit) {
-          $ccn_commands = '';
-          if (empty($entry->uniquehash)) {
-              $ccn_commands .= '<a class="btn dbxshad btn-md btn-thm3 circle" href="'.new moodle_url('/blog/edit.php', array('action' => 'edit', 'entryid' => $entry->id)).'">'.$stredit.'</a>';
-          }
-          $ccn_commands .= '<a class="btn dbxshad btn-md btn-thm3 circle" href="'.new moodle_url('/blog/edit.php', array('action' => 'delete', 'entryid' => $entry->id)).'">'.$strdelete.'</a>';
+        $ccn_commands = '';
+        if (empty($entry->uniquehash)) {
+            $ccn_commands .= '<a class="btn btn-secondary" href="'.new moodle_url('/blog/edit.php', array('action' => 'edit', 'entryid' => $entry->id)).'">'.$stredit.'</a>';
+        }
+        $ccn_commands .= '<a class="btn btn-secondary" href="'.new moodle_url('/blog/edit.php', array('action' => 'delete', 'entryid' => $entry->id)).'">'.$strdelete.'</a>';
       }
 
       $entryurl = new moodle_url('/blog/index.php', array('entryid' => $entry->id));
-      // $o .= html_writer::link($entryurl, get_string('permalink', 'blog'));
 
       // Last modification.
       if ($entry->created != $entry->lastmodified) {
@@ -181,21 +163,21 @@ class theme_edumy_core_blog_renderer extends core_blog_renderer {
 
       // Comments.
       if (!empty($entry->renderable->comment)) {
-          global $DB, $CFG, $PAGE, $USER, $COURSE;
+        global $DB, $CFG, $PAGE, $USER, $COURSE;
 
-              $cmt = new stdClass();
-              $cmt->context = context_user::instance($entry->userid);
-              $cmt->courseid = $PAGE->course->id;
-              $cmt->area = 'format_blog';
-              $cmt->itemid = $entry->id;
-              $cmt->notoggle  = true;
-              $cmt->showcount = $CFG->blogshowcommentscount;
-              $cmt->component = 'blog';
-              $cmt->autostart = true;
-              $cmt->displaycancel = false;
-              $ccn_comments = new comment($cmt);
-              $ccn_comments->set_view_permission(true);
-              $ccn_comments->set_fullwidth();
+        $cmt = new stdClass();
+        $cmt->context = context_user::instance($entry->userid);
+        $cmt->courseid = $PAGE->course->id;
+        $cmt->area = 'format_blog';
+        $cmt->itemid = $entry->id;
+        $cmt->notoggle  = true;
+        $cmt->showcount = $CFG->blogshowcommentscount;
+        $cmt->component = 'blog';
+        $cmt->autostart = true;
+        $cmt->displaycancel = false;
+        $ccn_comments = new comment($cmt);
+        $ccn_comments->set_view_permission(true);
+        $ccn_comments->set_fullwidth();
       }
 
       $tags =  $this->output->tag_list(core_tag_tag::get_item_tags('core', 'post', $entry->id));
@@ -209,6 +191,50 @@ class theme_edumy_core_blog_renderer extends core_blog_renderer {
       $cocoon_share_vk = 'http://vk.com/share.php?url='. $entryurl;
       $cocoon_share_em = 'mailto:?&body='. $entryurl;
       $o = '';
+
+      $ccnRenderEntryStyle4 = '
+        <div class="col-12 col-md-6 col-xl-4 ccn-blog-list-entry">
+          <div class="ccn_blog_post_4 blog_post mb30">
+            <div class="thumb">
+              <img class="img-fluid w100" src="'.$image.'" alt="">
+              <a class="post_date" href="'.$ccnGetPostDetails->url.'">'.$ccnGetPostDetails->created.'</a>
+            </div>
+            <div class="details">
+              <h5><a class="color-white" href="'.$ccnGetPostDetails->url.'">'.$ccnGetPostDetails->ccnRender->tags.'</a></h5>
+              <h4><a class="color-white" href="'.$ccnGetPostDetails->url.'">'.$ccnGetPostDetails->title.'</a></h4>
+            </div>
+          </div>
+        </div>';
+
+      $ccnRenderEntryStyle5 = '
+        <div class="col-md-6 col-lg-4 col-xl-4 ccn-blog-list-entry">
+          <div class="ccn_blog_post_5 blog_post_home6 mb30">
+            <div class="thumb">
+              <a href="'.$ccnGetPostDetails->url.'"><img class="img-fluid img-rounded" src="'.$image.'" alt=""></a>
+              <h5 class="mt20">'.$ccnGetPostDetails->ccnRender->tags.'</h5>
+              <a href="'.$ccnGetPostDetails->url.'"><h4 class="mt0">'.$ccnGetPostDetails->title.'</h4></a>
+              <span class="post_date">'.$ccnGetPostDetails->created.'</span>
+            </div>
+            <div class="details"></div>
+          </div>
+        </div>';
+
+      $ccnRenderEntryStyle6 = '
+        <div class="col-md-6 col-lg-6 col-xl-4 ccn-blog-masonry-entry">
+          <div class="ccn_blog_post_6 blog_post_home6 style2 mb30">
+            <div class="thumb">
+              <a href="'.$ccnGetPostDetails->url.'">
+                <img class="w100 img-rounded" src="'.$image.'" alt="">
+                <div class="overlay"></div>
+              </a>
+            </div>
+            <div class="details">
+              <h5 class="mt20">'.$ccnGetPostDetails->ccnRender->tags.'</h5>
+              <h4 class="mt0"><a href="'.$ccnGetPostDetails->url.'">'.$ccnGetPostDetails->title.'</a></h4>
+              <span class="post_date">'.$ccnGetPostDetails->created.'</span>
+            </div>
+          </div>
+        </div>';
 
       if(isset($_GET['entryid'])){
         // If it's a single blog entry
@@ -268,7 +294,7 @@ class theme_edumy_core_blog_renderer extends core_blog_renderer {
           // If it's a blog listing
           if (isset($PAGE->theme->settings->blogstyle) && ($PAGE->theme->settings->blogstyle == 1)) {
             $o .= '
-            <div class="ccn-blog-list-entry col-xs-12 main_blog_post_content mb30">
+            <div class="ccn-blog-list-entry col-12 main_blog_post_content mb30">
               <div class="mbp_thumb_post">';
                 if(!empty($image)){
                 $o .= '
@@ -285,7 +311,7 @@ class theme_edumy_core_blog_renderer extends core_blog_renderer {
                 }
                 $o .= '
                  <div class="details">
-                   <a href="'.$entryurl.'"><h3>'. $entry->subject .'</h3></a>';
+                   <a href="'.$entryurl.'"><h3>'. format_text($entry->subject, FORMAT_HTML, array('filter' => true)) .'</h3></a>';
                    if ($entry->renderable->usercanedit) {
                      $o .= '<div class="ccn-commands">'.$ccn_commands.'</div>';
                    }
@@ -402,7 +428,13 @@ class theme_edumy_core_blog_renderer extends core_blog_renderer {
      								</div>
      							</div>';
             }
-       }
+          } elseif(isset($PAGE->theme->settings->blogstyle) && ($PAGE->theme->settings->blogstyle == 4)) {
+            $o .= $ccnRenderEntryStyle4;
+          } elseif(isset($PAGE->theme->settings->blogstyle) && ($PAGE->theme->settings->blogstyle == 5)) {
+            $o .= $ccnRenderEntryStyle5;
+          } elseif(isset($PAGE->theme->settings->blogstyle) && ($PAGE->theme->settings->blogstyle == 6)) {
+            $o .= $ccnRenderEntryStyle6;
+          }
 }
 
 

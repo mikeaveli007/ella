@@ -37,7 +37,6 @@ class block_cocoon_hero_3_edit_form extends block_edit_form {
 
         // Feature 1
         $mform->addElement('header', 'config_feature_1', get_string('config_feature_1', 'theme_edumy'));
-
         $mform->addElement('text', 'config_feature_1_title', get_string('config_title', 'theme_edumy'));
         $mform->setDefault('config_feature_1_title', 'Design: Over 800 Courses');
         $mform->setType('config_feature_1_title', PARAM_TEXT);
@@ -48,6 +47,9 @@ class block_cocoon_hero_3_edit_form extends block_edit_form {
 
         $select = $mform->addElement('select', 'config_feature_1_icon', get_string('config_icon_class', 'theme_edumy'), $ccnFontList, array('class'=>'ccn_icon_class'));
         $select->setSelected('flaticon-pencil');
+
+        // MRR - Adding field for Link
+        $mform->addElement('text', 'config_feature_1_link', get_string('config_link', 'theme_edumy'));
 
         // Feature 2
         $mform->addElement('header', 'config_feature_2', get_string('config_feature_2', 'theme_edumy'));
@@ -63,6 +65,9 @@ class block_cocoon_hero_3_edit_form extends block_edit_form {
         $select = $mform->addElement('select', 'config_feature_2_icon', get_string('config_icon_class', 'theme_edumy'), $ccnFontList, array('class'=>'ccn_icon_class'));
         $select->setSelected('flaticon-student-1');
 
+        // MRR - Adding field for Link
+        $mform->addElement('text', 'config_feature_2_link', get_string('config_link', 'theme_edumy'));
+
         // Feature 3
         $mform->addElement('header', 'config_feature_3', get_string('config_feature_3', 'theme_edumy'));
 
@@ -77,6 +82,9 @@ class block_cocoon_hero_3_edit_form extends block_edit_form {
         $select = $mform->addElement('select', 'config_feature_3_icon', get_string('config_icon_class', 'theme_edumy'), $ccnFontList, array('class'=>'ccn_icon_class'));
         $select->setSelected('flaticon-photo-camera');
 
+        // MRR - Adding field for Link
+        $mform->addElement('text', 'config_feature_3_link', get_string('config_link', 'theme_edumy'));
+
         // Feature 4
         $mform->addElement('header', 'config_feature_4', get_string('config_feature_4', 'theme_edumy'));
 
@@ -90,6 +98,9 @@ class block_cocoon_hero_3_edit_form extends block_edit_form {
 
         $select = $mform->addElement('select', 'config_feature_4_icon', get_string('config_icon_class', 'theme_edumy'), $ccnFontList, array('class'=>'ccn_icon_class'));
         $select->setSelected('flaticon-medal');
+
+        // MRR - Adding field for Link
+        $mform->addElement('text', 'config_feature_4_link', get_string('config_link', 'theme_edumy'));
 
         for($i = 1; $i <= $slidesmax; $i++) {
             $mform->addElement('header', 'config_ccn_item' . $i , 'Slide ' . $i);

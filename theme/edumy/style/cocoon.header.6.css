@@ -7,7 +7,6 @@
   line-height: 30px;
   padding: 0;
 }
-
 .ccn_header_style_6 .header_top.home6 .sign_up_btn .btn {
   line-height: 23px;
 }
@@ -19,9 +18,6 @@
   margin-top: 5px;
   margin-bottom: 0;
 }
-.header_top.home6 {
-  background-color: #192675;
-}
 .menu6_search.home6 .mk-search-trigger {
   /* top: 17px; */
   top: 20px;
@@ -29,11 +25,6 @@
 .menu6_search.home6 #search-button i {
   color: #0a0a0a;
 }
-
-
-
-
-
 header.header-nav.ccnHeader6.menu_style_home_six {
   display: -webkit-box;
   background: #ffffff;
@@ -107,7 +98,6 @@ header.header-nav.ccnHeader6.menu_style_home_six .ace-responsive-menu>li.last {
 header.header-nav.ccnHeader6.menu_style_home_six.stricky-fixed .ace-responsive-menu li a {
   color: #0a0a0a;
 }
-
 header.header-nav.ccnHeader6.menu_style_home_six {
   background-color: #ffffff;
   border-bottom: none;
@@ -130,7 +120,6 @@ header.header-nav.ccnHeader6.menu_style_home_six .sign_up_btn .btn {
   color: #ffffff;
   margin-top: 10px;
 }
-
 .stylehome1.home6 .mm-navbar {
   background-color: #ffffff;
 }
@@ -152,14 +141,10 @@ header.header-nav.ccnHeader6.menu_style_home_six .sign_up_btn .btn {
 .stylehome1.home6 .mm-btn_next::after {
   border-color: #252834;
 }
-
-
 .ccn_header_style_6 .header_top.home6 .header_search_widget .mailchimp_form .form-control {
   margin: 0 !important;
   display: block;
 }
-
-
 .ccn_header_style_6 .header_top.home6 .header_search_widget .mailchimp_form button {
   margin: 0 !important;
   top: -29px;
@@ -169,7 +154,6 @@ header.header-nav.ccnHeader6.menu_style_home_six .sign_up_btn .btn {
 .ccn_header_style_6 .header_top.home6 .header_search_widget .mailchimp_form button span {
   padding-left: 0 !important;
 }
-
 .ccn_header_style_6 .menu6_search.home6 {
   /* margin-left: 40px; */
   margin-left: 0;
@@ -178,4 +162,12 @@ header.header-nav.ccnHeader6.menu_style_home_six .sign_up_btn .btn {
   margin-right: 10px;
   position: relative;
   margin-left: 20px;
+}
+.block_cocoon_slider_7.ccn_morphed .home14-slider:not(.style2) {
+  margin-top: 112px;
+}
+@media (min-width:1200px) {
+  .block_cocoon_slider_7.ccn_morphed .home14-slider:not(.style2) {
+    margin-top: 17px;
+  }
 }

@@ -78,7 +78,7 @@ class block_cocoon_accordion extends block_base {
             $text .= '
             <div class="shortcode_widget_accprdons">';
             if(!empty($this->config->title)){
-              $text .='  <h4 data-ccn="title">'.$this->content->title.'</h4>';
+              $text .='  <h4 data-ccn="title">'.format_text($this->content->title, FORMAT_HTML, array('filter' => true)).'</h4>';
             }
             $ccnAccInstance = 'accordion-'.$this->instance->id;
             $text .='
@@ -101,26 +101,23 @@ class block_cocoon_accordion extends block_base {
             								    <div class="card-header" id="#'.$ccnAccLink.'">
             								    	<h2 class="mb-0">
             								        	<button data-ccn="'.$ccnAccTitle.'" class="btn btn-link" type="button" data-toggle="collapse" data-target="#'.$ccnCollapseLink.'" aria-expanded="true" aria-controls="'.$ccnCollapseLink.'">
-            								        		'.$data->$ccnAccTitle.'
+            								        		'.format_text($data->$ccnAccTitle, FORMAT_HTML, array('filter' => true)).'
             								        		<span class="flaticon-right-arrow float-right"></span>
             								    		</button>
             								   		</h2>
             								    </div>
             								    <div id="'.$ccnCollapseLink.'" class="collapse" aria-labelledby="'.$ccnAccLink.'" data-parent="#'.$ccnAccInstance.'">
             									    <div class="card-body" data-ccn="'.$ccnAccBody.'">
-            									        '.$data->$ccnAccBody['text'].'
+            									        '.format_text($data->$ccnAccBody['text'], FORMAT_HTML, array('filter' => true)).'
             									    </div>
             								    </div>
             							    </div>';
-}
-$text .='
+                            }
+                            $text .='
             							</div>
             						</div>
             					</div>';
-
-
         }
-
         $this->content = new stdClass;
         $this->content->footer = '';
         $this->content->text = $text;

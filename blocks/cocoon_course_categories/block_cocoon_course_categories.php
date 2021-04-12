@@ -3,6 +3,7 @@
 include_once($CFG->dirroot . '/course/lib.php');
 require_once($CFG->dirroot. '/course/renderer.php');
 require_once($CFG->dirroot. '/theme/edumy/ccn/block_handler/ccn_block_handler.php');
+require_once($CFG->dirroot. '/theme/edumy/ccn/course_handler/ccn_course_handler.php');
 
 class block_cocoon_course_categories extends block_base {
     function init() {
@@ -20,20 +21,23 @@ class block_cocoon_course_categories extends block_base {
 
 
     function instance_allow_config() {
-        return true;
+      return true;
+    }
+
+    public function instance_allow_multiple() {
+      return true;
     }
 
     function specialization() {
         global $CFG, $DB;
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
-
+          $this->config = new \stdClass();
           $this->config->title = 'Via School Categories Courses';
           $this->config->subtitle = 'Cum doctus civibus efficiantur in imperdiet deterruisset.';
           $this->config->button_text = 'View All Courses';
           $this->config->body = '0';
           $this->config->items = '8';
-
           $this->config->color_bg = 'rgb(255,255,255)';
           $this->config->color_title = '#0a0a0a';
           $this->config->color_subtitle = '#6f7074';
@@ -69,6 +73,8 @@ class block_cocoon_course_categories extends block_base {
         if(!empty($this->config->body)){$this->content->body = $this->config->body;} else {$this->content->body = 0;}
         if(!empty($this->config->button_link)){$this->content->button_link = $this->config->button_link;}else{$this->content->button_link = "#our-courses";}
         if(!empty($this->config->button_text)){$this->content->button_text = $this->config->button_text;} else {$this->content->button_text = '';}
+        if(!empty($this->config->categories)){$this->content->categories = $this->config->categories;} else {$this->content->categories = NULL ;}
+        if(!empty($this->config->style)){$this->content->style = $this->config->style;} else {$this->content->style = 1;}
         if(!empty($this->config->color_bg)){$this->content->color_bg = $this->config->color_bg;} else {$this->content->color_bg = 'rgb(255,255,255)';}
         if(!empty($this->config->color_title)){$this->content->color_title = $this->config->color_title;} else {$this->content->color_title = '#0a0a0a';}
         if(!empty($this->config->color_subtitle)){$this->content->color_subtitle = $this->config->color_subtitle;} else {$this->content->color_subtitle = '#6f7074';}
@@ -77,7 +83,7 @@ class block_cocoon_course_categories extends block_base {
         if(!empty($this->config->color_btn)){$this->content->color_btn = $this->config->color_btn;} else {$this->content->color_btn = '#2441e7';}
         if(!empty($this->config->button_bdrrd)){$this->content->button_bdrrd = $this->config->button_bdrrd;} else {$this->content->button_bdrrd = '50';}
 
-        if ($this->config->style == 1) {
+        if ($this->content->style == 1) {
           $this->content->style = '<a href="#our-courses">
 				    	<div class="mouse_scroll">
 			        		<div class="icon"><span class="flaticon-download-arrow"></span></div>
@@ -128,8 +134,42 @@ class block_cocoon_course_categories extends block_base {
           } else {
             $col_class = "col-sm-6 col-lg-3";
           }
-          if ($data->items > 0) {
-          if ($topcategory->is_uservisible() && ($categories = $topcategory->get_children())) { // Check we have categories.
+
+
+          if(!empty($this->content->categories) && $this->content->categories !== NULL){
+            foreach($this->content->categories as $k=>$category) {
+
+              $ccnCourseHandler = new ccnCourseHandler();
+              $ccnGetCategoryDetails = $ccnCourseHandler->ccnGetCategoryDetails((int)$category);
+
+              if($ccnGetCategoryDetails->coursesCount >= 1){
+                $countNoOfCourses = '<p>'.get_string('number_of_courses', 'theme_edumy', $ccnGetCategoryDetails->coursesCount).'</p>';
+              } else {
+                $countNoOfCourses = '';
+              }
+
+              $this->content->text .= '
+              <div class="'.$col_class.'">
+                <a href="'.$ccnGetCategoryDetails->categoryUrl.'" class="img_hvr_box" style="background-image: url('.$ccnGetCategoryDetails->coverImage.');">
+                  <div class="overlay">
+                    <div class="details">
+                      <h5>'. $ccnGetCategoryDetails->categoryName .'</h5>';
+                      if($this->content->body == '2'){
+                        $this->content->text .= '';
+                      } elseif($this->content->body == '1'){
+                        $this->content->text .= $countNoOfCourses;
+                      } else {
+                       $this->content->text .='<p>'. $ccnGetCategoryDetails->categorySummary.'</p>';
+                      }
+                      $this->content->text .='
+                    </div>
+                  </div>
+                </a>
+              </div>';
+
+            }
+          } elseif($data->items > 0) {
+            if ($topcategory->is_uservisible() && ($categories = $topcategory->get_children())) { // Check we have categories.
               if (count($categories) > 1 || (count($categories) == 1 && $DB->count_records('course') > 200)) {     // Just print top level category links
                   $i = 0;
                   foreach ($categories as $category) {
@@ -193,19 +233,22 @@ class block_cocoon_course_categories extends block_base {
                 }
               } else {                          // Just print course names of single category
                 $category = array_shift($categories);
-                $courses = $category->get_courses();
+                if($category !== null){
+                  $courses = $category->get_courses();
 
-                if ($courses) {
-                    foreach ($courses as $course) {
-                        $coursecontext = context_course::instance($course->id);
-                        $linkcss = $course->visible ? "" : " class=\"dimmed\" ";
+                  if ($courses) {
+                      foreach ($courses as $course) {
+                          $coursecontext = context_course::instance($course->id);
+                          $linkcss = $course->visible ? "" : " class=\"dimmed\" ";
 
-                        $this->content->text .= '
-                        <li><a href="'.$CFG->wwwroot .'/course/view.php?id='.$course->id.'">'. $course->get_formatted_name() .' <span class="float-right">()</span></a></li>
+                          $this->content->text .= '
+                          <li><a href="'.$CFG->wwwroot .'/course/view.php?id='.$course->id.'">'. $course->get_formatted_name() .' <span class="float-right">()</span></a></li>
 
-                        ';
+                          ';
+                      }
                     }
-                  }
+                }
+
                 }
               } else {
                 $this->content->text .= '<div class="text-center col-lg-6 offset-lg-3">'.get_string('select_no_cat', 'theme_edumy').'</div>';
@@ -219,7 +262,7 @@ class block_cocoon_course_categories extends block_base {
               <div class="row">
                 <div class="col-lg-6 offset-lg-3">
                   <div class="courses_all_btn text-center">
-                    <a data-ccn="button_text" data-ccn-c="color_btn" data-ccn-cv="'.$this->content->color_btn.'" data-ccn-bdrrd="button_bdrrd" class="btn btn-transparent ccnLcEl--i" href="'.$CFG->wwwroot .'/course/index.php" style="border-radius:'.$this->content->button_bdrrd.'px;">'.$this->content->button_text.'</a>
+                    <a data-ccn="button_text" data-ccn-c="color_btn" data-ccn-cv="'.$this->content->color_btn.'" data-ccn-bdrrd="button_bdrrd" class="btn btn-transparent ccnLcEl--i" href="'.$CFG->wwwroot .'/course/index.php" style="border-radius:'.$this->content->button_bdrrd.'px;">'.format_text($this->content->button_text, FORMAT_HTML, array('filter' => true)).'</a>
                   </div>
                 </div>
               </div>

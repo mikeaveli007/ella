@@ -2,117 +2,94 @@
 require_once($CFG->dirroot. '/theme/edumy/ccn/block_handler/ccn_block_handler.php');
 class block_cocoon_slider_2 extends block_base {
 
-    /**
-     * Start block instance.
-     */
-    function init() {
-        $this->title = get_string('pluginname', 'block_cocoon_slider_2');
+  function init() {
+    $this->title = get_string('pluginname', 'block_cocoon_slider_2');
+  }
+
+  function applicable_formats() {
+    $ccnBlockHandler = new ccnBlockHandler();
+    return $ccnBlockHandler->ccnGetBlockApplicability(array('all'));
+  }
+
+  function specialization() {
+    global $CFG, $DB;
+    include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
+    if (empty($this->config)) {
+      $this->config = new \stdClass();
+      $this->config->slidesnumber = '3';
+      $this->config->slide_title1 = 'Self Education Resources and Infos';
+      $this->config->slide_subtitle1 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
+      $this->config->slide_btn_text1 = 'Ready to Get Started?';
+      $this->config->slide_btn_url1 = '#';
+      $this->config->slide_title2 = 'Self Education Resources and Infos';
+      $this->config->slide_subtitle2 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
+      $this->config->slide_btn_text2 = 'Ready to Get Started?';
+      $this->config->slide_btn_url2 = '#';
+      $this->config->slide_title3 = 'Self Education Resources and Infos';
+      $this->config->slide_subtitle3 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
+      $this->config->slide_btn_text3 = 'Ready to Get Started?';
+      $this->config->slide_btn_url3 = '#';
+      $this->config->prev_1 = 'PR';
+      $this->config->prev_2 = 'EV';
+      $this->config->next_1 = 'NE';
+      $this->config->next_2 = 'XT';
+      $this->config->arrow_style = 0;
+      include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization/specialization_ccn_carousel.php');
+    }
+  }
+
+  function instance_allow_multiple() {
+    return false;
+  }
+
+  function get_content() {
+    global $CFG, $PAGE;
+    require_once($CFG->libdir . '/filelib.php');
+
+    if ($this->content !== NULL) {
+        return $this->content;
     }
 
-    /**
-     * The block is usable in all pages
-     */
-     function applicable_formats() {
-         $ccnBlockHandler = new ccnBlockHandler();
-         return $ccnBlockHandler->ccnGetBlockApplicability(array('all'));
-     }
-
-
-    /**
-     * Customize the block title dynamically.
-     */
-    function specialization() {
-        // if (isset($this->config->title)) {
-        //     $this->title = $this->title = format_string($this->config->title, true, ['context' => $this->context]);
-        // }
-        global $CFG, $DB;
-        include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
-        if (empty($this->config)) {
-          $this->config->slidesnumber = '3';
-          $this->config->slide_title1 = 'Self Education Resources and Infos';
-          $this->config->slide_subtitle1 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
-          $this->config->slide_btn_text1 = 'Ready to Get Started?';
-          $this->config->slide_btn_url1 = '#';
-          $this->config->file_slide1 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
-          $this->config->file_slide2 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
-          $this->config->file_slide3 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
-          $this->config->slide_title2 = 'Self Education Resources and Infos';
-          $this->config->slide_subtitle2 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
-          $this->config->slide_btn_text2 = 'Ready to Get Started?';
-          $this->config->slide_btn_url2 = '#';
-          $this->config->slide_title3 = 'Self Education Resources and Infos';
-          $this->config->slide_subtitle3 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
-          $this->config->slide_btn_text3 = 'Ready to Get Started?';
-          $this->config->slide_btn_url3 = '#';
-          $this->config->prev_1 = 'PR';
-          $this->config->prev_2 = 'EV';
-          $this->config->next_1 = 'NE';
-          $this->config->next_2 = 'XT';
-          $this->config->arrow_style = 0;
-          include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization/specialization_ccn_carousel.php');
-        }
+    if (!empty($this->config) && is_object($this->config)) {
+      $data = $this->config;
+      $data->slidesnumber = is_numeric($data->slidesnumber) ? (int)$data->slidesnumber : 3;
+      if ($data->style == 1) {
+        $slidersize = 'slide slide-one home6';
+      } else {
+        $slidersize = 'slide slide-one sh2';
+      }
+    } else {
+      $data = new \stdClass();
+      $data->slidesnumber = '3';
     }
 
-    /**
-     * The block can be used repeatedly in a page.
-     */
-    function instance_allow_multiple() {
-        return false;
+    $this->content = new \stdClass();
+    if(!empty($this->config->prev_1)){$this->content->prev_1 = $this->config->prev_1;}else{$this->content->prev_1 = 'PR';}
+    if(!empty($this->config->prev_2)){$this->content->prev_2 = $this->config->prev_2;}else{$this->content->prev_2 = 'EV';}
+    if(!empty($this->config->next_1)){$this->content->next_1 = $this->config->next_1;}else{$this->content->next_1 = 'NE';}
+    if(!empty($this->config->next_2)){$this->content->next_2 = $this->config->next_2;}else{$this->content->next_2 = 'XT';}
+    if(!empty($this->config->prev)){$this->content->prev = $this->config->prev;}else{$this->content->prev = 'PREV';}
+    if(!empty($this->config->next)){$this->content->next = $this->config->next;}else{$this->content->next = 'NEXT';}
+    if(!empty($this->config->arrow_style)){$this->content->arrow_style = $this->config->arrow_style;} else {$this->content->arrow_style = '0';}
+    include($CFG->dirroot . '/theme/edumy/ccn/block_handler/config/config_ccn_carousel.php');
+
+    $text = '';
+    $bannerstyle = '';
+    if ($data->slidesnumber > 1) {
+      $bannerstyle .= 'banner-style-one--multiple';
+    } else {
+      $bannerstyle .= 'banner-style-one--single';
     }
-
-    /**
-     * Build the block content.
-     */
-    function get_content() {
-        global $CFG, $PAGE;
-
-        require_once($CFG->libdir . '/filelib.php');
-
-
-        if ($this->content !== NULL) {
-            return $this->content;
-        }
-
-
-        if (!empty($this->config) && is_object($this->config)) {
-            $data = $this->config;
-            $data->slidesnumber = is_numeric($data->slidesnumber) ? (int)$data->slidesnumber : 3;
-            if ($data->style == 1) {
-              $slidersize = 'slide slide-one home6';
-            } else {
-              $slidersize = 'slide slide-one sh2';
-            }
-        } else {
-            $data = new stdClass();
-            $data->slidesnumber = '3';
-        }
-
-        $this->content = new \stdClass();
-        if(!empty($this->config->prev_1)){$this->content->prev_1 = $this->config->prev_1;}
-        if(!empty($this->config->prev_2)){$this->content->prev_2 = $this->config->prev_2;}
-        if(!empty($this->config->next_1)){$this->content->next_1 = $this->config->next_1;}
-        if(!empty($this->config->next_2)){$this->content->next_2 = $this->config->next_2;}
-        if(!empty($this->config->prev)){$this->content->prev = $this->config->prev;}
-        if(!empty($this->config->next)){$this->content->next = $this->config->next;}
-        if(!empty($this->config->arrow_style)){$this->content->arrow_style = $this->config->arrow_style;} else {$this->content->arrow_style = '0';}
-        include($CFG->dirroot . '/theme/edumy/ccn/block_handler/config/config_ccn_carousel.php');
-
-        $text = '';
-        $bannerstyle = '';
-        if ($data->slidesnumber > 1) {
-          $bannerstyle .= 'banner-style-one--multiple';
-        } else {
-          $bannerstyle .= 'banner-style-one--single';
-        }
-        if ($data->slidesnumber > 0) {
-            $text = '		<div class="home2-slider">
-		<div class="container-fluid p0">
-			<div class="row">
-				<div class="col-lg-12">
-					<div class="main-banner-wrapper">
-					    <div class="banner-style-one owl-theme owl-carousel '.$bannerstyle.'" '.$ccnConfigDataCarousel.'>';
-            $fs = get_file_storage();
-            for ($i = 1; $i <= $data->slidesnumber; $i++) {
+    if ($data->slidesnumber > 0) {
+    $text = '
+    <div class="home2-slider">
+    	<div class="container-fluid p0">
+    		<div class="row">
+    			<div class="col-lg-12">
+    				<div class="main-banner-wrapper">
+    				  <div class="banner-style-one owl-theme owl-carousel '.$bannerstyle.'" '.$ccnConfigDataCarousel.'>';
+              $fs = get_file_storage();
+              for ($i = 1; $i <= $data->slidesnumber; $i++) {
                 $sliderimage = 'file_slide' . $i;
                 $slide_title = 'slide_title' . $i;
                 $slide_subtitle = 'slide_subtitle' . $i;
@@ -133,28 +110,26 @@ class block_cocoon_slider_2 extends block_base {
                   $data->$sliderimage = $CFG->wwwroot .'/theme/edumy/images/home/1.jpg';
                 }
 
-                    $text .= '
-                    <div class="'.$slidersize.'" data-ccn="file_slide'.$i.'" data-ccn-img="bg-img-url" style="background-image: url('.$data->$sliderimage.');">
-                     <div class="container">
-                         <div class="row">
-                             <div class="col-lg-12 text-center">';
-                             if (!empty($data->$slide_title)) {
-                               $text .='<h3 data-ccn="slide_title'.$i.'" class="banner-title">'.format_text($data->$slide_title, FORMAT_HTML, array('filter' => true)).'</h3>';
-                             }
-                             if (!empty($data->$slide_subtitle)) {
-                               $text .='<p data-ccn="slide_subtitle'.$i.'">'.format_text($data->$slide_subtitle, FORMAT_HTML, array('filter' => true)).'</p>';
-                             }
-                             if (!empty($data->$slide_btn_url) && !empty($data->$slide_btn_text)) {
-                               $text .='<div class="btn-block">
-                                          <a data-ccn="slide_btn_text'.$i.'" target="'.$slide_btn_target.'" href="'.format_text($data->$slide_btn_url, FORMAT_HTML, array('filter' => true)).'" class="banner-btn">'.format_text($data->$slide_btn_text, FORMAT_HTML, array('filter' => true)).'</a>
-                                        </div>';
-                             }
-                             $text .='</div>
-                         </div>
+                $text .= '
+                <div class="'.$slidersize.'" data-ccn="file_slide'.$i.'" data-ccn-img="bg-img-url" style="background-image: url('.$data->$sliderimage.');">
+                 <div class="container">
+                     <div class="row">
+                         <div class="col-lg-12 text-center">';
+                         if (!empty($data->$slide_title)) {
+                           $text .='<h3 data-ccn="slide_title'.$i.'" class="banner-title">'.format_text($data->$slide_title, FORMAT_HTML, array('filter' => true)).'</h3>';
+                         }
+                         if (!empty($data->$slide_subtitle)) {
+                           $text .='<p data-ccn="slide_subtitle'.$i.'">'.format_text($data->$slide_subtitle, FORMAT_HTML, array('filter' => true)).'</p>';
+                         }
+                         if (!empty($data->$slide_btn_url) && !empty($data->$slide_btn_text)) {
+                           $text .='<div class="btn-block">
+                                      <a data-ccn="slide_btn_text'.$i.'" target="'.$slide_btn_target.'" href="'.format_text($data->$slide_btn_url, FORMAT_HTML, array('filter' => true)).'" class="banner-btn">'.format_text($data->$slide_btn_text, FORMAT_HTML, array('filter' => true)).'</a>
+                                    </div>';
+                         }
+                         $text .='</div>
                      </div>
-                 </div>';
-
-
+                 </div>
+             </div>';
             }
             $text .= '
             </div>';

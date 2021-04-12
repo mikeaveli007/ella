@@ -32,6 +32,7 @@ class block_cocoon_slider_5 extends block_base {
 
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->slidesnumber = '3';
           $this->config->course1 = $ccnCourses[0]->courseId;
           $this->config->course2 = $ccnCourses[1]->courseId;
@@ -40,20 +41,23 @@ class block_cocoon_slider_5 extends block_base {
           $this->config->slide_title_21 = 'Anywhere';
           $this->config->slide_title_22 = 'Anywhere';
           $this->config->slide_title_23 = 'Anywhere';
+          $this->config->slide_accent1 = 'Top Seller';
+          $this->config->slide_accent2 = 'Top Seller';
+          $this->config->slide_accent3 = 'Top Seller';
           $this->config->slide_subtitle1 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
-          $this->config->slide_btn_text1 = 'Ready to Get Started?';
-          $this->config->slide_btn_url1 = '#';
-          $this->config->file_slide1 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
-          $this->config->file_slide2 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
-          $this->config->file_slide3 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
+          // $this->config->slide_btn_text1 = 'Ready to Get Started?';
+          // $this->config->slide_btn_url1 = '#';
+          // $this->config->file_slide1 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
+          // $this->config->file_slide2 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
+          // $this->config->file_slide3 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
           $this->config->slide_title2 = 'Learn From';
           $this->config->slide_subtitle2 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
-          $this->config->slide_btn_text2 = 'Ready to Get Started?';
-          $this->config->slide_btn_url2 = '#';
+          // $this->config->slide_btn_text2 = 'Ready to Get Started?';
+          // $this->config->slide_btn_url2 = '#';
           $this->config->slide_title3 = 'Learn From';
           $this->config->slide_subtitle3 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
-          $this->config->slide_btn_text3 = 'Ready to Get Started?';
-          $this->config->slide_btn_url3 = '#';
+          // $this->config->slide_btn_text3 = 'Ready to Get Started?';
+          // $this->config->slide_btn_url3 = '#';
           $this->config->prev_1 = 'PR';
           $this->config->prev_2 = 'EV';
           $this->config->next_1 = 'NE';
@@ -126,8 +130,9 @@ class block_cocoon_slider_5 extends block_base {
                       $slide_title = 'slide_title' . $i;
                       $slide_title_2 = 'slide_title_2' . $i;
                       $slide_subtitle = 'slide_subtitle' . $i;
-                      $slide_btn_url = 'slide_btn_url' . $i;
-                      $slide_btn_text = 'slide_btn_text' . $i;
+                      $slide_accent = 'slide_accent' . $i;
+                      // $slide_btn_url = 'slide_btn_url' . $i;
+                      // $slide_btn_text = 'slide_btn_text' . $i;
                       $courseid = 'course' . $i;
                       $course = $DB->get_record('course',array('id' => $data->$courseid));
                       $courseid = $course->id;
@@ -175,8 +180,9 @@ class block_cocoon_slider_5 extends block_base {
                         <a href="'.$coursenamelink.'">
                           <div class="details">
                             <div class="tc_content">
-                              <div class="tag">
-                                Top Seller
+                              <div class="tag"
+                                data-ccn="'.$slide_accent.'">
+                                '.$data->$slide_accent.'
                               </div>';
                               if($PAGE->theme->settings->coursecat_modified != 1){
                                 $text.='<p>'.get_string('updated', 'theme_edumy').' '.userdate($course->timemodified, get_string('strftimedatefullshort', 'langconfig')).'</p>';
@@ -275,59 +281,7 @@ $text .= '
     </div>
   </div>
 </div>
-<a id="continue" class="" style="visibility:hidden"></a>
-
-<script type="text/javascript">
-
-  $(window).on("load", function(){
-var bsCarouselItems = 1;
-if($(".bs_carousel .carousel-item").length){
-  $(".bs_carousel .carousel-item").each(function(index, element) {
-      if (index == 0) {
-         $(".bs_carousel_prices").addClass("pprty-price-active pprty-first-time");
-      }
-      $(".bs_carousel_prices .property-carousel-ticker-counter").append("<span>0" + bsCarouselItems + "</span>");
-      bsCarouselItems += 1;
-  });
-}
-
-$(".bs_carousel_prices .property-carousel-ticker-total").append("<span>0" + $(".bs_carousel .carousel-item").length + "</span>");
-
-if($(".bs_carousel").length){
-  $(".bs_carousel").on("slide.bs.carousel", function(carousel) {
-      $(".bs_carousel_prices").removeClass("pprty-first-time");
-      $(".bs_carousel_prices").carousel(carousel.to);
-  });
-}
-
-if($(".bs_carousel").length){
-  $(".bs_carousel").on("slid.bs.carousel", function(carousel) {
-      var tickerPos = (carousel.to) * 25;
-      $(".bs_carousel_prices .property-carousel-ticker-counter > span").css("transform", "translateY(-" + tickerPos + "px)");
-  });
-}
-
-if($(".bs_carousel .property-carousel-control-next").length){
-  $(".bs_carousel .property-carousel-control-next").on("click",function(e) {
-      $(".bs_carousel").carousel("next");
-  });
-}
-
-if($(".bs_carousel .property-carousel-control-prev").length){
-  $(".bs_carousel .property-carousel-control-prev").on("click",function(e) {
-      $(".bs_carousel").carousel("prev");
-  });
-}
-if($(".bs_carousel").length){
-  $(".bs_carousel").carousel({
-  interval: 6000,
-  pause: "true"
-});
-}
-});
-
-
-</script>';
+<a id="continue" class="" style="visibility:hidden"></a>';
         }
 
         $this->content = new stdClass;

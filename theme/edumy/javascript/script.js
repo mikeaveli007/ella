@@ -296,13 +296,13 @@
           }
         });
         $('.popup-iframe').magnificPopup({
-          disableOn: 700,
+          // disableOn: 700,
           type: 'iframe',
           preloader: false,
           fixedContentPos: false
         });
         $('.popup-youtube, .popup-vimeo, .popup-gmaps').magnificPopup({
-          disableOn: 700,
+          // disableOn: 700,
           type: 'iframe',
           mainClass: 'mfp-fade',
           removalDelay: 160,
@@ -1009,9 +1009,27 @@
       /*  Home7-Main-Slider-Owl-carousel  */
       if ($('.banner-style-two').length) {
         var ccnSliderAttr = ccnProcessSliderAttributes('.banner-style-two');
-        $('.banner-style-two').owlCarousel({
+
+        $('.banner-style-two--single').owlCarousel({
+          items: 1,
+          stagePadding: 0,
+          margin: 0,
+          dots: false,
+          nav: false,
+          touchDrag: false,
+          pullDrag: false,
+          freeDrag: false,
+          mouseDrag: false,
+          // animateOut: 'fadeOut',
+          // animateIn: 'fadeIn',
+          active: true,
+          smartSpeed: 1000,
+          autoplay: false
+        });
+        $('.banner-style-two--multiple').owlCarousel({
           loop: ccnSliderAttr.l,
           items: 1,
+          stagePadding: 0,
           margin: 0,
           dots: true,
           nav: true,
@@ -1019,10 +1037,27 @@
           animateIn: ccnSliderAttr.ai,
           active: true,
           smartSpeed: ccnSliderAttr.s,
-          autoplay: ccnSliderAttr.ap,
           autoplayTimeout: ccnSliderAttr.apt,
-          autoplayHoverPause: ccnSliderAttr.app
+          autoplayHoverPause: ccnSliderAttr.app,
+          autoplay: ccnSliderAttr.ap
         });
+
+
+
+        // $('.banner-style-two').owlCarousel({
+        //   loop: ccnSliderAttr.l,
+        //   items: 1,
+        //   margin: 0,
+        //   dots: true,
+        //   nav: true,
+        //   animateOut: ccnSliderAttr.ao,
+        //   animateIn: ccnSliderAttr.ai,
+        //   active: true,
+        //   smartSpeed: ccnSliderAttr.s,
+        //   autoplay: ccnSliderAttr.ap,
+        //   autoplayTimeout: ccnSliderAttr.apt,
+        //   autoplayHoverPause: ccnSliderAttr.app
+        // });
         $('.banner-carousel-btn2 .left-btn').on('click', function() {
           $('.banner-style-two').trigger('next.owl.carousel');
           return false;
@@ -1214,6 +1249,13 @@
        ====== */
     $(document).on('ready', function() {
       navbarScrollfixed();
+
+      const observer = lozad('[data-ccn-lazy]', {
+          rootMargin: '10px 0px',
+          threshold: 0.1,
+          enableAutoReload: true
+      });
+      observer.observe();
     });
     $(window).on('load', function() {
       // add your functions

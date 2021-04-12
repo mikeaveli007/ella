@@ -71,40 +71,41 @@ class block_cocoon_users_slider_2_dark extends block_base {
                 <div class="team_slider">';
                 if(!empty($this->content->users)){
                   foreach($this->content->users as $key => $ccnUserId){
-                    $ccnUserHandler = new ccnUserHandler();
-                    $ccnUser = $ccnUserHandler->ccnGetUserDetails($ccnUserId);
-                    // print_object($ccnUser);
-                    $teacherRating = '';
-                    if($ccnUser->teacherRating){
-                     $teacherRating = '<span class="float-right">'.$ccnUser->teacherRating.' <i class="fa fa-star color-golden"></i></span>';
-                    }
-                    $this->content->text .= '
-                      <div class="our_agent">
-                        <div class="thumb">
-                      <a href="'.$ccnUser->profileUrl.'">
-                        <img class="img-fluid w100" src="'.$ccnUser->rawAvatar.'" alt="">
-                        </a>
-                        <div class="overylay">
-                        <div class="ccn-control">
-                          <ul class="social_icon">
-                            '.$ccnUserHandler->ccnOutputUserSocials($userId, 'li', 'list-inline-item').'
-                          </ul>
-                          <a href="'.$ccnUser->profileUrl.'">
-                          <div class="ccn-instructor-meta">
-                          <span class="float-left">'.$ccnUser->teachingCoursesCount.' '.get_string('courses').'</span>
-                          <span class="float-right">'.$ccnUser->teachingStudentCount.' '.get_string('students').'</span>
-                          </div>
+                    if($ccnUserId){
+                      $ccnUserHandler = new ccnUserHandler();
+                      $ccnUser = $ccnUserHandler->ccnGetUserDetails($ccnUserId);
+                      $teacherRating = '';
+                      if($ccnUser->teacherRating){
+                       $teacherRating = '<span class="float-right">'.$ccnUser->teacherRating.' <i class="fa fa-star color-golden"></i></span>';
+                      }
+                      $this->content->text .= '
+                        <div class="our_agent">
+                          <div class="thumb">
+                        <a href="'.$ccnUser->profileUrl.'">
+                          <img class="img-fluid w100" src="'.$ccnUser->rawAvatar.'" alt="">
                           </a>
+                          <div class="overylay">
+                          <div class="ccn-control">
+                            <ul class="social_icon">
+                              '.$ccnUserHandler->ccnOutputUserSocials($userId, 'li', 'list-inline-item').'
+                            </ul>
+                            <a href="'.$ccnUser->profileUrl.'">
+                            <div class="ccn-instructor-meta">
+                            <span class="float-left">'.$ccnUser->teachingCoursesCount.' '.get_string('courses').'</span>
+                            <span class="float-right">'.$ccnUser->teachingStudentCount.' '.get_string('students').'</span>
+                            </div>
+                            </a>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <a href="'.$ccnUser->profileUrl.'">
-                      <div class="details">
-                        <h4 data-ccn-c="color_item_title" data-ccn-cv="'.$this->content->color_item_title.'">'. $ccnUser->fullname .'</h4>
-                        <p data-ccn-c="color_item_body" data-ccn-cv="'.$this->content->color_item_body.'">'.get_string('speaks', 'theme_edumy').' '.$ccnUser->lang . $teacherRating .'</p>
-                      </div>
-                      </a>
-                    </div>';
+                        <a href="'.$ccnUser->profileUrl.'">
+                        <div class="details">
+                          <h4 data-ccn-c="color_item_title" data-ccn-cv="'.$this->content->color_item_title.'">'. $ccnUser->fullname .'</h4>
+                          <p data-ccn-c="color_item_body" data-ccn-cv="'.$this->content->color_item_body.'">'.get_string('speaks', 'theme_edumy').' '.$ccnUser->lang . $teacherRating .'</p>
+                        </div>
+                        </a>
+                      </div>';
+                    }
                   }
                 }
 

@@ -17,34 +17,20 @@
 // This line protects the file from being accessed by a URL directly.
 defined('MOODLE_INTERNAL') || die();
 
+global $PAGE;
+
 require_once($CFG->dirroot. '/theme/edumy/ccn/mdl_handler/ccn_mdl_handler.php');
+// require_once(__DIR__ . '/lib.php');
 
 $ccnMdlHandler = new ccnMdlHandler();
 $ccnMdlVersion = $ccnMdlHandler->ccnGetCoreVersion();
 
-
-// $THEME is defined before this page is included and we can define settings by adding properties to this global object.
-
-// The first setting we need is the name of the theme. This should be the last part of the component name, and the same
-// as the directory name for our theme.
 $THEME->name = 'edumy';
 
-// This setting list the style sheets we want to include in our theme. Because we want to use SCSS instead of CSS - we won't
-// list any style sheets. If we did we would list the name of a file in the /styles/ folder for our theme without any css file
-// extensions.
-/* $THEME->sheets = []; */
+$THEME->supportscssoptimisation = true;
 
-$THEME->supportscssoptimisation = false;
-
-// This is a setting that can be used to provide some styling to the content in the TinyMCE text editor. This is no longer the
-// default text editor and "Atto" does not need this setting so we won't provide anything. If we did it would work the same
-// as the previous setting - listing a file in the /styles/ folder.
 $THEME->editor_sheets = [];
 
-// This is a critical setting. We want to inherit from theme_boost because it provides a great starting point for SCSS bootstrap4
-// themes. We could add more than one parent here to inherit from multiple parents, and if we did they would be processed in
-// order of importance (later themes overriding earlier ones). Things we will inherit from the parent theme include
-// styles and mustache templates and some (not all) settings.
 $THEME->parents = ['boost'];
 
 $ccnAdminLayout = 'ccn_dashboard.php';
@@ -170,7 +156,33 @@ $THEME->layouts = [
 ];
 
 $ccnSheetsReset = array();
-$ccnSheetsTheme = array('bootstrap.min', 'jquery-ui.min', 'font-awesome.min', 'font-awesome-animation.min', 'line-awesome.min', 'nouislider.min', 'menu', 'ace-responsive-menu', 'megadropdown', 'bootstrap-select.min', 'simplebar.min', 'progressbar', 'ccn-flaticon', 'flaticon', 'animate', 'slider', 'magnific-popup', 'timecounter', 'jquery.fancybox.min', 'spectrum', 'cocoon', 'dashbord_navitaion', 'cocoon-mdl', 'cocoon-dashboard', 'responsive');
+$ccnSheetsTheme = array(
+  'bootstrap.min',
+  'jquery-ui.min',
+  'font-awesome.min',
+  'font-awesome-animation.min',
+  'line-awesome.min',
+  'nouislider.min',
+  'menu',
+  'ace-responsive-menu',
+  'megadropdown',
+  'bootstrap-select.min',
+  'simplebar.min',
+  'progressbar',
+  'ccn-flaticon',
+  'flaticon',
+  'animate',
+  'slider',
+  'magnific-popup',
+  'timecounter',
+  'jquery.fancybox.min',
+  'spectrum',
+  'cocoon',
+  'dashbord_navitaion',
+  'cocoon-mdl',
+  'cocoon-dashboard',
+  'responsive'
+);
 $ccnSheetsAppend = array();
 
 // ccnComm: No else, chained because we combine.
@@ -186,6 +198,10 @@ if($ccnMdlVersion == '38') {
 if($ccnMdlVersion == '39') {
   $ccnSheetsReset[] = 'cocoon.mdl.reset.39';
   $ccnSheetsAppend[] = 'cocoon.mdl.39';
+}
+if($ccnMdlVersion == '310') {
+  $ccnSheetsReset[] = 'cocoon.mdl.reset.310';
+  $ccnSheetsAppend[] = 'cocoon.mdl.310';
 }
 
 
@@ -211,6 +227,10 @@ if(!empty($THEME->settings->headertype) && $THEME->settings->headertype == 2 ){
   $ccnSheetsAppend[] = 'cocoon.header.11';
 } elseif(!empty($THEME->settings->headertype) && $THEME->settings->headertype == 12 ){
   $ccnSheetsAppend[] = 'cocoon.header.12';
+} elseif(!empty($THEME->settings->headertype) && $THEME->settings->headertype == 13 ){
+  $ccnSheetsAppend[] = 'cocoon.header.13';
+} elseif(!empty($THEME->settings->headertype) && $THEME->settings->headertype == 14 ){
+  $ccnSheetsAppend[] = 'cocoon.header.14';
 } else {
   $ccnSheetsAppend[] = 'cocoon.header.1';
 }
@@ -246,20 +266,41 @@ $THEME->requiredblocks = '';
 $THEME->addblockposition = BLOCK_ADDBLOCK_POSITION_FLATNAV;
 // This is the function that returns the SCSS source for the main file in our theme. We override the boost version because
 // we want to allow presets uploaded to our own theme file area to be selected in the preset list.
-/* $THEME->scss = function($theme) {
-    return theme_edumy_get_main_scss_content($theme);
-}; */
-$THEME->javascripts = array('cocoon.init.preprocess', 'cocoon.init.lcvb.frontend.preprocess.min', 'jquery-migrate-3.0.0.min', 'cocoon.preprocess', 'cocoon.dashboard.preprocess', 'jquery.mmenu.all', 'ace-responsive-menu', 'bootstrap-select.min', 'isotop', 'snackbar.min', 'simplebar', 'parallax', 'scrollto', 'jquery-scrolltofixed-min', 'jquery.counterup', 'wow.min', 'progressbar', 'slider', 'timepicker', 'spectrum', 'nouislider.min', 'jquery.youtubebackground', 'jquery.fancybox.min', 'dashboard-script', 'script');
+// $THEME->scss = function($theme) {
+//   return theme_edumy_get_main_scss_content($theme);
+// };
+$THEME->javascripts = array(
+  'cocoon.init.preprocess',
+  'cocoon.init.lcvb.frontend.preprocess.min',
+  'jquery-migrate-3.0.0.min',
+  'cocoon.preprocess',
+  'cocoon.dashboard.preprocess',
+  'jquery.mmenu.all',
+  'ace-responsive-menu',
+  'bootstrap-select.min',
+  'cocoon.script.isotope',
+  'magnific-popup',
+  'snackbar.min',
+  'simplebar',
+  'cocoon.script.parallax-scene',
+  'parallax',
+  'scrollto',
+  'jquery-scrolltofixed-min',
+  'jquery.counterup',
+  'wow.min',
+  'progressbar',
+  'slider',
+  'timepicker',
+  'lozad.min',
+  'spectrum',
+  'nouislider.min',
+  'jquery.youtubebackground',
+  'jquery.fancybox.min',
+  'dashboard-script',
+  'script'
+);
 
 
-// if (isset($_GET['bui_editid']) && isset($_GET['cocoon_live_customizer'])) {
-//   $THEME->javascripts = array('cocoon.init.preprocess', 'jquery-migrate-3.0.0.min', 'cocoon.preprocess', 'cocoon.dashboard.preprocess', 'jquery.mmenu.all', 'ace-responsive-menu', 'bootstrap-select.min', 'isotop', 'snackbar.min', 'simplebar', 'parallax', 'scrollto', 'jquery-scrolltofixed-min', 'jquery.counterup', 'wow.min', 'progressbar', 'slider', 'timepicker', 'spectrum', 'jquery.youtubebackground', 'jquery.fancybox.min', 'dashboard-script', 'script', 'cocoon.lcvb.preprocess.js');
-// }
-
-
-
-// $THEME->javascripts_footer = array('script');
-//$THEME->javascripts_footer = array('popper.min', 'bootstrap.min', 'jquery.mmenu.all', 'ace-responsive-menu', 'bootstrap-select.min', 'snackbar.min', 'simplebar', 'parallax', 'scrollto', 'jquery-scrolltofixed-min', 'jquery.counterup', 'wow.min', 'progressbar', 'slider', 'timepicker', 'script');
 $THEME->iconsystem = '\\theme_edumy\\output\\icon_system_fontawesome';
 
 $THEME->csspostprocess = 'theme_edumy_process_css';

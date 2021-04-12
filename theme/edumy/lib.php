@@ -37,6 +37,7 @@ function theme_edumy_pluginfile($course, $cm, $context, $filearea, $args, $force
                                                       $filearea === 'headerlogo_mobile' ||
                                                       $filearea === 'footerlogo1' ||
                                                       $filearea === 'heading_bg' ||
+                                                      $filearea === 'login_bg' ||
                                                       $filearea === 'preloader_image' ||
                                                       $filearea === 'favicon' ||
                                                       $filearea === 'upload_font_eot' ||
@@ -61,43 +62,49 @@ function theme_edumy_pluginfile($course, $cm, $context, $filearea, $args, $force
     }
 }
 
-/**
- * Returns the main SCSS content.
- *
- * @param theme_config $theme The theme config object.
- * @return string
- */
-function theme_edumy_get_main_scss_content($theme) {
-    global $CFG;
-
-    $scss = '';
-    $filename = !empty($theme->settings->preset) ? $theme->settings->preset : null;
-    $fs = get_file_storage();
-
-    $context = context_system::instance();
-    if ($filename == 'default.scss') {
-        // We still load the default preset files directly from the boost theme. No sense in duplicating them.
-        $scss .= file_get_contents($CFG->dirroot . '/theme/boost/scss/preset/default.scss');
-    } else if ($filename == 'plain.scss') {
-        // We still load the default preset files directly from the boost theme. No sense in duplicating them.
-        $scss .= file_get_contents($CFG->dirroot . '/theme/boost/scss/preset/plain.scss');
-
-    } else if ($filename && ($presetfile = $fs->get_file($context->id, 'theme_edumy', 'preset', 0, '/', $filename))) {
-        // This preset file was fetched from the file area for theme_edumy and not theme_boost (see the line above).
-        $scss .= $presetfile->get_content();
-    } else {
-        // Safety fallback - maybe new installs etc.
-        $scss .= file_get_contents($CFG->dirroot . '/theme/boost/scss/preset/default.scss');
-    }
-
-    // Pre CSS - this is loaded AFTER any prescss from the setting but before the main scss.
-    $pre = file_get_contents($CFG->dirroot . '/theme/edumy/scss/pre.scss');
-    // Post CSS - this is loaded AFTER the main scss but before the extra scss from the setting.
-    $post = file_get_contents($CFG->dirroot . '/theme/edumy/scss/post.scss');
-
-    // Combine them together.
-    return $pre . "\n" . $scss . "\n" . $post;
-}
+// /**
+//  * Returns the main SCSS content.
+//  *
+//  * @param theme_config $theme The theme config object.
+//  * @return string
+//  */
+// function theme_edumy_get_main_scss_content($theme) {
+//     global $CFG;
+//
+//     $scss = '';
+//     $filename = !empty($theme->settings->preset) ? $theme->settings->preset : null;
+//     $fs = get_file_storage();
+//
+//     $context = context_system::instance();
+//     // if ($filename == 'default.scss') {
+//     //     // We still load the default preset files directly from the boost theme. No sense in duplicating them.
+//     //     $scss .= file_get_contents($CFG->dirroot . '/theme/boost/scss/preset/default.scss');
+//     // } else if ($filename == 'plain.scss') {
+//     //     // We still load the default preset files directly from the boost theme. No sense in duplicating them.
+//     //     $scss .= file_get_contents($CFG->dirroot . '/theme/boost/scss/preset/plain.scss');
+//     //
+//     // } else if ($filename && ($presetfile = $fs->get_file($context->id, 'theme_edumy', 'preset', 0, '/', $filename))) {
+//     //     // This preset file was fetched from the file area for theme_edumy and not theme_boost (see the line above).
+//     //     $scss .= $presetfile->get_content();
+//     // } else {
+//     //     // Safety fallback - maybe new installs etc.
+//     //     $scss .= file_get_contents($CFG->dirroot . '/theme/boost/scss/preset/default.scss');
+//     // }
+//
+//
+//     // $scss .= file_get_contents($CFG->dirroot . '/theme/edumy/scss/edumy-boost-preprocess.scss');
+//     $scss .= file_get_contents($CFG->dirroot . '/theme/boost/scss/moodle.scss');
+//     // $scss .= file_get_contents($CFG->dirroot . '/theme/edumy/scss/edumy-boost-postprocess.scss');
+//
+//     // // Pre CSS - this is loaded AFTER any prescss from the setting but before the main scss.
+//     // $pre = file_get_contents($CFG->dirroot . '/theme/edumy/scss/pre.scss');
+//     // // Post CSS - this is loaded AFTER the main scss but before the extra scss from the setting.
+//     // $post = file_get_contents($CFG->dirroot . '/theme/edumy/scss/post.scss');
+//
+//     // Combine them together.
+//     // return $pre . "\n" . $scss . "\n" . $post;
+//     return $scss;
+// }
 
 /**
  * Copy the updated theme image to the correct location in dataroot for the image to be served
@@ -247,6 +254,12 @@ function theme_edumy_process_css($css, $theme) {
     if(is_null($replacement)){$replacement = '#141414';}
     $css = str_replace($tag, $replacement, $css);
 
+    $setting = $theme->settings->color_header_style_3_top;
+    $tag = '[[setting:color_header_style_3_top]]';
+    $replacement = $setting;
+    if(is_null($replacement)){$replacement = '#051925';}
+    $css = str_replace($tag, $replacement, $css);
+
     $setting = $theme->settings->color_header_style_4_top;
     $tag = '[[setting:color_header_style_4_top]]';
     $replacement = $setting;
@@ -364,6 +377,12 @@ function theme_edumy_process_css($css, $theme) {
     $setting = $theme->settings->heading_bg;
     $tag = '[[setting:heading_bg]]';
     $replacement = $theme->setting_file_url('heading_bg', 'heading_bg');
+    if(is_null($replacement)){$replacement = $CFG->wwwroot . '/theme/edumy/images/background/inner-pagebg.jpg';}
+    $css = str_replace($tag, $replacement, $css);
+
+    $setting = $theme->settings->login_bg;
+    $tag = '[[setting:login_bg]]';
+    $replacement = $theme->setting_file_url('login_bg', 'login_bg');
     if(is_null($replacement)){$replacement = $CFG->wwwroot . '/theme/edumy/images/background/inner-pagebg.jpg';}
     $css = str_replace($tag, $replacement, $css);
 

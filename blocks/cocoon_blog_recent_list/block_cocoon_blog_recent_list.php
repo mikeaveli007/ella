@@ -92,10 +92,10 @@ class block_cocoon_blog_recent_list extends block_base {
             $entrieslist = array();
             $viewblogurl = new moodle_url('/blog/index.php');
 
-$this->content->text .= '
-<div class="blog_recent_post_widget media_widget">
-  <h4 class="title">'.$this->content->title.'</h4>';
-            foreach ($entries as $entryid => $entry) {
+            $this->content->text .= '
+            <div class="blog_recent_post_widget media_widget">
+              <h4 class="title">'.format_text($this->content->title, FORMAT_HTML, array('filter' => true)).'</h4>';
+              foreach ($entries as $entryid => $entry) {
                 $viewblogurl->param('entryid', $entryid);
                 $entrylink = html_writer::link($viewblogurl, shorten_text($entry->subject));
                 $entrieslist[] = $entrylink;
@@ -105,19 +105,24 @@ $this->content->text .= '
                 $this->content->text .= '
 
                 <div class="media">
-    <div class="ccn-img-surround"><a href="'.$viewblogurl.'"><img class="align-self-start mr-3" src="'.$blogattachments[0]->url.'" alt="'.$entry->subject.'"></a></div>
-    <div class="media-body">
-        <a href="'.$viewblogurl.'"><h5 class="mt-0 post_title">'. $entry->subject.'</h5></a>';
-        if($PAGE->theme->settings->blog_post_date != 1){
-          $this->content->text .='<a href="'.$viewblogurl.'">'. userdate($entry->created, '%d %B', 0) .'</a>';
-        }
-        $this->content->text .='
-    </div>
-  </div>';
-
-            }
-$this->content->text .= '
-</div>';
+                  <div class="ccn-img-surround">
+                    <a href="'.$viewblogurl.'">
+                      <img class="align-self-start mr-3" src="'.$blogattachments[0]->url.'" alt="'.$entry->subject.'">
+                    </a>
+                  </div>
+                  <div class="media-body">
+                    <a href="'.$viewblogurl.'">
+                      <h5 class="mt-0 post_title">'. format_text($entry->subject, FORMAT_HTML, array('filter' => true)).'</h5>
+                    </a>';
+                    if($PAGE->theme->settings->blog_post_date != 1){
+                      $this->content->text .='<a href="'.$viewblogurl.'">'. userdate($entry->created, '%d %B', 0) .'</a>';
+                    }
+                    $this->content->text .='
+                  </div>
+                </div>';
+              }
+            $this->content->text .= '
+              </div>';
 
 
 

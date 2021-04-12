@@ -20,7 +20,7 @@ class block_cocoon_contact_form_edit_form extends block_edit_form
             '1' => 'Contact form and image',
             '2' => 'Contact form only',
         );
-        $select = $mform->addElement('select', 'config_style', get_string('config_style', 'theme_edumy'), $options);
+        $select = $mform->addElement('select', 'config_style', get_string('config_style', 'theme_edumy'), $options, array('class'=>'ccnCommLcRef_change'));
         $select->setSelected('0');
 
         $ccnItemsRange = array(
@@ -41,7 +41,7 @@ class block_cocoon_contact_form_edit_form extends block_edit_form
 
         $ccnItemsMax = 12;
 
-        $mform->addElement('select', 'config_items', get_string('config_items', 'theme_edumy'), $ccnItemsRange);
+        $mform->addElement('select', 'config_items', get_string('config_items', 'theme_edumy'), $ccnItemsRange, array('class'=>'ccnCommLcRef_change'));
         $mform->setDefault('config_items', 3);
 
         for($i = 1; $i <= $ccnItemsMax; $i++) {
@@ -51,9 +51,9 @@ class block_cocoon_contact_form_edit_form extends block_edit_form
             $mform->setDefault('config_title_'.$i, 'Our Email');
             $mform->setType('config_title_'.$i, PARAM_TEXT);
 
-            $mform->addElement('text', 'config_subtitle_'.$i, get_string('config_subtitle', 'theme_edumy', $i));
+            $mform->addElement('textarea', 'config_subtitle_'.$i, get_string('config_body', 'theme_edumy', $i));
             $mform->setDefault('config_subtitle_'.$i , 'info@edumy.com');
-            $mform->setType('config_subtitle_'.$i, PARAM_TEXT);
+            $mform->setType('config_subtitle_'.$i, PARAM_RAW);
 
             $select = $mform->addElement('select', 'config_icon_'.$i, get_string('config_icon_class', 'theme_edumy'), $ccnFontList, array('class'=>'ccn_icon_class'));
             $select->setSelected('flaticon-email');
@@ -89,6 +89,10 @@ class block_cocoon_contact_form_edit_form extends block_edit_form
         $mform->addElement('text', 'config_map_lng', get_string('config_map_lng', 'block_cocoon_contact_form'));
         $mform->setDefault('config_map_lng', '-73.9280182');
         $mform->setType('config_map_lng', PARAM_RAW);
+
+        $mform->addElement('text', 'config_map_address', get_string('address_line_1', 'theme_edumy'));
+        $mform->setDefault('config_map_address', 'Trafalgar Square, London');
+        $mform->setType('config_map_address', PARAM_RAW);
 
         $range = range(1, 20);
         $mform->addElement('select', 'config_zoom', get_string('config_zoom', 'theme_edumy'), $range);

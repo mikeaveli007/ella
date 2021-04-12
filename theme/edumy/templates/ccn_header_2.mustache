@@ -7,7 +7,7 @@
             {{#logo}}
               <li class="list-inline-item">
                 <div class="logo-widget">
-                  <a href="{{{ config.wwwroot }}}" class="">
+                  <a href="{{{ ccnLogoUrl }}}" class="">
                     {{#logo_image}}<img class="img-fluid" src="{{{headerlogo1}}}" alt="{{{sitename}}}" {{#logo_styles}} style="{{{logo_styles}}}" {{/logo_styles}}>{{/logo_image}}
                     {{#logotype}}<span>{{{ sitename }}}</span>{{/logotype}}
                   </a>
@@ -90,14 +90,14 @@
         {{> theme_edumy/ccn_navbar_user }}
       </ul>
       <ul class="sign_up_btn pull-right dn-smd mt20">
-        {{#cta_text}}
-          <li class="list-inline-item"><a href="{{{cta_link}}}" class="btn btn-md"><i class="flaticon-megaphone"></i><span class="dn-md">{{{cta_text}}}</span></a></li>
-        {{/cta_text}}
         {{#header_search_icon}}
           <li class="list-inline-item list_s">
             {{> theme_edumy/ccn_navbar_search_icon }}
           </li>
         {{/header_search_icon}}
+        {{#cta_text}}
+          <li class="list-inline-item"><a href="{{{cta_link}}}" class="btn btn-md"><i class="{{{ cta_icon }}}"></i><span class="dn-md">{{{cta_text}}}</span></a></li>
+        {{/cta_text}}
         {{> theme_edumy/ccn_navbar_user_popup }}
       </ul><!-- Button trigger modal -->
     </nav>

@@ -3,35 +3,25 @@ require_once($CFG->dirroot. '/theme/edumy/ccn/user_handler/ccn_user_handler.php'
 require_once($CFG->dirroot. '/theme/edumy/ccn/block_handler/ccn_block_handler.php');
 class block_cocoon_users_slider_round extends block_base {
 
-    /**
-     * Initializes class member variables.
-     */
-    public function init() {
-        // Needed by Moodle to differentiate between blocks.
-        $this->title = get_string('pluginname', 'block_cocoon_users_slider_round');
+  public function init() {
+    $this->title = get_string('pluginname', 'block_cocoon_users_slider_round');
+  }
+
+  function specialization() {
+    global $CFG, $DB;
+    include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
+    if (empty($this->config)) {
+      $ccnUserHandler = new ccnUserHandler();
+      $ccnUsers = $ccnUserHandler->ccnGetExampleUsersIds(8);
+      $this->config->title = 'Top Rating Instructors';
+      $this->config->subtitle = 'Cum doctus civibus efficiantur in imperdiet deterruisset.';
+      $this->config->users = $ccnUsers;
+      $this->config->color_bg = 'rgb(255,255,255)';
+      $this->config->color_title = '#0a0a0a';
+      $this->config->color_subtitle = '#6f7074';
+      $this->config->color_owl_dots = '#debf52';
     }
-
-    function specialization() {
-        global $CFG, $DB;
-        include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
-        if (empty($this->config)) {
-
-          $ccnUserHandler = new ccnUserHandler();
-          $ccnUsers = $ccnUserHandler->ccnGetExampleUsersIds(8);
-
-          $this->config->title = 'Top Rating Instructors';
-          $this->config->subtitle = 'Cum doctus civibus efficiantur in imperdiet deterruisset.';
-          $this->config->users = $ccnUsers;
-
-
-          $this->config->color_bg = 'rgb(255,255,255)';
-          $this->config->color_title = '#0a0a0a';
-          $this->config->color_subtitle = '#6f7074';
-          $this->config->color_owl_dots = '#debf52';
-
-        }
-
-    }
+  }
 
 
 
@@ -53,9 +43,7 @@ class block_cocoon_users_slider_round extends block_base {
         }
 
         $this->content = new stdClass();
-        $this->content->items = array();
-        $this->content->icons = array();
-        $this->content->footer = '';
+        $this->content->text = '';
 
         if(!empty($this->config->title)){$this->content->title = $this->config->title;} else {$this->content->title = '';}
         if(!empty($this->config->subtitle)){$this->content->subtitle = $this->config->subtitle;} else {$this->content->subtitle = '';}
@@ -84,30 +72,31 @@ class block_cocoon_users_slider_round extends block_base {
                <div class="instructor_slider_home3 home8">';
                   if(!empty($this->content->users)){
                     foreach($this->content->users as $key => $ccnUserId){
-                      $ccnUserHandler = new ccnUserHandler();
-                      $ccnUser = $ccnUserHandler->ccnGetUserDetails($ccnUserId);
-                      // print_object($ccnUser);
-                      $this->content->text .='
-                      <div class="item">
-                        <a href="'.$ccnUser->profileUrl.'">
-                          <div class="instructor_col">
-                            <div class="thumb">
-                              <img class="img-fluid img-rounded-circle" src="'.$ccnUser->rawAvatar.'" alt="">
+                      if($ccnUserId){
+                        $ccnUserHandler = new ccnUserHandler();
+                        $ccnUser = $ccnUserHandler->ccnGetUserDetails($ccnUserId);
+                        $this->content->text .='
+                        <div class="item">
+                          <a href="'.$ccnUser->profileUrl.'">
+                            <div class="instructor_col">
+                              <div class="thumb">
+                                <img class="img-fluid img-rounded-circle" src="'.$ccnUser->rawAvatar.'" alt="">
+                              </div>
+                              <div class="details">
+                                <ul>
+                                <li class="list-inline-item"><i class="fa fa-star"></i></li>
+                                <li class="list-inline-item"><i class="fa fa-star"></i></li>
+                                <li class="list-inline-item"><i class="fa fa-star"></i></li>
+                                <li class="list-inline-item"><i class="fa fa-star"></i></li>
+                                <li class="list-inline-item"><i class="fa fa-star"></i></li>
+                                </ul>
+                                <h4 data-ccn-c="color_title" data-ccn-cv="'.$this->content->color_title.'">'. $ccnUser->fullname.'</h4>
+                                <p data-ccn-c="color_subtitle" data-ccn-cv="'.$this->content->color_subtitle.'">'. $ccnUser->ccnRender->profileCount .'</p>
+                              </div>
                             </div>
-                            <div class="details">
-                              <ul>
-                              <li class="list-inline-item"><i class="fa fa-star"></i></li>
-                              <li class="list-inline-item"><i class="fa fa-star"></i></li>
-                              <li class="list-inline-item"><i class="fa fa-star"></i></li>
-                              <li class="list-inline-item"><i class="fa fa-star"></i></li>
-                              <li class="list-inline-item"><i class="fa fa-star"></i></li>
-                              </ul>
-                              <h4 data-ccn-c="color_title" data-ccn-cv="'.$this->content->color_title.'">'. $ccnUser->fullname.'</h4>
-                              <p data-ccn-c="color_subtitle" data-ccn-cv="'.$this->content->color_subtitle.'">'. $ccnUser->ccnRender->profileCount .'</p>
-                            </div>
-                          </div>
                           </a>
                         </div>';
+                        }
                     }
                   }
                   $this->content->text .='

@@ -178,30 +178,38 @@ $this->content->text .='</div>
 <div class="top_courses_iconbox">
   <div class="container">
     <div class="row row_home4">
-      <div class="col-sm-6 col-lg-3">
-        <div class="home_icon_box home4">
-          <div class="icon ccn_icon_2"><span data-ccn="feature_1_icon" class="'.format_text($data->feature_1_icon, FORMAT_HTML, array('filter' => true)).'"></span></div>
-          <p data-ccn="feature_1_title">'.format_text($data->feature_1_title, FORMAT_HTML, array('filter' => true)).'</p>
-        </div>
-      </div>
-      <div class="col-sm-6 col-lg-3">
-        <div class="home_icon_box home4">
-          <div class="icon ccn_icon_2"><span data-ccn="feature_2_icon" class="'.format_text($data->feature_2_icon, FORMAT_HTML, array('filter' => true)).'"></span></div>
-          <p data-ccn="feature_2_title">'.format_text($data->feature_2_title, FORMAT_HTML, array('filter' => true)).'</p>
-        </div>
-      </div>
-      <div class="col-sm-6 col-lg-3">
-        <div class="home_icon_box home4">
+      <div class="col-sm-6 col-lg-3">'
+        .($data->feature_1_link ? '<a href="'. format_text($data->feature_1_link, FORMAT_HTML, array('filter' => true)) .'">' : '').
+          '<div class="home_icon_box home4">
+            <div class="icon ccn_icon_2"><span data-ccn="feature_1_icon" class="'.format_text($data->feature_1_icon, FORMAT_HTML, array('filter' => true)).'"></span></div>
+            <p data-ccn="feature_1_title">'.format_text($data->feature_1_title, FORMAT_HTML, array('filter' => true)).'</p>
+          </div>'
+        . ($data->feature_1_link ? '</a>' : '').
+      '</div>
+      <div class="col-sm-6 col-lg-3">'
+      .($data->feature_2_link ? '<a href="'. format_text($data->feature_2_link, FORMAT_HTML, array('filter' => true)) .'">' : '').
+          '<div class="home_icon_box home4">
+            <div class="icon ccn_icon_2"><span data-ccn="feature_2_icon" class="'.format_text($data->feature_2_icon, FORMAT_HTML, array('filter' => true)).'"></span></div>
+            <p data-ccn="feature_2_title">'.format_text($data->feature_2_title, FORMAT_HTML, array('filter' => true)).'</p>
+          </div>'
+      .($data->feature_2_link ? '</a>' : '').
+      '</div>
+      <div class="col-sm-6 col-lg-3">'
+      .($data->feature_3_link ? '<a href="'. format_text($data->feature_3_link, FORMAT_HTML, array('filter' => true)) .'">' : '').
+        '<div class="home_icon_box home4">
           <div class="icon ccn_icon_2"><span data-ccn="feature_3_icon" class="'.format_text($data->feature_3_icon, FORMAT_HTML, array('filter' => true)).'"></span></div>
           <p data-ccn="feature_3_title">'.format_text($data->feature_3_title, FORMAT_HTML, array('filter' => true)).'</p>
-        </div>
-      </div>
-      <div class="col-sm-6 col-lg-3">
-        <div class="home_icon_box home4">
+        </div>'
+      .($data->feature_3_link ? '</a>' : '').
+      '</div>
+      <div class="col-sm-6 col-lg-3">'
+      .($data->feature_4_link ? '<a href="'. format_text($data->feature_4_link, FORMAT_HTML, array('filter' => true)) .'">' : '').
+        '<div class="home_icon_box home4">
           <div class="icon ccn_icon_2"><span data-ccn="feature_4_icon" class="'.format_text($data->feature_4_icon, FORMAT_HTML, array('filter' => true)).'"></span></div>
           <p data-ccn="feature_4_title">'.format_text($data->feature_4_title, FORMAT_HTML, array('filter' => true)).'</p>
-        </div>
-      </div>
+        </div>'
+      .($data->feature_4_link ? '</a>' : '').
+      '</div>
     </div>
   </div>
 </div>';

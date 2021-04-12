@@ -34,6 +34,16 @@ class block_cocoon_hero_1_edit_form extends block_edit_form
                 array('subdirs' => 0, 'maxbytes' => $maxbytes, 'areamaxbytes' => 10485760, 'maxfiles' => 1,
                 'accepted_types' => array('.png', '.jpg', '.gif') ));
 
+        $mform->addElement('header', 'config_ccn_colors', get_string('block_styles', 'theme_edumy'));
+
+        $mform->addElement('text', 'config_color_gradient_start', get_string('color_gradient_start', 'theme_edumy'), array('class'=>'ccn_spectrum_class'));
+        $mform->setDefault('config_color_gradient_start', 'rgb(54,159,219)');
+        $mform->setType('config_color_gradient_start', PARAM_TEXT);
+
+        $mform->addElement('text', 'config_color_gradient_end', get_string('color_gradient_end', 'theme_edumy'), array('class'=>'ccn_spectrum_class'));
+        $mform->setDefault('config_color_gradient_end', 'rgb(5,25,37)');
+        $mform->setType('config_color_gradient_end', PARAM_TEXT);
+
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/edit.php');
 
     }
@@ -59,20 +69,20 @@ class block_cocoon_hero_1_edit_form extends block_edit_form
 
 
 
-        if (!empty($this->block->config) && is_object($this->block->config)) {
-            $text = $this->block->config->bio;
-            $draftid_editor = file_get_submitted_draft_itemid('config_bio');
-            if (empty($text)) {
-                $currenttext = '';
-            } else {
-                $currenttext = $text;
-            }
-            $defaults->config_bio['text'] = file_prepare_draft_area($draftid_editor, $this->block->context->id, 'block_cocoon_hero_1', 'content', 0, array('subdirs'=>true), $currenttext);
-            $defaults->config_bio['itemid'] = $draftid_editor;
-            $defaults->config_bio['format'] = $this->block->config->format;
-        } else {
-            $text = '';
-        }
+        // if (!empty($this->block->config) && is_object($this->block->config)) {
+        //     $text = $this->block->config->bio;
+        //     $draftid_editor = file_get_submitted_draft_itemid('config_bio');
+        //     if (empty($text)) {
+        //         $currenttext = '';
+        //     } else {
+        //         $currenttext = $text;
+        //     }
+        //     $defaults->config_bio['text'] = file_prepare_draft_area($draftid_editor, $this->block->context->id, 'block_cocoon_hero_1', 'content', 0, array('subdirs'=>true), $currenttext);
+        //     $defaults->config_bio['itemid'] = $draftid_editor;
+        //     $defaults->config_bio['format'] = $this->block->config->format;
+        // } else {
+        //     $text = '';
+        // }
 
 
     }

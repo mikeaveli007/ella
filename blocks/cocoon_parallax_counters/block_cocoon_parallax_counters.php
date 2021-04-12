@@ -30,7 +30,7 @@ class block_cocoon_parallax_counters extends block_base
           $this->config->counter_2_icon = 'flaticon-cap';
           $this->config->counter_3_icon = 'flaticon-jigsaw';
           $this->config->counter_4_icon = 'flaticon-online-learning';
-          $this->config->image = $CFG->wwwroot . '/theme/edumy/images/background/2.jpg';
+          // $this->config->image = $CFG->wwwroot . '/theme/edumy/images/background/2.jpg';
           $this->config->color_bg = '#2441e7';
           $this->config->color_title = '#ffffff';
           $this->config->color_subtitle = '#ffffff';

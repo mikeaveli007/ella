@@ -1,11 +1,91 @@
-/* Extra small devices (phones, less than 768px) */
-/* No media query since this is the default in Bootstrap */
-/* Small devices (tablets, 768px and up) */
-/* Small devices (tablets, 768px and up) */
-/* Medium devices (desktops, 992px and up) */
-/* Large devices (large desktops, 1200px and up) */
-/* Extra small devices (phones, less than 768px) */
-/* No media query since this is the default in Bootstrap */
+@media only screen and (min-width: 992px) {
+  .ccn_header_style_2 .logo-widget {
+    padding-top: 1px;
+  }
+  .home3_about2 {
+    overflow: visible;
+  }
+  .block_cocoon_hero_3 .home_icon_box p {
+    padding-top: 10px;
+  }
+  #page-course-index-category #ccn-main {
+    padding-bottom: 50px;
+  }
+  .our-log.style4 {
+    justify-content: flex-start;
+    padding: 0;
+  }
+  .our-log.style3:before {
+    background-image: url([[setting:login_bg]]);
+    background-position: bottom center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    bottom: 0;
+    content: "";
+    left: auto;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 50%;
+  }
+  .our-log.style4:before {
+    background-image: url([[setting:login_bg]]);
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    bottom: 0;
+    content: "";
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 100%;
+  }
+  .our-log.style4>.login_box {
+    width: 40vw;
+    background: #f9fafc;
+    position: relative;
+    z-index: 1;
+    padding: 60px 25px 40px;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .our-log.style4 .login_form.inner_page.style3 {
+    padding: 70px 0 0;
+  }
+}
+@media only screen and (min-width: 1200px) {
+  .our-log.style4>.login_box {
+    padding: 60px 30px 40px;
+    width: 35vw;
+  }
+  .path-blog .ccn-masonry-grid>.ccn-blog-masonry-entry .thumb {
+    height: 300px;
+    object-fit: cover;
+    position: relative;
+  }
+  .path-blog .ccn-masonry-grid>.ccn-blog-masonry-entry .thumb img {
+    object-fit: cover;
+    height: 100%;
+    width: 100%;
+  }
+  .path-blog .ccn-masonry-grid>.ccn-blog-masonry-entry:nth-child(3) .thumb,
+  .path-blog .ccn-masonry-grid>.ccn-blog-masonry-entry:nth-child(5) .thumb {
+    height: 600px;
+  }
+}
+@media only screen and (min-width: 1400px) {
+  .our-log.style4>.login_box {
+    width: 30vw;
+  }
+}
+@media only screen and (min-width: 1700px) {
+  .our-log.style4>.login_box {
+    padding: 60px 40px 40px;
+  }
+}
 @media only screen and (min-width: 1900px) {
   .block_cocoon_hero_2 .home8-overlay>.container {
     width: 100%;
@@ -21,67 +101,8 @@
   .block_cocoon_hero_2 .home8-overlay .row_style img {
     width: 100%;
   }
-  /*.about_home3_shape, .about_home3_shape3 {
-    right: calc(-25vw);
-  }*/
-}
-@media only screen and (min-width: 992px) {
-  .ccn_header_style_2 .logo-widget {
-    padding-top: 1px;
-  }
-  .home3_about2 {
-    overflow: visible;
-  }
-  .block_cocoon_hero_3 .home_icon_box p {
-    padding-top: 10px;
-  }
-  #page-course-index-category #ccn-main {
-    padding-bottom: 50px;
-  }
 }
 @media only screen and (max-width: 1500px) {
-  /* .ccn_context_frontend.ccn_header_style_10 header.header-nav.menu_style_home_one.home9:not(.stricky-fixed) a.navbar_brand {
-    margin-left: 12px;
-  }
-  .ccn_context_frontend.ccn_header_style_10 header.header-nav.menu_style_home_one.home9:not(.stricky-fixed) {
-    padding: 0;
-  }
-  .ccn_context_frontend.ccn_header_style_10 header.header-nav.menu_style_home_one.home9:not(.stricky-fixed)>.search_overlay span#search-button {
-    top: -9px;
-    right: 35px;
-  }
-  .ccn_context_frontend.ccn_header_style_10 header.header-nav.menu_style_home_one.home9.stricky-fixed>.search_overlay span#search-button {
-    right: 25px;
-  }
-  .ccn_context_frontend.ccn_header_style_10 header.header-nav.menu_style_home_one .header_user_notif {
-    right: 107px;
-  }
-  .ccn_context_frontend.ccn_header_style_10 header.header-nav.menu_style_home_one:not(.stricky-fixed) .ace-responsive-menu>li:first-child {
-    margin-left: 0;
-  }
-  .ccn_context_frontend .header-nav.menu_style_home_one.home9 ul.ace-responsive-menu, .header-nav.menu_style_home_one.home10 ul.ace-responsive-menu {
-    padding-left: 30px;
-    justify-content: left;
-  }
-  .ccn_context_frontend .header-nav.menu_style_home_one.home9.stricky-fixed ul.ace-responsive-menu, .header-nav.menu_style_home_one.home10.stricky-fixed ul.ace-responsive-menu {
-    padding-left: 0;
-  }
-  .ccn_context_frontend.ccn_header_style_10 header.header-nav.menu_style_home_one.stricky-fixed .ace-responsive-menu>li:first-child {
-    margin-left: 0;
-    padding-left: 20px;
-  }
-  .home9>.search_overlay span#search-button:before {
-    animation: none;
-  }
-  .home9>.search_overlay span#search-button {
-    top: -9px;
-  }
-  .ccn_context_frontend.ccn_header_style_10 header.header-nav.menu_style_home_one .ace-responsive-menu>li>a {
-    font-size: 16px;
-  }
-  .ccn_context_frontend.ccn_header_style_10 header.header-nav.menu_style_home_one.stricky-fixed .header_user_notif {
-    right: 107px;
-  } */
   .banner-style-one.home9 .slide {
     height: 800px;
   }
@@ -122,22 +143,11 @@
   .home2-slider {
     overflow: hidden;
   }
-  /* ul.home5_shop_reg_widget {
-    margin-top: 15px !important;
-  } */
-  /* header.header-nav.menu_style_home_five .ace-responsive-menu>li a,
-  header.header-nav.menu_style_home_five .ace-responsive-menu>li>ul>li a {
-    padding-top: 20px;
-  } */
   .dashboard_main_content {
     padding-left: calc(280px - -20px);
     padding-left: calc(280px + 20px);
   }
-  /* .ccn_context_focus .dashboard_main_content {
-    padding-left: calc(400px + 20px);
-  } */
 }
-@media only screen and (max-width:1414px) {}
 @media only screen and (max-width:1366px) {
   .m_box.our-dashbord:before {
     width: 23.5%;
@@ -162,12 +172,6 @@
   .dib-1366 {
     display: inline-block;
   }
-  /* .ht_left_widget.home3 .header_search_widget .mailchimp_form .form-control {
-    width: 200px;
-  } */
-  /* header.header-nav.menu_style_home_three .ace-responsive-menu>li>a {
-    padding: 30px 30px 30px 10px;
-  } */
   .becomea_instructor {
     padding: 65px 15px 55px 100px;
   }
@@ -189,9 +193,6 @@
   .ht_left_widget.home5 {
     margin-top: 15px;
   }
-  /* header.header-nav.menu_style_home_five .container-fluid {
-    padding: 0 15px;
-  } */
   .blog_post_home6_date .post_grid {
     padding: 30px 10px 30px 10px;
   }
@@ -327,9 +328,6 @@
   .img_hvr_box.home7 {
     width: auto;
   }
-  /* .logo-widget.home8 {
-    margin-left: 100px;
-  } */
   .main-banner-wrapper.home7 .carousel-btn-block .carousel-btn.left-btn {
     left: 15px;
   }
@@ -400,6 +398,9 @@
   .ccn_header_style_1 .block_cocoon_slider_3 .home2-slider .banner-style-two .slide {
     padding: 365px 0 255px;
   }
+  .block_cocoon_boxes .icon_hvr_img_box.ccn-box {
+    height: calc(100% - 30px);
+  }
 }
 @media only screen and (min-width:1300px) {
   .block_cocoon_hero_3 .home_icon_box {
@@ -424,6 +425,10 @@
 }
 /*  (max-width:1200px)+++ */
 @media only screen and (max-width:1200px) {
+  .ccn-courses-grid-block.ccn-courses-grid-block-6 .top_courses .thumb {
+    height: 180px !important;
+    width: 170px;
+  }
   .block_cocoon_hero_2 .home-three .home-text {
     padding: 400px 0;
   }
@@ -932,6 +937,43 @@
   .avatar-upload .avatar-edit input+label {
     width: 220px;
   }
+  /* */
+  .countdown.home11 .col-xs-6.col-sm-3 {
+    margin-right: 15px !important;
+  }
+  .home12_btn {
+    margin-bottom: 10px;
+  }
+  .home-twelve .home-text {
+    padding: 130px 0 110px;
+  }
+  .block_cocoon_slider_8 .home14-slider .banner-style-one.home15 .slide {
+    padding: 160px 0 170px !important;
+  }
+  .block_cocoon_slider_8 .banner-style-one.home15 .banner-title,
+  .block_cocoon_slider_8 .banner-style-one.home15 .banner-sub-title {
+    font-size: 40px;
+  }
+  .block_cocoon_slider_8 .banner-style-one .owl-dots {
+    display: block !important;
+    bottom: 80px;
+  }
+  .about-us-home13 {
+    padding-top: 60px !important;
+  }
+  .home14-slider.style2 .bg-wave {
+    display: none;
+  }
+  .hvr_img_box_container.home13 {
+    margin-bottom: 30px;
+    margin-top: 0;
+  }
+  .hvr_img_box_container.home13:hover {
+    margin-top: 0;
+  }
+  .login_form.inner_page.style2 {
+    padding: 30px;
+  }
 }
 @media only screen and (max-width:1024px) {
   .dn-md {
@@ -1160,6 +1202,44 @@
   }
   .banner-style-one.home9 .owl-dots .owl-dot {
     height: 33px;
+  }
+  .block_cocoon_parallax_subscribe_2 .singup-course-form {
+    max-width: none;
+    margin-top: 40px;
+  }
+  .block_cocoon_parallax_subscribe_2 .divider-two.home11 {
+    text-align: center;
+  }
+  .block_cocoon_parallax_subscribe_2 .countdown.home11 {
+    justify-content: center;
+  }
+  .block_cocoon_parallax_subscribe_2 .divider-two.home11 h1 {
+    margin-bottom: 35px;
+  }
+  .block_cocoon_event_list_2 .blog_post_home6_date .post_grid {
+    flex-direction: column;
+  }
+  .block_cocoon_event_list_2 .event-thumb {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  .block_cocoon_event_list_2 .event-thumb-img {
+    max-height: 130px;
+  }
+  .block_cocoon_event_list_2 .post_body {
+    padding-left: 0 !important;
+    text-align: center;
+    padding-bottom: 10px;
+  }
+  .animated_img.home12 {
+    padding: 30px 0 80px;
+  }
+  .ccn-courses-grid-block-8 .main-title,
+  .ccn-courses-grid-block-8 .text-right {
+    text-align: center !important;
+  }
+  .ccn-courses-grid-block-8 .ccn-drops {
+    margin-top: 30px;
   }
 }
 /* Medium devices (min-width:768px) (max-width: 991.98px) // (tablets, less than 992px) */
@@ -1447,6 +1527,12 @@
   }
 }
 @media only screen and (max-width:768px) {
+  .block_cocoon_parallax_subscribe_2 .divider-two.home11 {
+    margin-top: 0px;
+  }
+  .block_cocoon_parallax_subscribe_2 .singup-course-form {
+    margin-top: 0;
+  }
   .block_cocoon_slider_1 .home1-mainslider .home-content-inner,
   .block_cocoon_slider_1_v .home1-mainslider .home-content-inner {
     padding-left: 20px;
@@ -1639,7 +1725,7 @@
     color: [[setting:color_primary]] !important;
   }
   .block_cocoon_tabs .nav-tabs .nav-link:focus {
-    box-shadow: none!important;
+    box-shadow: none !important;
   }
   .mouse_scroll {
     display: none;
@@ -1895,6 +1981,9 @@
   .testimonial_slider_home2 .owl-item.active .testimonial_item.home2 .details p {
     color: #ffffff;
   }
+  .block_cocoon_tstmnls_3 .testimonial_slider_home2 .owl-item.active .testimonial_item.home2 .details p {
+    color: #6f7074;
+  }
   .banner-style-two .slide {
     background-position: 60% center;
   }
@@ -2022,7 +2111,7 @@
   }
   .block_cocoon_tabs .nav-tabs .nav-item,
   .block_cocoon_tabs .nav-tabs .nav-link {
-    text-align: left!important;
+    text-align: left !important;
   }
   .block_cocoon_tabs .nav-tabs .nav-link::after {
     height: 1px;
@@ -2416,6 +2505,9 @@
   /* .logo-widget.home8 {
     margin-left: 55px;
   } */
+  .block_cocoon_hero_3 .maxtext {
+    top: 35vh;
+  }
 }
 @media only screen and (max-width:414px) {
   .fn-414 {
@@ -2701,6 +2793,9 @@
   .header_user_notif li.user_setting .dropdown-menu.show:before {
     right: 60px;
   }
+  .block_cocoon_hero_3 .maxtext {
+    top: 39vh;
+  }
 }
 @media only screen and (max-width:320px) {
   .message_container .message_input form button.btn {
@@ -2737,6 +2832,10 @@
 @media only screen and (min-width: 1600px) {
   .home1-mainslider .banner-style-one .banner-title {
     max-width: 800px;
+  }
+  .banner-style-one.home15 .banner-title,
+  .banner-style-one.home15 .banner-sub-title {
+    font-size: 60px;
   }
 }
 @media (min-width: 992px) {

@@ -9,6 +9,14 @@ header.ccnHeader12.header-nav.menu_style_home_one.stricky-fixed .sign_up_btn .bt
 header.ccnHeader12.header-nav.menu_style_home_one.stricky-fixed #search-button i {
   color: #fff;
 }
+.block_cocoon_slider_7.ccn_morphed .home14-slider:not(.style2)>.container.maxw1500 {
+  max-width: none;
+  padding: 0;
+  width: 100%;
+}
+.block_cocoon_slider_7.ccn_morphed .home14-slider:not(.style2) .banner-style-one .slide {
+  border-radius: 0;
+}
 @media (min-width: 1200px) {
   .ccnHeader12.stricky-fixed .header_user_notif {
     position: absolute;

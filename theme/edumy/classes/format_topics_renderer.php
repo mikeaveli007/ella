@@ -96,7 +96,7 @@ class theme_edumy_format_topics_renderer extends format_topics_renderer {
                 <div class="panel">
                   <div class="panel-heading">
                     <h4 class="panel-title">
-                      <a href="#panel-'.$section->section.'" class="accordion-toggle link" data-toggle="collapse" data-parent="#accordion">'.get_section_name($course, $section).'</a>
+                      <a href="#panel-'.$section->section.'" class="accordion-toggle link collapsed" data-toggle="collapse" data-parent="#accordion">'.get_section_name($course, $section).'</a>
                     </h4>
                   </div>
                   <div id="panel-'.$section->section.'" class="panel-collapse collapse">

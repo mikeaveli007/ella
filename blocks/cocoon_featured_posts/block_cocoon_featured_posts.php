@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 require_once($CFG->dirroot. '/theme/edumy/ccn/block_handler/ccn_block_handler.php');
+require_once($CFG->dirroot. '/theme/edumy/ccn/blog_handler/ccn_blog_handler.php');
+
 class block_cocoon_featured_posts extends block_base {
 
     /**
@@ -35,15 +37,35 @@ class block_cocoon_featured_posts extends block_base {
     /**
      * Customize the block title dynamically.
      */
-    function specialization() {
-        // if (isset($this->config->title)) {
-        //     $this->title = $this->title = format_string($this->config->title, true, ['context' => $this->context]);
-        // } else {
-        //     $this->title = get_string('newcustomsliderblock', 'block_cocoon_featured_posts');
-        // }
-        global $CFG;
-        include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
-    }
+
+   function specialization() {
+       global $CFG, $DB;
+
+       include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
+       if (empty($this->config)) {
+         $this->config = new \stdClass();
+         $this->config->title = 'Featured Posts';
+         // $this->config->subtitle = 'Cum doctus civibus efficiantur in imperdiet deterruisCum doctus civibus efficiantur in imperdiet deterruisset.';
+         // $this->config->hover_text = 'Preview Course';
+         // $this->config->hover_accent = 'Top Seller';
+         // $this->config->button_text = 'View all courses';
+         // $this->config->button_link = $CFG->wwwroot . '/course';
+         // $this->config->course_image = '1';
+         // $this->config->description = '0';
+         // $this->config->price = '1';
+         // $this->config->enrol_btn = '0';
+         // $this->config->enrol_btn_text = 'Buy Now';
+         // $this->config->courses = $ccnCourses;
+         // $this->config->color_bg = 'rgb(0, 8, 70)';
+         // $this->config->color_title = 'rgb(255,255,255)';
+         // $this->config->color_subtitle = 'rgb(255,255,255)';
+         // $this->config->color_course_title = 'rgb(255,255,255)';
+         // $this->config->color_course_subtitle = 'rgb(255, 234, 193)';
+         // $this->config->color_course_price = 'rgb(255, 0, 95)';
+         // $this->config->color_button = 'rgb(255, 0, 95)';
+         // $this->config->color_course_enrol_btn = '#79b530';
+       }
+   }
 
     /**
      * The block can be used repeatedly in a page.
@@ -72,7 +94,37 @@ class block_cocoon_featured_posts extends block_base {
             $data = new stdClass();
             $data->slidesnumber = 0;
         }
+
+
+
+        // print_object($this->config->posts);
+
         $text = '';
+
+        $ccnBlogHandler = new ccnBlogHandler();
+
+        foreach($this->config->posts as $post){
+          $ccnGetPostDetails = $ccnBlogHandler->ccnGetPostDetails($post);
+          print_object($ccnGetPostDetails);
+          $text .= '<div class="item">
+          <a href="'.format_text($data->$slide_url, FORMAT_HTML, array('filter' => true)).'">
+<div class="blog_post">
+<div class="thumb">
+<img class="img-fluid w100" src="' . moodle_url::make_file_url("$CFG->wwwroot/pluginfile.php", "/{$this->context->id}/block_cocoon_featured_posts/slides/" . $i . '/' . $mainfile) . '" alt="">';
+if($PAGE->theme->settings->blog_post_date != 1){
+$text .='<span class="post_date">'.userdate($data->$slide_date, '%d %B', 0).'</span>';
+}
+$text .='
+</div>
+<div class="details">
+<h5>'.format_text($data->$slide_subtitle, FORMAT_HTML, array('filter' => true)).'</h5>
+<h4>'.format_text($data->$slide_title, FORMAT_HTML, array('filter' => true)).'</h4>
+</div>
+</div>
+</a>
+</div>';
+        }
+
         if ($data->slidesnumber > 0) {
             $text = '		<section class="blog_post_container bgc-fa">
 		<div class="container">

@@ -33,6 +33,7 @@ use html_writer;
 use moodle_page;
 use moodle_url;
 use navigation_node;
+use renderer_base;
 use pix_icon;
 use stdClass;
 use ccnUserHandler;
@@ -120,7 +121,17 @@ class core_renderer extends \core_renderer {
           return new moodle_url($url);
           return parent::get_theme_image_heading_bg($maxwidth, $maxheight);
       }
-
+  }
+  public function get_theme_image_login_bg($maxwidth = null, $maxheight = 100) {
+    global $CFG;
+    if (!empty($this->page->theme->settings->login_bg)) {
+      $url = $this->page->theme->setting_file_url('login_bg', 'login_bg');
+      // Get a URL suitable for moodle_url.
+      $relativebaseurl = preg_replace('|^https?://|i', '//', $CFG->wwwroot);
+      $url = str_replace($relativebaseurl, '', $url);
+      return new moodle_url($url);
+      return parent::get_theme_image_login_bg($maxwidth, $maxheight);
+    }
   }
   public function get_theme_image_favicon($maxwidth = null, $maxheight = 100) {
       global $CFG;
@@ -226,8 +237,8 @@ class core_renderer extends \core_renderer {
           } else {
               $url = '#cm_submenu_'.$submenucount;
           }
-          // $content .= html_writer::link($url, format_text($menunode->get_text(), FORMAT_HTML), array('class'=>'ccn-menu-item', 'title'=>$menunode->get_title()));
-          $content .= html_writer::link($url, $menunode->get_text(), array('class'=>'ccn-menu-item', 'title'=>$menunode->get_title()));
+          $content .= html_writer::link($url, format_text($menunode->get_text(), FORMAT_HTML), array('class'=>'ccn-menu-item', 'title'=>$menunode->get_title()));
+          // $content .= html_writer::link($url, $menunode->get_text(), array('class'=>'ccn-menu-item', 'title'=>$menunode->get_title()));
           // $content .= html_writer::start_tag('div', array('id'=>'cm_submenu_'.$submenucount, 'class'=>'yui3-menu custom_menu_submenu'));
           // $content .= html_writer::start_tag('div', array('class'=>'yui3-menu-content'));
           $content .= html_writer::start_tag('ul');
@@ -723,6 +734,7 @@ return $output;
         "cocoon_course_categories_2",
         "cocoon_course_categories_3",
         "cocoon_course_categories_4",
+        "cocoon_course_categories_5",
         "cocoon_course_details",
         "cocoon_course_enrl_c",
         "cocoon_course_feat_a",
@@ -731,6 +743,10 @@ return $output;
         "cocoon_course_grid_2",
         "cocoon_course_grid_3",
         "cocoon_course_grid_4",
+        "cocoon_course_grid_5",
+        "cocoon_course_grid_6",
+        "cocoon_course_grid_7",
+        "cocoon_course_grid_8",
         "cocoon_course_info",
         "cocoon_course_instructor",
         "cocoon_course_intro",
@@ -742,14 +758,19 @@ return $output;
         "cocoon_event_body",
         "cocoon_event_contact",
         "cocoon_event_details",
+        "cocoon_event_list",
+        "cocoon_event_list_2",
         "cocoon_event_slider",
         "cocoon_faqs",
         "cocoon_featured_event",
         "cocoon_featured_posts",
+        "cocoon_featured_teacher",
+        "cocoon_featured_video",
         "cocoon_featuredcourses",
         "cocoon_features",
         "cocoon_gallery",
         "cocoon_gallery_slider",
+        "cocoon_gallery_video",
         "cocoon_globalsearch_n",
         "cocoon_globalsearch_sb",
         "cocoon_hero_1",
@@ -757,6 +778,8 @@ return $output;
         "cocoon_hero_3",
         "cocoon_hero_4",
         "cocoon_hero_5",
+        "cocoon_hero_6",
+        "cocoon_hero_7",
         "cocoon_more_courses",
         "cocoon_my_courses",
         "cocoon_mynews",
@@ -767,6 +790,7 @@ return $output;
         "cocoon_parallax_counters",
         "cocoon_parallax_features",
         "cocoon_parallax_subscribe",
+        "cocoon_parallax_subscribe_2",
         "cocoon_parallax_testimonials",
         "cocoon_parallax_white",
         "cocoon_partners",
@@ -784,6 +808,8 @@ return $output;
         "cocoon_slider_4",
         "cocoon_slider_5",
         "cocoon_slider_6",
+        "cocoon_slider_7",
+        "cocoon_slider_8",
         "cocoon_steps",
         "cocoon_steps_dark",
         "cocoon_subscribe",
@@ -791,6 +817,10 @@ return $output;
         "cocoon_tabs",
         "cocoon_tstmnls",
         "cocoon_tstmnls_2",
+        "cocoon_tstmnls_3",
+        "cocoon_tstmnls_4",
+        "cocoon_tstmnls_5",
+        "cocoon_tstmnls_6",
         "cocoon_users",
         "cocoon_users_slider",
         "cocoon_users_slider_2",
@@ -802,6 +832,11 @@ return $output;
         "myoverview",
         "recentlyaccessedcourses",
         "tags",
+      );
+      // for Cocoon blocks we want to default to programmatic styling instead of in-template
+      $ccnBreakoutBlockInvetory = array(
+        "cocoon_myviews",
+        "cocoon_mynews",
       );
       // ccnBreak
       $ccn_lc_vbCollection =  array(
@@ -816,16 +851,27 @@ return $output;
         "cocoon_course_categories_2",
         "cocoon_course_categories_3",
         "cocoon_course_categories_4",
+        "cocoon_course_categories_5",
         "cocoon_course_grid",
         "cocoon_course_grid_2",
         "cocoon_course_grid_3",
         "cocoon_course_grid_4",
+        "cocoon_course_grid_5",
+        "cocoon_course_grid_6",
+        "cocoon_course_grid_7",
+        "cocoon_course_grid_8",
         "cocoon_featuredcourses",
+        "cocoon_featured_posts",
+        "cocoon_featured_teacher",
+        "cocoon_featured_video",
+        "cocoon_gallery_video",
         "cocoon_courses_slider",
         "cocoon_more_courses",
         "cocoon_course_overview",
         "cocoon_course_rating",
         "cocoon_course_instructor",
+        "cocoon_event_list",
+        "cocoon_event_list_2",
         "cocoon_faqs",
         "cocoon_features",
         "cocoon_parallax",
@@ -833,6 +879,8 @@ return $output;
         "cocoon_parallax_counters",
         "cocoon_parallax_features",
         "cocoon_parallax_testimonials",
+        "cocoon_parallax_subscribe",
+        "cocoon_parallax_subscribe_2",
         "cocoon_partners",
         "cocoon_parallax_white",
         "cocoon_pills",
@@ -846,6 +894,8 @@ return $output;
         "cocoon_hero_3",
         "cocoon_hero_4",
         "cocoon_hero_5",
+        "cocoon_hero_6",
+        "cocoon_hero_7",
         "cocoon_slider_1",
         "cocoon_slider_1_v",
         "cocoon_slider_2",
@@ -853,6 +903,8 @@ return $output;
         "cocoon_slider_4",
         "cocoon_slider_5",
         "cocoon_slider_6",
+        "cocoon_slider_7",
+        "cocoon_slider_8",
         "cocoon_steps",
         "cocoon_steps_dark",
         "cocoon_subscribe",
@@ -864,6 +916,10 @@ return $output;
         "cocoon_users_slider_round",
         "cocoon_tstmnls",
         "cocoon_tstmnls_2",
+        "cocoon_tstmnls_3",
+        "cocoon_tstmnls_4",
+        "cocoon_tstmnls_5",
+        "cocoon_tstmnls_6",
       );
       // ccnBreak
       $id = !empty($bc->attributes['id']) ? $bc->attributes['id'] : uniqid('block-');
@@ -888,7 +944,7 @@ return $output;
       }
 
       $ccnControlBlockAppearance = array_merge($ccnBlockInventory, $ccnPseudoBlockInventory);
-      if(in_array($context->type, $ccnControlBlockAppearance)) {
+      if(in_array($context->type, $ccnControlBlockAppearance) && !in_array($context->type, $ccnBreakoutBlockInvetory)) {
         $context->ccn_block = true;
       } else {
         $context->ccn_block = false;
@@ -904,16 +960,33 @@ return $output;
 
       $context->ccn_context_course = false;
 
-      // print_object($PAGE->pagelayout);
-
-      if($PAGE->pagelayout && ($PAGE->pagelayout == 'course' || $PAGE->pagelayout == 'coursecategory')) {
-        // print_object($PAGE->pagelayout);
+      if($PAGE->pagelayout && ($PAGE->pagelayout == 'course' || $PAGE->pagelayout == 'incourse' || $PAGE->pagelayout == 'coursecategory')) {
         $context->ccn_context_course = true;
+      } elseif($PAGE->pagelayout && $PAGE->pagelayout == 'mydashboard' && $this->page->theme->settings->dashboard_layout == '1') {
+        return $this->render_from_template('theme_edumy/ccn_block_dashboard_front', $context);
+      } elseif($PAGE->pagelayout && ($PAGE->pagelayout == 'mydashboard' || $PAGE->pagelayout == 'admin')) {
+        return $this->render_from_template('theme_edumy/ccn_block_dashboard_dash', $context);
       }
 
       return $this->render_from_template('core/block', $context);
   }
 
+  /**
+   * Outputs a heading
+   *
+   * @param string $text The text of the heading
+   * @param int $level The level of importance of the heading. Defaulting to 2
+   * @param string $classes A space-separated list of CSS classes. Defaulting to null
+   * @param string $id An optional ID
+   * @return string the HTML to output.
+   */
+  public function heading($text, $level = 2, $classes = null, $id = null) {
+      $level = (integer) $level;
+      if ($level < 1 or $level > 6) {
+          throw new coding_exception('Heading level must be an integer between 1 and 6.');
+      }
+      return html_writer::tag('h' . $level, $text, array('id' => $id, 'class' => renderer_base::prepare_classes($classes) . ' ccnMdlHeading'));
+  }
 
   /**
    * Render the login signup form into a nice template for the theme.

@@ -119,7 +119,17 @@ class core_renderer_maintenance extends \core_renderer_maintenance {
           return new moodle_url($url);
           return parent::get_theme_image_heading_bg($maxwidth, $maxheight);
       }
-
+  }
+  public function get_theme_image_login_bg($maxwidth = null, $maxheight = 100) {
+    global $CFG;
+    if (!empty($this->page->theme->settings->login_bg)) {
+      $url = $this->page->theme->setting_file_url('login_bg', 'login_bg');
+      // Get a URL suitable for moodle_url.
+      $relativebaseurl = preg_replace('|^https?://|i', '//', $CFG->wwwroot);
+      $url = str_replace($relativebaseurl, '', $url);
+      return new moodle_url($url);
+      return parent::get_theme_image_login_bg($maxwidth, $maxheight);
+    }
   }
   public function get_theme_image_favicon($maxwidth = null, $maxheight = 100) {
       global $CFG;

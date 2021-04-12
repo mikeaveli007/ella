@@ -450,6 +450,9 @@ fieldset.hidden {
 .filemanager-container, .filepicker-filelist {
   border-color: rgba(255, 255, 255, .09) !important;
 }
+ul.form-autocomplete-suggestions>li:empty {
+  display: none;
+}
 #ccn_lc_vb--visualize--block-wrapper--inner>div {
   /* block wrapper div*/
   overflow: hidden;
@@ -599,6 +602,32 @@ body.ccnRefreshActionExecuting #ccnRefresherAside {
 .phone_img,
 .phone_img img {
   width: 100%;
+}
+.block_cocoon_slider_1.ccn_morphed,
+.block_cocoon_slider_1_v.ccn_morphed,
+.block_cocoon_slider_2.ccn_morphed,
+.block_cocoon_slider_3.ccn_morphed,
+.block_cocoon_slider_4.ccn_morphed,
+.block_cocoon_slider_5.ccn_morphed,
+.block_cocoon_slider_6.ccn_morphed,
+.block_cocoon_hero_1.ccn_morphed,
+.block_cocoon_hero_2.ccn_morphed,
+.block_cocoon_hero_4.ccn_morphed,
+.ccn_context_frontend .inner_page_breadcrumb {
+  margin-top: unset !important;
+}
+.banner-style-one:not(.ccn-banner-style-boxed) .slide,
+.banner-style-two .slide,
+.block_cocoon_slider_1 .home1-mainslider .slide,
+.block_cocoon_slider_1_v .home1-mainslider .slide,
+.home1-mainslider .banner-style-one .slide::before,
+.home1-mainslider .banner-style-two .slide::before,
+.block_cocoon_slider_1_v .main-banner-wrapper .ccn-slide-yt-root::before,
+.block_cocoon_slider_1 .home1-mainslider .home-content,
+.block_cocoon_slider_1_v .home1-mainslider .home-content,
+.block_cocoon_slider_2 .main-banner-wrapper,
+.ccn_header_style_4 .block_cocoon_slider_2 .home2-slider>.container-fluid>.row {
+  width: auto !important;
 }
 @media (max-width: 1500px) {
   .divider_home1, .divider_home2 {

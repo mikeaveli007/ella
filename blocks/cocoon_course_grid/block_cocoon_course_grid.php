@@ -129,10 +129,14 @@ class block_cocoon_course_grid extends block_base {
 
         if(!empty($this->config->group)){
           $filter = $this->config->group;
-          $coursesContainerClass = 'masonry_abc';
+          $ccnClassMasonry_cont = 'ccn-masonry-grid-1';
+          $ccnClassMasonry_opts = 'ccn-masonry-options';
+          $ccnClassMasonry_grid = 'ccn-masonry-grid';
         } else {
           $filter = null;
-          $coursesContainerClass = '';
+          $ccnClassMasonry_cont = '';
+          $ccnClassMasonry_opts = '';
+          $ccnClassMasonry_grid = '';
         }
         if(!empty($this->config->courses)){
           $coursesArr = $this->config->courses;
@@ -157,7 +161,7 @@ class block_cocoon_course_grid extends block_base {
 
 
         $this->content->text .= '
-        <section id="our-top-courses" class="our-courses ccn-courses-grid-block ccn-courses-grid-block-1">
+        <section id="our-top-courses" class="'.$ccnClassMasonry_cont.' our-courses ccn-courses-grid-block ccn-courses-grid-block-1">
           <div class="container">
             <div class="row">
               <div class="col-lg-6 offset-lg-3">
@@ -175,7 +179,7 @@ class block_cocoon_course_grid extends block_base {
               <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12">';
               if($filter == 1){
                 $this->content->text .= '
-                <div id="options" class="alpha-pag full">
+                <div id="options" class="alpha-pag full '.$ccnClassMasonry_opts.'">
                   <div class="option-isotop">
                     <ul id="filter" class="option-set" data-option-key="filter">
                       <li class="list-inline-item"><a href="#all" data-option-value="*" class="selected">'.get_string('all').'</a></li>';
@@ -190,7 +194,7 @@ class block_cocoon_course_grid extends block_base {
                 <div class="emply-text-sec">';
               }
               $this->content->text .='
-                  <div class="row" id="'.$coursesContainerClass.'">';
+                  <div class="row '.$ccnClassMasonry_grid.' id="'.$coursesContainerClass.'">';
 
         // $courses = self::get_featured_courses();
         // print_object($courses);

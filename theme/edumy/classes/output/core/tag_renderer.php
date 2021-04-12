@@ -105,7 +105,7 @@ class tag_renderer extends \core_tag_renderer {
         $relatedtags = $tag->get_related_tags();
         $taglist = new \core_tag\output\taglist($relatedtags, get_string('relatedtags', 'tag'),
                 'tag-relatedtags', $relatedtagslimit);
-        $rv .= $this->output->render_from_template('core_tag/taglist',
+        $rv .= $this->output->render_from_template('theme_edumy/ccn_tag_taglist_large',
                 $taglist->export_for_template($this->output));
 
         // Display quick menu of the item types (if more than one item type found).

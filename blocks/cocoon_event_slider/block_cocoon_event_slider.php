@@ -64,8 +64,8 @@ class block_cocoon_event_slider extends block_base {
             return $this->content;
         }
 
-        if(!empty($this->config->title)){$ccn_title = $this->config->title;}else{$ccn_title = 'Upcoming Events';}
-        if(!empty($this->config->subtitle)){$ccn_subtitle = $this->config->subtitle;}else{$ccn_subtitle = 'Cum doctus civibus efficiantur in imperdiet deterruisset';}
+        if(!empty($this->config->title)){$ccn_title = $this->config->title;}else{$ccn_title = '';}
+        if(!empty($this->config->subtitle)){$ccn_subtitle = $this->config->subtitle;}else{$ccn_subtitle = '';}
 
         if (!empty($this->config) && is_object($this->config)) {
             $data = $this->config;

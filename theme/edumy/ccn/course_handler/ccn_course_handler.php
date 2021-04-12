@@ -6,6 +6,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot. '/course/renderer.php');
+include_once($CFG->dirroot . '/course/lib.php');
 
 class ccnCourseHandler {
   public function ccnGetCourseDetails($courseId) {
@@ -21,6 +22,7 @@ class ccnCourseHandler {
 
       $courseRecord = $DB->get_record('course', array('id' => $courseId));
       $courseElement = new core_course_list_element($courseRecord);
+
       /* @ccnBreak */
       $courseId = $courseRecord->id;
       $courseShortName = $courseRecord->shortname;
@@ -35,6 +37,8 @@ class ccnCourseHandler {
       $courseUpdated = $courseRecord->timemodified;
       $courseRequested = $courseRecord->requested;
       $courseEnrolmentCount = count_enrolled_users($courseContext);
+      $ccnCourseActivities = get_array_of_activities($courseId);
+      $ccnCountActivities = count($ccnCourseActivities);
       /* @ccnBreak */
       $categoryId = $courseRecord->category;
 
@@ -225,14 +229,14 @@ class ccnCourseHandler {
 
 
       // @ccnComm: Process first image
-      $contentimages = $contentfiles = '';
+      $contentimages = $contentfiles = $CFG->wwwroot . '/theme/edumy/images/ccnBg.png';
       foreach ($courseElement->get_course_overviewfiles() as $file) {
           $isimage = $file->is_valid_image();
           $url = file_encode_url("{$CFG->wwwroot}/pluginfile.php",
                   '/'. $file->get_contextid(). '/'. $file->get_component(). '/'.
                   $file->get_filearea(). $file->get_filepath(). $file->get_filename(), !$isimage);
           if ($isimage) {
-              $contentimages .= $url;
+              $contentimages = $url;
           } else {
               // $image = $this->output->pix_icon(file_file_icon($file, 24), $file->get_filename(), 'moodle');
               // $filename = html_writer::tag('span', $image, array('class' => 'fp-icon')).
@@ -240,7 +244,7 @@ class ccnCourseHandler {
               // $contentfiles .= html_writer::tag('span',
                       // html_writer::link($url, $filename),
                       // array('class' => 'coursefile fp-filename-icon'));
-              $contentfiles .= $CFG->wwwroot . '/theme/edumy/images/ccnBg.png';
+              $contentfiles = $CFG->wwwroot . '/theme/edumy/images/ccnBg.png';
           }
       }
 
@@ -268,6 +272,20 @@ class ccnCourseHandler {
           $ccnRenderStars = $ccnProcessRatingRenderFunction;
       }
 
+      $ccnCourseSections = [];
+      foreach($ccnCourseActivities as $ccnSection){
+        if(empty($ccnSection->deletioninprogress)){
+          if(!isset($ccnCourseSections[$ccnSection->sectionid]['name'])){
+            if(course_format_uses_sections($courseFormat)){
+              $ccnCourseSections[$ccnSection->sectionid]['name'] = get_section_name($courseId, $ccnSection);
+            } else {
+              $ccnCourseSections[$ccnSection->sectionid]['name'] = $courseFullName;
+            }
+          }
+          $ccnCourseSections[$ccnSection->sectionid][] = $ccnSection;
+        }
+      }
+      $ccnCountSections = count($ccnCourseSections);
 
       /* Map data */
       $ccnCourse->courseId = $courseId;
@@ -281,6 +299,10 @@ class ccnCourseHandler {
       $ccnCourse->imageUrl = $contentimages;
       $ccnCourse->format = $courseFormat;
       $ccnCourse->announcements = $courseAnnouncements;
+      $ccnCourse->numberOfSections = $ccnCountSections;
+      $ccnCourse->sections = $ccnCourseSections;
+      $ccnCourse->numberOfActivities = $ccnCountActivities;
+      $ccnCourse->activities = $ccnCourseActivities;
       $ccnCourse->startDate = userdate($courseStartDate, get_string('strftimedatefullshort', 'langconfig'));
       $ccnCourse->endDate = userdate($courseEndDate, get_string('strftimedatefullshort', 'langconfig'));
       $ccnCourse->visible = $courseVisible;
@@ -309,8 +331,8 @@ class ccnCourseHandler {
       $ccnRender->announcementsIcon     =     '';
       $ccnRender->announcementsIcon1     =     '';
       if($PAGE->theme->settings->coursecat_announcements != 1){
-        $ccnRender->announcementsIcon   =     '<li class="list-inline-item"><i class="flaticon-comment"></i></li><li class="list-inline-item">'.$ccnCourse->announcements.'</li>';
-        $ccnRender->announcementsIcon1   =     '<li class="list-inline-item"><i class="flaticon-comment"></i></li><li class="list-inline-item">'.$ccnCourse->announcements.' '.get_string('topics', 'theme_edumy').'</li>';
+        $ccnRender->announcementsIcon   =     '<li class="list-inline-item"><i class="flaticon-comment"></i></li><li class="list-inline-item">'.$ccnCourse->numberOfSections.'</li>';
+        $ccnRender->announcementsIcon1   =     '<li class="list-inline-item"><i class="flaticon-comment"></i></li><li class="list-inline-item">'.$ccnCourse->numberOfSections.' '.get_string('topics', 'theme_edumy').'</li>';
       }
       $ccnRender->updatedDate           =     '';
       if($PAGE->theme->settings->coursecat_modified != 1){
@@ -579,6 +601,24 @@ class ccnCourseHandler {
     }
     return null;
   }
+
+  public function ccnListCategories(){
+
+    global $DB, $CFG;
+
+    $topcategory = core_course_category::top();
+    $topcategorykids = $topcategory->get_children();
+    $areanames = array();
+    foreach ($topcategorykids as $areaid => $topcategorykids) {
+      $areanames[$areaid] = $topcategorykids->get_formatted_name();
+      foreach($topcategorykids->get_children() as $k=>$child){
+        $areanames[$k] = $child->get_formatted_name();
+      }
+    }
+
+    return $areanames;
+  }
+
   public function ccnGetCategoryDetails($categoryId){
     global $CFG, $COURSE, $USER, $DB, $SESSION, $SITE, $PAGE, $OUTPUT;
 
@@ -586,26 +626,70 @@ class ccnCourseHandler {
 
       $categoryRecord = $DB->get_record('course_categories', array('id' => $categoryId));
 
+      $chelper = new coursecat_helper();
+      $categoryObject = core_course_category::get($categoryId);
+
       $ccnCategory = new \stdClass();
 
       $categoryId = $categoryRecord->id;
       $categoryName = format_text($categoryRecord->name, FORMAT_HTML, array('filter' => true));
-      $categoryDescription = format_text($categoryRecord->description, FORMAT_HTML, array('filter' => true));
+      $categoryDescription = $chelper->get_category_formatted_description($categoryObject);
+
+      // $categoryDescription = format_text($categoryRecord->description, FORMAT_HTML, array('filter' => true));
+      $categorySummary = format_string($categoryRecord->description, $striplinks = true,$options = null);
       $isVisible = $categoryRecord->visible;
       $categoryUrl = $CFG->wwwroot . '/course/index.php?categoryid=' . $categoryId;
+      $categoryCourses = $categoryObject->get_courses();
+      $categoryCoursesCount = count($categoryCourses);
+
+      /* Do image */
+      $outputimage = '';
+      //ccnComm: Fetching the image manually added to the coursecat description via the editor.
+      $description = $chelper->get_category_formatted_description($categoryObject);
+      if ($description) {
+        $dom = new DOMDocument();
+        $dom->loadHTML($description);
+        $xpath = new DOMXPath($dom);
+        $src = $xpath->evaluate("string(//img/@src)");
+      }
+      if ($src && $description){
+        $outputimage = $src;
+      } else {
+        // if($categoryCourses >= 1){
+        //   $countNoOfCourses = '<p>'.get_string('number_of_courses', 'theme_edumy', count($categoryCourses)).'</p>';
+        // } else {
+        //   $countNoOfCourses = '';
+        // }
+        foreach($categoryCourses as $child_course) {
+          if ($child_course === reset($categoryCourses)) {
+            foreach ($child_course->get_course_overviewfiles() as $file) {
+              if ($file->is_valid_image()) {
+                $imagepath = '/' . $file->get_contextid() . '/' . $file->get_component() . '/' . $file->get_filearea() . $file->get_filepath() . $file->get_filename();
+                $imageurl = file_encode_url($CFG->wwwroot . '/pluginfile.php', $imagepath, false);
+                $outputimage  =  $imageurl;
+                // Use the first image found.
+                break;
+              }
+            }
+          }
+        }
+      }
 
       /* Map data */
       $ccnCategory->categoryId = $categoryId;
       $ccnCategory->categoryName = $categoryName;
       $ccnCategory->categoryDescription = $categoryDescription;
+      $ccnCategory->categorySummary = $categorySummary;
       $ccnCategory->isVisible = $isVisible;
       $ccnCategory->categoryUrl = $categoryUrl;
+      $ccnCategory->coverImage = $outputimage;
+      $ccnCategory->courses = $categoryCourses;
+      $ccnCategory->coursesCount = $categoryCoursesCount;
 
       return $ccnCategory;
 
     }
   }
-
 
   public function ccnGetCourseDescription($courseId, $maxLength){
     global $CFG, $COURSE, $USER, $DB, $SESSION, $SITE, $PAGE, $OUTPUT;

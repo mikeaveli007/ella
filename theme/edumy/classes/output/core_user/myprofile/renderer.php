@@ -95,16 +95,17 @@ class renderer extends \core_user\output\myprofile\renderer {
       } else { //Edumy Dashboard
         $ccn_col_main = 'col-md-12 col-lg-8 col-xl-8';
         $ccn_col_side = 'col-lg-4 col-xl-4';
-        $ccn_col_side_block = 'block mb30 p0';
+        $ccn_col_side_block = 'ccnDashBl mb30 p0';
         $ccn_col_block_title = 'ccnDashBlHd';
         $ccn_col_side_block_content = 'ccnDashBlCt siderbar_contact_widget';
-        $ccn_col_main_block = 'block b0';
+        $ccn_col_main_block = 'ccnDashBl b0';
       }
 
       // begin new
       $userData = get_complete_user_data('id', $ccn_user_id);
       $moreUserData = $DB->get_record('user', array('id' => $ccn_user_id), '*', MUST_EXIST);
       $userDescription = file_rewrite_pluginfile_urls($moreUserData->description, 'pluginfile.php', $ccn_user_id, 'user', 'profile', null);
+      $userDescription = format_text($userDescription, FORMAT_HTML, array('filter' => true));
 
       $userFirst = $userData->firstname;
       $userLast = $userData->lastname;
@@ -197,7 +198,7 @@ class renderer extends \core_user\output\myprofile\renderer {
 
                 $return .='
                 <div class="cs_row_three">
-                  <div class="'.$ccn_col_main_block.' course_content">';
+                  <div class="'.$ccn_col_main_block.' --course_content">';
                     $categories = $tree->categories;
                     foreach ($categories as $category) {
                       $return .= $this->render($category);
@@ -270,7 +271,7 @@ class renderer extends \core_user\output\myprofile\renderer {
                 </div></div>';
               } elseif ($userLastCourses && $PAGE->theme->settings->user_profile_layout == 1){ //Edumy Dash
                 $return .='
-                <div class="block p0 mb30">
+                <div class="'.$ccn_col_main_block.' p0">
                   <div class="'.$ccn_col_block_title.'">
                     <h4>'.$userFirst.get_string('apostrophe_s', 'theme_edumy').' '.get_string('last_accessed_courses', 'theme_edumy').'</h4>
                   </div>

@@ -25,6 +25,15 @@ class block_cocoon_action_panels_edit_form extends block_edit_form
         $mform->setDefault('config_panel_1_button_url', '#');
         $mform->setType('config_panel_1_button_url', PARAM_RAW);
 
+        $options = array(
+            '_self' => 'Self (open in same window)',
+            '_blank' => 'Blank (open in new window)',
+            '_parent' => 'Parent (open in parent frame)',
+            '_top' => 'Top (open in full body of the window)',
+        );
+        $select = $mform->addElement('select', 'config_panel_1_button_target', get_string('config_button_target', 'theme_edumy'), $options);
+        $select->setSelected('_self');
+
         $mform->addElement('text', 'config_panel_1_color_bg', get_string('config_color_bg', 'theme_edumy'), array('class'=>'ccn_spectrum_class'));
         $mform->setDefault('config_panel_1_color_bg', '#f9f9f9');
         $mform->setType('config_panel_1_color_bg', PARAM_TEXT);
@@ -63,6 +72,15 @@ class block_cocoon_action_panels_edit_form extends block_edit_form
         $mform->addElement('text', 'config_panel_2_button_url', get_string('config_panel_2_button_url', 'block_cocoon_action_panels'));
         $mform->setDefault('config_panel_2_button_url', '#');
         $mform->setType('config_panel_2_button_url', PARAM_RAW);
+
+        $options = array(
+            '_self' => 'Self (open in same window)',
+            '_blank' => 'Blank (open in new window)',
+            '_parent' => 'Parent (open in parent frame)',
+            '_top' => 'Top (open in full body of the window)',
+        );
+        $select = $mform->addElement('select', 'config_panel_2_button_target', get_string('config_button_target', 'theme_edumy'), $options);
+        $select->setSelected('_self');
 
         $mform->addElement('text', 'config_panel_2_color_bg', get_string('config_color_bg', 'theme_edumy'), array('class'=>'ccn_spectrum_class'));
         $mform->setDefault('config_panel_2_color_bg', '#f9f9f9');

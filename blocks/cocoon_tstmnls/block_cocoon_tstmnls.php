@@ -26,6 +26,7 @@ class block_cocoon_tstmnls extends block_base {
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
 
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->title = 'What People Say';
           $this->config->subtitle = 'Cum doctus civibus efficiantur in imperdiet deterruisset.';
           $this->config->style = '0';
@@ -36,23 +37,23 @@ class block_cocoon_tstmnls extends block_base {
           $this->config->slide_title1 = 'Ali Tufan';
           $this->config->slide_subtitle1 = 'Client';
           $this->config->slide_text1 = 'Customization is very easy with this theme. Clean and quality design and full support for any kind of request! Great theme!';
-          $this->config->file_slide1 = $CFG->wwwroot.'/theme/edumy/images/testimonial/1.jpg';
+          // $this->config->file_slide1 = $CFG->wwwroot.'/theme/edumy/images/testimonial/1.jpg';
           $this->config->slide_title2 = 'Ali Tufan';
           $this->config->slide_subtitle2 = 'Client';
           $this->config->slide_text2 = 'Customization is very easy with this theme. Clean and quality design and full support for any kind of request! Great theme!';
-          $this->config->file_slide2 = $CFG->wwwroot.'/theme/edumy/images/testimonial/1.jpg';
+          // $this->config->file_slide2 = $CFG->wwwroot.'/theme/edumy/images/testimonial/1.jpg';
           $this->config->slide_title3 = 'Ali Tufan';
           $this->config->slide_subtitle3 = 'Client';
           $this->config->slide_text3 = 'Customization is very easy with this theme. Clean and quality design and full support for any kind of request! Great theme!';
-          $this->config->file_slide3 = $CFG->wwwroot.'/theme/edumy/images/testimonial/1.jpg';
+          // $this->config->file_slide3 = $CFG->wwwroot.'/theme/edumy/images/testimonial/1.jpg';
           $this->config->slide_title4 = 'Ali Tufan';
           $this->config->slide_subtitle4 = 'Client';
           $this->config->slide_text4 = 'Customization is very easy with this theme. Clean and quality design and full support for any kind of request! Great theme!';
-          $this->config->file_slide4 = $CFG->wwwroot.'/theme/edumy/images/testimonial/1.jpg';
+          // $this->config->file_slide4 = $CFG->wwwroot.'/theme/edumy/images/testimonial/1.jpg';
           $this->config->slide_title5 = 'Ali Tufan';
           $this->config->slide_subtitle5 = 'Client';
           $this->config->slide_text5 = 'Customization is very easy with this theme. Clean and quality design and full support for any kind of request! Great theme!';
-          $this->config->file_slide5 = $CFG->wwwroot.'/theme/edumy/images/testimonial/1.jpg';
+          // $this->config->file_slide5 = $CFG->wwwroot.'/theme/edumy/images/testimonial/1.jpg';
         }
     }
 
@@ -344,16 +345,17 @@ class block_cocoon_tstmnls extends block_base {
              $slide_subtitle = 'slide_subtitle' . $i;
              $slide_text = 'slide_text' . $i;
 
-             if (!empty($data->$sliderimage)) {
-                 $files = $fs->get_area_files($this->context->id, 'block_cocoon_tstmnls', 'slides', $i, 'sortorder DESC, id ASC', false, 0, 0, 1);
-                 if (count($files) >= 1) {
-                     $mainfile = reset($files);
-                     $mainfile = $mainfile->get_filename();
-                 } else {
-                     continue;
-                 }
+             $files = $fs->get_area_files($this->context->id, 'block_cocoon_tstmnls', 'slides', $i, 'sortorder DESC, id ASC', false, 0, 0, 1);
 
-                 $text .= '<div class="item">
+             if (!empty($data->$sliderimage) && count($files) >= 1) {
+               $mainfile = reset($files);
+               $mainfile = $mainfile->get_filename();
+               $data->$sliderimage = moodle_url::make_file_url("$CFG->wwwroot/pluginfile.php","/{$this->context->id}/block_cocoon_tstmnls/slides/" . $i . '/' . $mainfile);
+             } else {
+               $data->$sliderimage = $CFG->wwwroot.'/theme/edumy/images/testimonial/1.jpg';
+             }
+
+             $text .= '<div class="item">
 							<div class="ccn_testimonial_grid">
 								<div class="t_icon home3"><span class="flaticon-quotation-mark"></span></div>
 								<div class="testimonial_content">
@@ -368,8 +370,6 @@ class block_cocoon_tstmnls extends block_base {
 								</div>
 							</div>
 						</div>';
-             }
-
          }
          $text .= '
          </div>
