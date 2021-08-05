@@ -13,7 +13,7 @@ class block_cocoon_parallax_subscribe extends block_base
     public function specialization()
     {
         // $this->title = isset($this->config->title) ? format_string($this->config->title) : '';
-        global $CFG;
+        global $CFG, $DB;
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
     }
     public function get_content(){

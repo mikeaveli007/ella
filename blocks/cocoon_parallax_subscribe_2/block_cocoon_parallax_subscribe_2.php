@@ -68,7 +68,12 @@ class block_cocoon_parallax_subscribe_2 extends block_base
                     class="color-white text-uppercase"
                     data-ccn="title"
                     >'.format_text($this->content->title, FORMAT_HTML, array('filter' => true)).'</h1>
-                  <div id="countdown" class="row countdown home11" ccn-year="'.userdate($this->content->date, '%Y', 0).'" ccn-month="'.userdate($this->content->date, '%m', 0).'" ccn-day="'.userdate($this->content->date, '%d', 0).'"></div>
+                  <div id="countdown" class="row countdown home11" ccn-year="'.userdate($this->content->date, '%Y', 0).'" ccn-month="'.userdate($this->content->date, '%m', 0).'" ccn-day="'.userdate($this->content->date, '%d', 0).'" ccn-str=\'{
+                    "days": "'.get_string('days').'",
+                    "hours": "'.get_string('hours').'",
+                    "minutes": "'.get_string('minutes').'",
+                    "seconds": "'.get_string('seconds').'"}\'
+                    ></div>
               </div>
               </div>
               <div class="col-lg-6 col-xl-5">

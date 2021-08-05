@@ -38,6 +38,47 @@ class block_cocoon_slider_2 extends block_base {
     }
   }
 
+  function ccnIterable($args = NULL, $i = NULL) {
+
+    if($i === NULL) {
+      $i = '_x_ccnI';
+    }
+    if($args === NULL) {
+      $args = new \stdClass();
+
+      $fieldFileSlide = 'file_slide'.$i;
+      $fieldSlideTitle = 'slide_title'.$i;
+      $fieldSlideSubtitle = 'slide_subtitle'.$i;
+      $fieldButtonUrl = 'slide_btn_url'.$i;
+      $fieldButtonTarget = 'slide_btn_target'.$i;
+      $fieldButtonText = 'slide_btn_text'.$i;
+
+      $args->$fieldFileSlide = 'test';
+      $args->$fieldSlideTitle = 'test';
+      $args->$fieldSlideSubtitle = 'test';
+      $args->$fieldButtonUrl = 'test';
+      $args->$fieldButtonTarget = 'test';
+      $args->$fieldButtonText = 'test';
+    }
+    // var_dump($args);
+
+    return '
+    <div class="'.$slidersize.'" data-ccn-slide data-ccn="'.$fieldFileSlide.'" data-ccn-img="bg-img-url" style="background-image: url('.$data->$sliderimage.');">
+     <div class="container">
+         <div class="row">
+             <div class="col-lg-12 text-center">
+               <h3 data-ccn="'.$fieldSlideTitle.'" class="banner-title">'.format_text($fieldSlideTitle, FORMAT_HTML, array('filter' => true)).'</h3>
+               <p data-ccn="'.$fieldSlideSubtitle.'">'.format_text($fieldSlideSubtitle, FORMAT_HTML, array('filter' => true)).'</p>
+               <div class="btn-block">
+                          <a data-ccn="'.$fieldSlideButtonText.'" target="" href="'.format_text($data->$slide_btn_url, FORMAT_HTML, array('filter' => true)).'" class="banner-btn">'.format_text($args->$fieldSlideButtonText, FORMAT_HTML, array('filter' => true)).'</a>
+                        </div>
+                        </div>
+         </div>
+     </div>
+     </div>';
+
+  }
+
   function instance_allow_multiple() {
     return false;
   }
@@ -111,7 +152,7 @@ class block_cocoon_slider_2 extends block_base {
                 }
 
                 $text .= '
-                <div class="'.$slidersize.'" data-ccn="file_slide'.$i.'" data-ccn-img="bg-img-url" style="background-image: url('.$data->$sliderimage.');">
+                <div class="'.$slidersize.'" data-ccn-slide data-ccn="file_slide'.$i.'" data-ccn-img="bg-img-url" style="background-image: url('.$data->$sliderimage.');">
                  <div class="container">
                      <div class="row">
                          <div class="col-lg-12 text-center">';

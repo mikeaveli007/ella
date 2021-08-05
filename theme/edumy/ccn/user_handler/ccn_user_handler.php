@@ -46,6 +46,7 @@ class ccnUserHandler {
         $userSince = $userData->firstaccess;
         $userLastLogin = $userData->lastaccess;
         $userSince = ($userSince == 0) ? 'Never' : userdate($userSince);
+        $userLastLoginShort = ($userLastLogin == 0) ? 'Never' : userdate($userLastLogin, get_string('strftimedateshort', 'langconfig'));
         $userLastLogin = ($userLastLogin == 0) ? 'Never' : userdate($userLastLogin);
         $userStatus = $userData->currentlogin;
         $userEmail = $userData->email;
@@ -188,7 +189,7 @@ class ccnUserHandler {
         $ccnUser->department = $fieldDepartment;
 
         $ccnPretty = new \stdClass();
-        $ccnPretty->lastLogin = userdate($userLastLogin, get_string('strftimedateshort', 'langconfig'), 0);
+        $ccnPretty->lastLogin = $userLastLoginShort;
 
         $ccnRender = new \stdClass();
         $ccnRender->profileCount = $ccnProfileCount . ' '. get_string('profile_views', 'theme_edumy');

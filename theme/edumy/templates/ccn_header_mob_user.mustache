@@ -9,8 +9,8 @@
   </li>
 {{/isloggedin}}
 {{#notloggedin}}
-  <li><a href="{{{ ccnLogoUrl }}}/login/index.php"><span class="ccn-flaticon-user"></span> {{#str}}login, theme_edumy{{/str}}</a></li>
+  <li><a href="{{{ config.wwwroot }}}/login/index.php"><span class="ccn-flaticon-user"></span> {{#str}}login, theme_edumy{{/str}}</a></li>
   {{#signup_is_enabled}}
-   <li><a href="{{{ ccnLogoUrl }}}/login/signup.php"><span class="ccn-flaticon-login"></span> {{#str}} signup, theme_edumy {{/str}}</a></li>
+   <li><a href="{{{ config.wwwroot }}}/login/signup.php"><span class="ccn-flaticon-login"></span> {{#str}} signup, theme_edumy {{/str}}</a></li>
   {{/signup_is_enabled}}
 {{/notloggedin}}

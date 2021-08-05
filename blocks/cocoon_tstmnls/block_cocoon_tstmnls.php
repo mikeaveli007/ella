@@ -241,7 +241,7 @@ class block_cocoon_tstmnls extends block_base {
                 }
 
                     $text .= '
-                    <div class="item">
+                    <div class="item" data-ccn-slide>
   <div class="testimonial_item home2">
     <div class="details">
       <div class="icon"><span class="fa fa-quote-left"></span></div>

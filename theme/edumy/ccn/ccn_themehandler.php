@@ -6,6 +6,7 @@
 defined('MOODLE_INTERNAL') || die();
 global $USER, $CFG, $SESSION, $OUTPUT, $COURSE, $DB;
 require_once($CFG->libdir . '/behat/lib.php');
+// require_once($CFG->libdir . '/lib/blocklib.php');
 include($CFG->dirroot . '/theme/edumy/ccn/ccn_loginform.php');
 include($CFG->dirroot . '/theme/edumy/ccn/ccn_globalsearch.php');
 include($CFG->dirroot . '/theme/edumy/ccn/ccn_globalsearch_navbar.php');
@@ -28,9 +29,10 @@ $ccnMdlHandler = new ccnMdlHandler();
 $ccnMdlVersion = $ccnMdlHandler->ccnGetCoreVersion();
 
 /* @ccnComm: Visualize */
-if (isset($_GET['bui_editid'])) {
-  // Perform actions
+if (isset($_GET['cocoon_customizer'])) {
+  require_once($CFG->dirroot. '/theme/edumy/ccn/visualize/ccn_lcvb_construct.php');
 }
+
 
 /* @ccnBreak */
 if (is_siteadmin()) {$user_status = 'role-supreme';} else {$user_status = 'role-standard';}

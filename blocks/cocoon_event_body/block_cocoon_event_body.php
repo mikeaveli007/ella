@@ -1,6 +1,7 @@
 <?php
 global $CFG;
 require_once($CFG->dirroot. '/theme/edumy/ccn/block_handler/ccn_block_handler.php');
+use DateTime;
 class block_cocoon_event_body extends block_base
 {
     // Declare first
@@ -35,15 +36,22 @@ class block_cocoon_event_body extends block_base
                 $this->content->image .=  $url;
             }
         }
+        $date = new DateTime();
+        $date = $date->setTimestamp($this->config->date);
+        $date = $date->format('d M Y');
         $this->content->text = '
         <div class="mbp_thumb_post">
 							<div class="details pt0">
 								<h3 class="mb25">'.format_text($this->content->title, FORMAT_HTML, array('filter' => true)).'</h3>
-							</div>
-							<div class="thumb">
-								<img class="img-fluid" src="'.$this->content->image.'" alt="'.format_text($this->content->title, FORMAT_HTML, array('filter' => true)).'">
-								<div class="post_date"><h2>'.userdate($this->content->date, '%d').'</h2> <span>'.userdate($this->content->date, '%B').'</span></div>
-							</div>
+							</div>';
+              if(!empty($this->content->image)){
+                $this->content->text .= '
+  							<div class="thumb">
+  								<img class="img-fluid" src="'.$this->content->image.'" alt="'.format_text($this->content->title, FORMAT_HTML, array('filter' => true)).'">
+  								<div class="post_date"><h2>'.userdate($this->content->date, '%d').'</h2> <span>'.userdate($this->content->date, '%B').'</span></div>
+  							</div>';
+              }
+              $this->content->text .= '
 							<div class="event_counter_plugin_container">
 								<div class="event_counter_plugin_content">
 									<ul>
@@ -63,7 +71,7 @@ class block_cocoon_event_body extends block_base
                     minute = second * 60,
                     hour = minute * 60,
                     day = hour * 24;
-                  let countDown = new Date(\''.userdate($this->content->date, '%B %d %Y', 0).'\').getTime(),
+                  let countDown = new Date(\''.$date.'\').getTime(),
                     x = setInterval(function() {
                       let now = new Date().getTime(),
                         distance = countDown - now;

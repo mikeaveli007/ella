@@ -22,6 +22,7 @@ use \core_user\output\myprofile\category;
 use core_user\output\myprofile\tree;
 use core_user\output\myprofile\node;
 use core_user\output\myprofile;
+use html_writer;
 use context_course;
 use core_course_list_element;
 use DateTime;

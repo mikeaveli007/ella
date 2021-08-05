@@ -2172,9 +2172,9 @@ header.header-nav.menu_style_home_seven .ace-responsive-menu>li.last {
   margin-top: -240px;
 }
 .home-four {
-  margin-top: 77px !important;
+  margin-top: 0 !important;
 }
-.home-four:before {
+/* .home-four:before {
   background-color: rgba(10, 10, 10, .5);
   bottom: 98px;
   content: "";
@@ -2182,7 +2182,7 @@ header.header-nav.menu_style_home_seven .ace-responsive-menu>li.last {
   position: absolute;
   top: -98px;
   width: 100%;
-}
+} */
 .animated {
   -webkit-animation-duration: 3s;
   animation-duration: 3s;
@@ -2407,6 +2407,44 @@ header.header-nav.menu_style_home_seven .ace-responsive-menu>li.last {
 .home14-slider.style2 .bg-wave {
   position: relative;
 }
+/* @media (min-width: 1200px) {
+  .block_cocoon_slider_8 .home14-slider.style2::after {
+    content: "";
+    background: url([[cocoon:edumy]]/images/background/wave.svg) left bottom no-repeat;
+    width: 100%;
+    height: 200px;
+    position: absolute;
+    z-index: 1;
+    background-size: 111%;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+  }
+}
+@media (min-width: 1600px) {
+  .block_cocoon_slider_8 .home14-slider.style2::after {
+    height: 200px;
+    bottom: -40px;
+  }
+}
+@media (min-width: 1700px) {
+  .block_cocoon_slider_8 .home14-slider.style2::after {
+    height: 200px;
+    bottom: -60px;
+  }
+}
+@media (min-width: 2100px) {
+  .block_cocoon_slider_8 .home14-slider.style2::after {
+    height: 300px;
+    bottom: -60px;
+    background-position: left 96%;
+  }
+}
+@media(min-width: 2300px) {
+  .block_cocoon_slider_8 .home14-slider.style2::after {
+    display: none;
+  }
+} */
 .home14-slider.style2 .bg-wave img {
   bottom: -43px;
   left: 0;
@@ -3142,6 +3180,9 @@ header.header-nav.menu_style_home_seven .ace-responsive-menu>li.last {
 .row_home4 {
   margin-top: -250px;
   margin-bottom: 75px;
+}
+.block_cocoon_hero_3 .row_home4 {
+  margin-bottom: 140px;
 }
 .home_icon_box.home4 .icon {
   color: #ffffff;
@@ -5873,6 +5914,9 @@ header.header-nav.menu_style_home_seven .ace-responsive-menu>li.last {
 .team_member .tm_footer ul {
   margin-bottom: 0;
   padding: 10px 0 10px;
+}
+.team_member .tm_footer ul li {
+  color: rgba(0, 0, 0, .4);
 }
 .team_member .tm_footer ul li:first-child {
   padding-right: 10px;
@@ -8837,9 +8881,14 @@ body:not(.ccn_context_dashboard) .ui_kit_select_search button.btn:focus {
   top: 0;
   width: 2px;
 }
-.dashbord_nav_list li a span:not(.ccn_dashnav_item) {
+.dashbord_nav_list li a span:not(.ccn_dashnav_item),
+.dashbord_nav_list li a i.icon {
   font-size: 23px;
   margin-right: 15px;
+  width: auto;
+  height: auto;
+  top: 3px;
+  position: relative;
 }
 .skill_sidebar_widget {
   margin-top: 40px;
@@ -9561,7 +9610,13 @@ body:not(.ccn_context_dashboard) .ui_kit_select_search button.btn:focus {
 .inbox_chatting_box .chatting_content li.media .media-body {
   display: block;
 }
-.inbox_chatting_box .chatting_content li.media span {
+/* .inbox_chatting_box .chatting_content li.media span {
+ *
+ * @ccnTicketRef - 3421 - 2021032214.07
+ * add 'ccn-msg-del-icon' class - we need to monitor to see if it inadvertently affects styling of other elements in messages
+ *
+ */
+.inbox_chatting_box .chatting_content li.media .ccn-msg-del-icon span {
   background-color: #95a5a6;
   border: 1px solid #ffffff;
   border-radius: 50%;
@@ -10502,14 +10557,32 @@ body:not(.ccn_context_dashboard) .ui_kit_select_search button.btn:focus {
   margin: 0 !important;
   width: 100% !important;
 }
-.maxtext {
-  bottom: 52%;
+.block:not(.block_cocoon_hero_3) maxtext {
+  bottom: 45%;
   left: 0;
   margin: 0 auto;
   position: absolute;
   right: 0;
   text-align: center;
   z-index: 9;
+}
+.block_cocoon_hero_3 .maxslider-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+.block_cocoon_hero_3 .maxtext {
+  text-align: center;
+  top: -50px;
+  position: relative;
+}
+.block_cocoon_hero_3 .owl-controls {
+  display: none;
 }
 .maxtext h1 {
   color: #ffffff;
@@ -12580,7 +12653,7 @@ div#countdown .col-xs-6.col-sm-3 {
 }
 .singup-course-form .btn {
   border-radius: 4px;
-  font-family: "Open Sans";
+  font-family: "[[setting:secondary_font]]";
   font-size: 15px;
   font-weight: normal;
   height: 50px;
@@ -15220,7 +15293,8 @@ body:not(.ccn_context_focus) .ccn_dashbord_nav_list .icon {
 .block_cocoon_accordion ul,
 .ccn-blog-post-content-surround ul:not(.bs_content_list),
 .block_cocoon_tabs .tab-content ul,
-.box ul {
+.box ul,
+.que ul {
   margin-left: 40px;
   list-style: disc;
 }
@@ -15230,7 +15304,8 @@ body:not(.ccn_context_focus) .ccn_dashbord_nav_list .icon {
 .block_cocoon_tabs .tab-content ol,
 .ccn_course_content ol,
 .block_cocoon_accordion ol,
-.box ol {
+.box ol,
+.que ol {
   margin-left: 40px;
   list-style: decimal;
 }
@@ -16777,7 +16852,7 @@ ul.list_requiremetn {
 .ccn-courses-grid-block .top_courses .thumb .overlay .tag,
 .feat_property .details .tc_content .tag {
   background-color: [[setting:color_accent_4]];
-  color: [[setting:color_primary_alternate]];
+  color: #fff;
 }
 .ccn-courses-grid-block .top_courses .thumb .overlay .tc_preview_course {
   top: 46%;
@@ -17005,6 +17080,7 @@ ul.list_requiremetn {
 .ccn_testimonial_slider_home2 .owl-item.active.center .testimonial_item.home2.ccnTestimonials2 .details {
   background: #fff;
   border: 1px solid rgb(234, 235, 240);
+  border: 1px solid [[setting:color_primary]];
   border-radius: 3px;
   padding: 40px 35px;
 }

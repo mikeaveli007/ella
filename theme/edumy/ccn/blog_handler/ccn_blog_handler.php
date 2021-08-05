@@ -28,6 +28,11 @@ class ccnBlogHandler {
       $blogPostSummary = substr(format_string($blogPost->summary, $striplinks = true,$options = null),0,100).'...';
       $blogPostUrl = new moodle_url('/blog/index.php', array('entryid' => $postId));
 
+      $image = $CFG->wwwroot .'/theme/edumy/images/ccnBgMd.png';
+      if (!empty($blogPost->get_attachments()) && isset($blogPost->get_attachments()[0]->url) && $blogPost->get_attachments()[0]->url !== '') {
+        $image = $blogPost->get_attachments()[0]->url;
+      }
+
       $ccnPost = new stdClass();
       /* Map data */
       $ccnPost->postId = $postId;
@@ -36,6 +41,7 @@ class ccnBlogHandler {
       $ccnPost->summary = $blogPostSummary;
       $ccnPost->rating = $blogPost->rating;
       $ccnPost->hasImage = $blogPost->attachment;
+      $ccnPost->image = $image;
       $ccnPost->state = $blogPost->publishstate;
       $ccnPost->tags = $blogPost->tags;
       $ccnPost->tagCount = count($blogPost->tags);

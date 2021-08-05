@@ -50,10 +50,10 @@ if ($handle === false) {
                 report_customsql_url('view.php?id=' . $id));
 }
 
-$fields = fgetcsv($handle);
+$fields = report_customsql_read_csv_row($handle);
 
 $rows = new ArrayObject([]);
-while ($row = fgetcsv($handle)) {
+while ($row = report_customsql_read_csv_row($handle)) {
     $rows->append($row);
 }
 
@@ -61,7 +61,7 @@ fclose($handle);
 
 $filename = clean_filename($report->displayname);
 
-download_as_dataformat($filename, $dataformat, $fields, $rows->getIterator(), function(array $row) use ($dataformat) {
+\core\dataformat::download_data($filename, $dataformat, $fields, $rows->getIterator(), function(array $row) use ($dataformat) {
     // HTML export content will need escaping.
     if (strcasecmp($dataformat, 'html') === 0) {
         $row = array_map(function($cell) {

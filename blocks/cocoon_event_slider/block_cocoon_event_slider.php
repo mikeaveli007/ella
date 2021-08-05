@@ -126,7 +126,7 @@ class block_cocoon_event_slider extends block_base {
                     }
 
                     $text .= '
-                    <div class="item">';
+                    <div class="item" data-ccn-slide>';
                     if($slide_url){
                       $text .='
                       <a href="'.$slide_url.'">';
@@ -137,7 +137,7 @@ class block_cocoon_event_slider extends block_base {
 									          <img class="img-fluid" src="' . moodle_url::make_file_url("$CFG->wwwroot/pluginfile.php", "/{$this->context->id}/block_cocoon_event_slider/slides/" . $i . '/' . $mainfile) . '" alt="">';
                   if (!empty($data->$sliderimage)) {
 								$text .='<div class="bph2_date_meta">
-										      <span class="year">'.userdate($data->$slide_date, '%d').' <br> '.userdate($data->$slide_date, '%B').'</span>
+										      <span class="year" data-ccn="'.$slide_date.'">'.userdate($data->$slide_date, '%d').' <br> '.userdate($data->$slide_date, '%B').'</span>
 									       </div>';
                 }
 								$text .='
@@ -146,16 +146,16 @@ class block_cocoon_event_slider extends block_base {
 									<div class="post_meta">
 										<ul>';
                     if (!empty($data->$slide_time)) {
-										$text .='<li class="list-inline-item"><span><i class="flaticon-calendar"></i> '.format_text($data->$slide_time, FORMAT_HTML, array('filter' => true)).'</span></li>';
+										$text .='<li class="list-inline-item"><span><i class="flaticon-calendar"></i> <span data-ccn="'.$slide_time.'">'.format_text($data->$slide_time, FORMAT_HTML, array('filter' => true)).'</span></span></li>';
                     }
                     if (!empty($data->$slide_location)) {
-										$text .='<li class="list-inline-item"><span><i class="flaticon-placeholder"></i> '. format_text($data->$slide_location, FORMAT_HTML, array('filter' => true)).'</span></li>';
+										$text .='<li class="list-inline-item"><span><i class="flaticon-placeholder"></i> <span data-ccn="'.$slide_location.'">'. format_text($data->$slide_location, FORMAT_HTML, array('filter' => true)).'</span></span></li>';
                     }
 										$text .='
                     </ul>
 									</div>';
                   if (!empty($data->$slide_title)) {
-                    $text .='	<h4>'. format_text($data->$slide_title, FORMAT_HTML, array('filter' => true)).'</h4>';
+                    $text .='	<h4 data-ccn="'.$slide_title.'">'. format_text($data->$slide_title, FORMAT_HTML, array('filter' => true)).'</h4>';
                   }
                     $text .=' </div>
                   </div>';

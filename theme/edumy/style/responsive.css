@@ -118,6 +118,7 @@
   .home1-mainslider .banner-style-one.home9 .banner-title,
   .home1-mainslider .banner-style-one.home9 .sub-title {
     font-size: 50px;
+    padding-right: 200px;
   }
   .home1-mainslider .banner-style-one.home9 .video_pop {
     margin-top: 40px;
@@ -425,6 +426,10 @@
 }
 /*  (max-width:1200px)+++ */
 @media only screen and (max-width:1200px) {
+  .home1-mainslider .banner-style-one.home9 .banner-title,
+  .home1-mainslider .banner-style-one.home9 .sub-title {
+    padding-right: 0;
+  }
   .ccn-courses-grid-block.ccn-courses-grid-block-6 .top_courses .thumb {
     height: 180px !important;
     width: 170px;
@@ -438,7 +443,8 @@
   .dashboard_main_content .breadcrumb_widgets .breadcrumb {
     display: none;
   }
-  .dashboard_main_content .my_course_content_list .mc_content_list .thumb {
+  .dashboard_main_content .my_course_content_list .mc_content_list .thumb,
+  /* #5213 20210607 */ .my_course_content_list .mc_content_list .thumb {
     width: 100%;
     max-height: none;
   }
@@ -1073,6 +1079,7 @@
     width: 20%;
     margin-right: 4%;
   }
+
 }
 @media only screen and (max-width:992px) {
   .our-dashbord {
@@ -1160,9 +1167,9 @@
   .inbox_user_list {
     padding: 30px 25px 40px;
   }
-  .home-four {
+  /* .home-four {
     margin-top: 3px !important;
-  }
+  } */
   .header.stylehome1.home5 a#search-button-listener2 {
     color: #0a0a0a !important;
   }
@@ -1460,6 +1467,9 @@
   }
   .row_home4 {
     margin: 0 !important;
+  }
+  .block_cocoon_hero_3 .row_home4 {
+    margin: 80px 0 !important;
   }
   .home_icon_box.home4 .icon span {
     float: none !important;
@@ -2078,6 +2088,14 @@
     max-width: 70%;
   }
 }
+@media only screen and (max-width: 992px) and (max-height: 520px) {
+  .block_cocoon_hero_3 .maxtext {
+    top: 20px;
+  }
+  /* .block_cocoon_hero_3 .owl-controls {
+    display: none;
+  } */
+}
 @media only screen and (max-width:630px) {
   .banner-style-one.home9 .owl-dots .owl-dot {
     width: 14%;
@@ -2506,7 +2524,7 @@
     margin-left: 55px;
   } */
   .block_cocoon_hero_3 .maxtext {
-    top: 35vh;
+    top: 50px;
   }
 }
 @media only screen and (max-width:414px) {
@@ -2794,8 +2812,11 @@
     right: 60px;
   }
   .block_cocoon_hero_3 .maxtext {
-    top: 39vh;
+    top: 20px;
   }
+  /* .block_cocoon_hero_3 .owl-controls {
+    display: none;
+  } */
 }
 @media only screen and (max-width:320px) {
   .message_container .message_input form button.btn {

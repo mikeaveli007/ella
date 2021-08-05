@@ -180,7 +180,7 @@ class block_cocoon_slider_8 extends block_base {
                 </div>
                 <div class="row">
                   <div class="col-lg-12">
-                    <div class="bg-wave"><img src="'.$CFG->wwwroot.'/theme/edumy/images/background/wave.svg" alt=""></div>
+                    <div class="bg-wave"><img src="'.$CFG->wwwroot.'/theme/edumy/images/background/wave-cropped.svg" alt=""></div>
                   </div>
                 </div>
               </div>

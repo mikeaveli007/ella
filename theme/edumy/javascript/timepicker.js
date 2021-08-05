@@ -26,6 +26,7 @@ r.allowTimes&&e.isArray(r.allowTimes)&&r.allowTimes.length&&(F.allowTimes=e.exte
 			second: 0, // 0-59
 			timezone: +2, // http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 			labels: true, // If false days hours seconds and monutes labels will not be created
+      strings: document.getElementById("countdown").getAttribute("ccn-str") ? JSON.parse(document.getElementById("countdown").getAttribute("ccn-str")) : {},
 			onFinish: function () { }  // Executes client side when timer is zero
 		}, options));
 	};
@@ -42,6 +43,7 @@ r.allowTimes&&e.isArray(r.allowTimes)&&r.allowTimes.length&&(F.allowTimes=e.exte
 		start = $.fn.countdown.convertTimezone(settings.timezone);
 		// Defines countdown data
 		timespan = $.fn.countdown.getTimeRemaining(start, end, settings);
+
 		// Check if the script has run before
 		if (!settings.init) {
 			// Create elements
@@ -55,8 +57,13 @@ r.allowTimes&&e.isArray(r.allowTimes)&&r.allowTimes.length&&(F.allowTimes=e.exte
 				// Create time element
 				time = $('<span/>').addClass('time').text(v < 10 ? '0' + v : v.toLocaleString());
 				if (settings.labels) {
+          var singleLabel = settings.strings[k]
 					// Create label element
-					label = $('<span/>').addClass('label').text((v === 1 ? $.fn.countdown.singularize(k) : k));
+          if(singleLabel){
+            label = $('<span/>').addClass('label').text((v === 1 ? singleLabel : singleLabel));
+          } else {
+            label = $('<span/>').addClass('label').text((v === 1 ? $.fn.countdown.singularize(k) : k));
+          }
 					// Add everything to container element
 					container.append(wrapper.append(time).append(label));
 				} else {
@@ -71,7 +78,13 @@ r.allowTimes&&e.isArray(r.allowTimes)&&r.allowTimes.length&&(F.allowTimes=e.exte
 			// Update each element
 			$.each(timespan, function (k, v) {
 				$('.time', '#' + k).text(v < 10 ? '0' + v : v.toLocaleString());
-				$('.label', '#' + k).text((v === 1 ? $.fn.countdown.singularize(k) : k));
+        var singleLabel = settings.strings[k]
+        // Create label element
+        if(singleLabel){
+          $('.label', '#' + k).text((v === 1 ? singleLabel : singleLabel));
+        } else {
+          $('.label', '#' + k).text((v === 1 ? $.fn.countdown.singularize(k) : k));
+        }
 			});
 		}
 		// Check if target date has beeen reached

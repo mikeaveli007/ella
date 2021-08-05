@@ -15,6 +15,7 @@ class block_cocoon_users_slider_round extends block_base {
       $ccnUsers = $ccnUserHandler->ccnGetExampleUsersIds(8);
       $this->config->title = 'Top Rating Instructors';
       $this->config->subtitle = 'Cum doctus civibus efficiantur in imperdiet deterruisset.';
+      $this->config->profile_views = 1;
       $this->config->users = $ccnUsers;
       $this->config->color_bg = 'rgb(255,255,255)';
       $this->config->color_title = '#0a0a0a';
@@ -52,6 +53,7 @@ class block_cocoon_users_slider_round extends block_base {
         if(!empty($this->config->color_title)){$this->content->color_title = $this->config->color_title;} else {$this->content->color_title = '#0a0a0a';}
         if(!empty($this->config->color_subtitle)){$this->content->color_subtitle = $this->config->color_subtitle;} else {$this->content->color_subtitle = '#6f7074';}
         if(!empty($this->config->color_owl_dots)){$this->content->color_owl_dots = $this->config->color_owl_dots;} else {$this->content->color_owl_dots = '#debf52';}
+        if(!empty($this->config->profile_views)){$this->content->profile_views = $this->config->profile_views;} else {$this->content->profile_views = 0;}
 
 
 
@@ -62,8 +64,8 @@ class block_cocoon_users_slider_round extends block_base {
            <div class="row">
              <div class="col-lg-6 offset-lg-3">
                <div class="main-title text-center">
-                 <h3 class="mt0" data-ccn="title" data-ccn-c="color_title" data-ccn-co="content" style="color: '.$this->content->color_title.';">'.$this->content->title.'</h3>
-                 <p data-ccn="subtitle" data-ccn-c="color_subtitle" data-ccn-co="content" style="color: '.$this->content->color_subtitle.';">'.$this->content->subtitle.'</p>
+                 <h3 class="mt0" data-ccn="title" data-ccn-c="color_title" data-ccn-co="content" style="color: '.$this->content->color_title.';">'.format_text($this->content->title, FORMAT_HTML, array('filter' => true)).'</h3>
+                 <p data-ccn="subtitle" data-ccn-c="color_subtitle" data-ccn-co="content" style="color: '.$this->content->color_subtitle.';">'.format_text($this->content->subtitle, FORMAT_HTML, array('filter' => true)).'</p>
                </div>
              </div>
            </div>
@@ -90,8 +92,11 @@ class block_cocoon_users_slider_round extends block_base {
                                 <li class="list-inline-item"><i class="fa fa-star"></i></li>
                                 <li class="list-inline-item"><i class="fa fa-star"></i></li>
                                 </ul>
-                                <h4 data-ccn-c="color_title" data-ccn-cv="'.$this->content->color_title.'">'. $ccnUser->fullname.'</h4>
-                                <p data-ccn-c="color_subtitle" data-ccn-cv="'.$this->content->color_subtitle.'">'. $ccnUser->ccnRender->profileCount .'</p>
+                                <h4 data-ccn-c="color_title" data-ccn-cv="'.$this->content->color_title.'">'. $ccnUser->fullname.'</h4>';
+                                if($this->content->profile_views == 1){
+                                  $this->content->text .='<p data-ccn-c="color_subtitle" data-ccn-cv="'.$this->content->color_subtitle.'">'. $ccnUser->ccnRender->profileCount .'</p>';
+                                }
+                                $this->content->text .='
                               </div>
                             </div>
                           </a>

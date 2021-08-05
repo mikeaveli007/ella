@@ -170,6 +170,9 @@
   padding-top: 80px;
   padding-bottom: 40px;
 }
+.ccn_context_frontend.ccn_header_style_3.ccn_hero_1 .header_top.home3 .sign_up_btn li:first-child .btn span {
+    padding-left: 7px;
+}
 @media (max-width:1700px) and (min-width: 1200px) {
   .ccn_header_style_3.ccn_context_frontend header.header-nav.ccnHeader3.menu_style_home_three .ht_left_widget.home3 {
     margin-top: 15px;

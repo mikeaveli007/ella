@@ -27,6 +27,7 @@ $ccnCollectionFullwidthTop =  array(
   "cocoon_event_list_2",
   "cocoon_faqs",
   "cocoon_features",
+  "cocoon_form",
   "cocoon_gallery_video",
   "cocoon_parallax",
   "cocoon_parallax_apps",

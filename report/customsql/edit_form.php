@@ -55,9 +55,9 @@ class report_customsql_edit_form extends moodleform {
         $mform->setType('description', PARAM_RAW);
 
         $mform->addElement('textarea', 'querysql', get_string('querysql', 'report_customsql'),
-                           'rows="25" cols="50"');
+                ['rows' => '25', 'cols' => '80']);
         $mform->addRule('querysql', get_string('querysqlrequried', 'report_customsql'),
-                        'required', null, 'client');
+                'required', null, 'client');
         $mform->setType('querysql', PARAM_RAW);
 
         $mform->addElement('submit', 'verify', get_string('verifyqueryandupdate', 'report_customsql'));
@@ -110,16 +110,69 @@ class report_customsql_edit_form extends moodleform {
         $mform->disabledIf('customdir', 'runable', 'eq', 'manual');
         $mform->addHelpButton('customdir', 'customdir', 'report_customsql');
 
-        $mform->addElement('text', 'emailto', get_string('emailto', 'report_customsql'), 'size = 70');
+        $options = [
+            'ajax' => 'report_customsql/userselector', // Bit of a hack, but the service seems to do what we want.
+            'multiple' => true,
+            'valuehtmlcallback' => function($userid) {
+                global $DB, $OUTPUT;
+
+                $user = $DB->get_record('user', ['id' => (int) $userid], '*', IGNORE_MISSING);
+                if (!$user) {
+                    return false;
+                }
+
+                if (class_exists('\core_user\fields')) {
+                    $extrafields = \core_user\fields::for_identity(\context_system::instance(),
+                            false)->get_required_fields();
+                } else {
+                    $extrafields = get_extra_user_fields(context_system::instance());
+                }
+
+                return $OUTPUT->render_from_template(
+                        'report_customsql/form-user-selector-suggestion',
+                        \report_customsql\external\get_users::prepare_result_object(
+                                $user, $extrafields)
+                        );
+            }
+        ];
+        $mform->addElement('autocomplete', 'emailto', get_string('emailto', 'report_customsql'), [], $options);
+        $mform->setType('emailto', PARAM_RAW);
+
         $mform->addElement('select', 'emailwhat', get_string('emailwhat', 'report_customsql'),
                 report_customsql_email_options());
+
         $mform->disabledIf('singlerow', 'runable', 'eq', 'manual');
         $mform->disabledIf('at', 'runable', 'ne', 'daily');
         $mform->disabledIf('emailto', 'runable', 'eq', 'manual');
         $mform->disabledIf('emailwhat', 'runable', 'eq', 'manual');
-        $mform->setType('emailto', PARAM_RAW);
 
         $this->add_action_buttons();
+    }
+
+    public function set_data($currentvalues) {
+        global $DB, $OUTPUT;
+
+        $currentvalues->emailto = explode(',', $currentvalues->emailto);
+        parent::set_data($currentvalues);
+
+        // Add report information.
+        $mform = $this->_form;
+        $reportinfocontext = new stdClass();
+        $reportinfocontext->timecreated = $currentvalues->timecreated > 0 ? userdate($currentvalues->timecreated) : '';
+        $reportinfocontext->timemodified = $currentvalues->timemodified > 0 ? userdate($currentvalues->timemodified) : '';
+        $reportinfocontext->usermodified = '';
+        if ($currentvalues->usermodified > 0) {
+            $usermodified = $DB->get_record('user', ['id' => $currentvalues->usermodified]);
+            $reportinfocontext->usermodified = html_writer::link(
+                $url = new moodle_url('/user/profile.php', ['id' => $usermodified->id]),
+                fullname($usermodified)
+            );
+        }
+        $reportinfo = $OUTPUT->render_from_template(
+            'report_customsql/form_report_information',
+            $reportinfocontext
+        );
+        $mform->addElement('html', $reportinfo);
     }
 
     public function validation($data, $files) {

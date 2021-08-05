@@ -66,7 +66,7 @@ class block_cocoon_users_slider extends block_base {
             <div class="row">
               <div class="col-lg-12">
                 <div class="main-title text-center">
-                  <h3 class="mb0 mt0">'.$this->content->title.'</h3>
+                  <h3 class="mb0 mt0">'.format_text($this->content->title, FORMAT_HTML, array('filter' => true)).'</h3>
                 </div>
               </div>
             </div>

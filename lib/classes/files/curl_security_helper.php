@@ -55,14 +55,20 @@ class curl_security_helper extends curl_security_helper_base {
     ];
 
     /**
-     * Checks whether the given URL is blacklisted by checking its address and port number against the black/white lists.
+     * Checks whether the given URL is blocked by checking its address and port number against the block/allow lists.
      * The behaviour of this function can be classified as strict, as it returns true for URLs which are invalid or
-     * could not be parsed, as well as those valid URLs which were found in the blacklist.
+     * could not be parsed, as well as those valid URLs which were found in the list of blocked ones.
      *
      * @param string $urlstring the URL to check.
-     * @return bool true if the URL is blacklisted or invalid and false if the URL is not blacklisted.
+     * @param int $notused There used to be an optional parameter $maxredirects for a short while here, not used any more.
+     * @return bool true if the URL is blocked or invalid and false if the URL is not blocked.
      */
-    public function url_is_blocked($urlstring) {
+    public function url_is_blocked($urlstring, $notused = null) {
+
+        if ($notused !== null) {
+            debugging('The $maxredirects parameter of curl_security_helper::url_is_blocked() has been dropped!', DEBUG_DEVELOPER);
+        }
+
         // If no config data is present, then all hosts/ports are allowed.
         if (!$this->is_enabled()) {
             return false;
@@ -85,7 +91,7 @@ class curl_security_helper extends curl_security_helper_base {
         }
 
         if ($parsed['port'] && $parsed['host']) {
-            // Check the host and port against the blacklist/whitelist entries.
+            // Check the host and port against the allow/block entries.
             return $this->host_is_blocked($parsed['host']) || $this->port_is_blocked($parsed['port']);
         }
         return true;

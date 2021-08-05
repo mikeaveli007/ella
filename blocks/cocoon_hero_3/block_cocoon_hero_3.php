@@ -1,19 +1,4 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
-//
-// Moodle is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot. '/theme/edumy/ccn/block_handler/ccn_block_handler.php');
 class block_cocoon_hero_3 extends block_base {
@@ -40,11 +25,6 @@ class block_cocoon_hero_3 extends block_base {
      * Customize the block title dynamically.
      */
     function specialization() {
-        // if (isset($this->config->title)) {
-        //     $this->title = $this->title = format_string($this->config->title, true, ['context' => $this->context]);
-        // } else {
-        //     $this->title = get_string('newcustomsliderblock', 'block_cocoon_hero_3');
-        // }
         global $CFG, $DB;
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
@@ -53,9 +33,6 @@ class block_cocoon_hero_3 extends block_base {
           $this->config->subtitle = 'Own your future learning new skills online';
           $this->config->button_text = 'Ready to Get Started?';
           $this->config->button_link = '#';
-          $this->config->file_slide1 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
-          $this->config->file_slide2 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
-          $this->config->file_slide3 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
           $this->config->feature_1_title = 'Design: Over 800 Courses';
           $this->config->feature_2_title = 'Business: Over 1,400 Courses';
           $this->config->feature_3_title = 'Photography: Over 740 Courses';
@@ -64,6 +41,8 @@ class block_cocoon_hero_3 extends block_base {
           $this->config->feature_2_icon = 'flaticon-student-1';
           $this->config->feature_3_icon = 'flaticon-photo-camera';
           $this->config->feature_4_icon = 'flaticon-medal';
+
+          include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization/specialization_ccn_carousel.php');
         }
     }
 
@@ -104,12 +83,22 @@ class block_cocoon_hero_3 extends block_base {
         $this->content->text = '';
         if(!empty($this->config->title)){$this->content->title = $this->config->title;}
         if(!empty($this->config->subtitle)){$this->content->subtitle = $this->config->subtitle;}
+        include($CFG->dirroot . '/theme/edumy/ccn/block_handler/config/config_ccn_carousel.php');
+        $bannerstyle = '';
+        if ($data->slidesnumber > 1) {
+          $bannerstyle .= 'banner-style-one--multiple';
+        } else {
+          $bannerstyle .= 'banner-style-one--single';
+        }
+
+
+
         if ($data->slidesnumber > 0) {
           $this->content->text .= '
           <section id="maximage1" class="maximage-home home-four p0">
             <div class="container-fluid p0">
               <!-- Basic HTML -->
-                <div id="maximage">';
+                <div class="banner-style-one owl-theme owl-carousel '.$bannerstyle.' " '.$ccnConfigDataCarousel.'>';
                 $fs = get_file_storage();
                 for ($i = 1; $i <= $data->slidesnumber; $i++) {
                   $sliderimage = 'file_slide' . $i;
@@ -123,8 +112,7 @@ class block_cocoon_hero_3 extends block_base {
                     $data->$sliderimage = $CFG->wwwroot .'/theme/edumy/images/home/1.jpg';
                   }
                   $this->content->text .= '
-                  <div class="first-item">
-                    <img data-ccn="file_slide'.$i.'" data-ccn-img="src" src="' . $data->$sliderimage . '" alt=""/>
+                  <div class="slide" data-ccn="file_slide'.$i.'" data-ccn-img="bg-img-url" style="background-image: url('.$data->$sliderimage.');height:95vh;background-size:cover">
                   </div>';
                 }
                 $this->content->text .= '
@@ -184,31 +172,31 @@ $this->content->text .='</div>
             <div class="icon ccn_icon_2"><span data-ccn="feature_1_icon" class="'.format_text($data->feature_1_icon, FORMAT_HTML, array('filter' => true)).'"></span></div>
             <p data-ccn="feature_1_title">'.format_text($data->feature_1_title, FORMAT_HTML, array('filter' => true)).'</p>
           </div>'
-        . ($data->feature_1_link ? '</a>' : '').
+        .($data->feature_1_link ? '</a>' : '').
       '</div>
       <div class="col-sm-6 col-lg-3">'
-      .($data->feature_2_link ? '<a href="'. format_text($data->feature_2_link, FORMAT_HTML, array('filter' => true)) .'">' : '').
+        .($data->feature_2_link ? '<a href="'. format_text($data->feature_2_link, FORMAT_HTML, array('filter' => true)) .'">' : '').
           '<div class="home_icon_box home4">
             <div class="icon ccn_icon_2"><span data-ccn="feature_2_icon" class="'.format_text($data->feature_2_icon, FORMAT_HTML, array('filter' => true)).'"></span></div>
             <p data-ccn="feature_2_title">'.format_text($data->feature_2_title, FORMAT_HTML, array('filter' => true)).'</p>
           </div>'
-      .($data->feature_2_link ? '</a>' : '').
+        .($data->feature_2_link ? '</a>' : '').
       '</div>
       <div class="col-sm-6 col-lg-3">'
-      .($data->feature_3_link ? '<a href="'. format_text($data->feature_3_link, FORMAT_HTML, array('filter' => true)) .'">' : '').
-        '<div class="home_icon_box home4">
-          <div class="icon ccn_icon_2"><span data-ccn="feature_3_icon" class="'.format_text($data->feature_3_icon, FORMAT_HTML, array('filter' => true)).'"></span></div>
-          <p data-ccn="feature_3_title">'.format_text($data->feature_3_title, FORMAT_HTML, array('filter' => true)).'</p>
-        </div>'
-      .($data->feature_3_link ? '</a>' : '').
+        .($data->feature_3_link ? '<a href="'. format_text($data->feature_3_link, FORMAT_HTML, array('filter' => true)) .'">' : '').
+          '<div class="home_icon_box home4">
+            <div class="icon ccn_icon_2"><span data-ccn="feature_3_icon" class="'.format_text($data->feature_3_icon, FORMAT_HTML, array('filter' => true)).'"></span></div>
+            <p data-ccn="feature_3_title">'.format_text($data->feature_3_title, FORMAT_HTML, array('filter' => true)).'</p>
+          </div>'
+        .($data->feature_3_link ? '</a>' : '').
       '</div>
       <div class="col-sm-6 col-lg-3">'
-      .($data->feature_4_link ? '<a href="'. format_text($data->feature_4_link, FORMAT_HTML, array('filter' => true)) .'">' : '').
-        '<div class="home_icon_box home4">
-          <div class="icon ccn_icon_2"><span data-ccn="feature_4_icon" class="'.format_text($data->feature_4_icon, FORMAT_HTML, array('filter' => true)).'"></span></div>
-          <p data-ccn="feature_4_title">'.format_text($data->feature_4_title, FORMAT_HTML, array('filter' => true)).'</p>
-        </div>'
-      .($data->feature_4_link ? '</a>' : '').
+        .($data->feature_4_link ? '<a href="'. format_text($data->feature_4_link, FORMAT_HTML, array('filter' => true)) .'">' : '').
+          '<div class="home_icon_box home4">
+            <div class="icon ccn_icon_2"><span data-ccn="feature_4_icon" class="'.format_text($data->feature_4_icon, FORMAT_HTML, array('filter' => true)).'"></span></div>
+            <p data-ccn="feature_4_title">'.format_text($data->feature_4_title, FORMAT_HTML, array('filter' => true)).'</p>
+          </div>'
+        .($data->feature_4_link ? '</a>' : '').
       '</div>
     </div>
   </div>

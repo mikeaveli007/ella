@@ -61,8 +61,8 @@ class block_cocoon_users_slider_2_dark extends block_base {
             <div class="row">
               <div class="col-lg-12">
                 <div class="main-title text-center mb0 pb20">
-                  <h3 class="mb0 mt0" data-ccn="title" data-ccn-c="color_title" data-ccn-cv="'.$this->content->color_title.'">'.$this->content->title.'</h3>
-                  <p data-ccn="subtitle" data-ccn-c="color_subtitle" data-ccn-co="content" style="color: '.$this->content->color_subtitle.';">'.$this->content->subtitle.'</p>
+                  <h3 class="mb0 mt0" data-ccn="title" data-ccn-c="color_title" data-ccn-cv="'.$this->content->color_title.'">'. format_text($this->content->title, FORMAT_HTML, array('filter' => true)) .'</h3>
+                  <p data-ccn="subtitle" data-ccn-c="color_subtitle" data-ccn-co="content" style="color: '.$this->content->color_subtitle.';">'. format_text($this->content->subtitle, FORMAT_HTML, array('filter' => true)) .'</p>
                 </div>
               </div>
             </div>

@@ -32,27 +32,27 @@ class block_cocoon_slider_7 extends block_base {
           $this->config->title_2_1 = 'Never Ends';
           $this->config->subtitle_1 = 'Watch our video';
           $this->config->video_1 = 'https://www.youtube.com/watch?v=UdDwKI4DcGw';
-          $this->config->image_1 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
+          // $this->config->image_1 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
           $this->config->title_2 = 'Learn Remotely From ';
           $this->config->title_2_2 = 'Anywhere';
           $this->config->subtitle_2 = 'Watch our video';
           $this->config->video_2 = 'https://www.youtube.com/watch?v=UdDwKI4DcGw';
-          $this->config->image_2 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
+          // $this->config->image_2 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
           $this->config->title_3 = 'Experience New Heights ';
           $this->config->title_2_3 = 'of Education';
           $this->config->subtitle_3 = 'Watch our video';
           $this->config->video_3 = 'https://www.youtube.com/watch?v=UdDwKI4DcGw';
-          $this->config->image_3 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
+          // $this->config->image_3 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
           $this->config->title_3 = 'Access Your Free Course  ';
           $this->config->title_2_3 = 'Today';
           $this->config->subtitle_3 = 'Watch our video';
           $this->config->video_3 = 'https://www.youtube.com/watch?v=UdDwKI4DcGw';
-          $this->config->image_3 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
+          // $this->config->image_3 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
           $this->config->title_4 = 'Learn From Anywhere, On  ';
           $this->config->title_2_4 = 'Any Device';
           $this->config->subtitle_4 = 'Watch our video';
           $this->config->video_4 = 'https://www.youtube.com/watch?v=UdDwKI4DcGw';
-          $this->config->image_4 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
+          // $this->config->image_4 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
           $this->config->button_type_1 = '0';
           $this->config->button_type_2 = '0';
           $this->config->button_type_3 = '0';
@@ -131,13 +131,6 @@ class block_cocoon_slider_7 extends block_base {
 
 
 
-
-
-
-
-
-
-
                   $fs = get_file_storage();
                   for ($i = 1; $i <= $data->slidesnumber; $i++) {
                       $sliderimage = 'image_' . $i;
@@ -173,7 +166,7 @@ class block_cocoon_slider_7 extends block_base {
                                           <div class="banner-sub-title text-capitalize fw400" data-ccn="'.$slide_title.'">'.format_text($data->$slide_title, FORMAT_HTML, array('filter' => true)).'</div>
                                           <div class="banner-title text-capitalize fwb mb25" data-ccn="'.$slide_title_2.'">'.format_text($data->$slide_title_2, FORMAT_HTML, array('filter' => true)).'</div>
                                           <div class="btn-block">
-                                              <a data-ccn="'.$btn_text.'" href="'.$data->$btn_link.'" class="banner-btn bdrs3">'.$data->$btn_text.'</a>
+                                              <a data-ccn="'.$btn_text.'" href="'.$data->$btn_link.'" class="banner-btn bdrs3">'.format_text($data->$btn_text, FORMAT_HTML, array('filter' => true)).'</a>
                                           </div>
                                       </div>
                                   </div>

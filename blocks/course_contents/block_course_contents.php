@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Provides the {@link block_course_contents} class.
+ * Provides the {@see block_course_contents} class.
  *
  * @package    block_course_contents
  * @copyright  2009 David Mudrak <david@moodle.com>
@@ -78,6 +78,7 @@ class block_course_contents extends block_base {
      * @return stdClass block content info
      */
     public function get_content() {
+        global $OUTPUT;
 
         if (!is_null($this->content)) {
             return $this->content;
@@ -112,7 +113,7 @@ class block_course_contents extends block_base {
         $context = context_course::instance($course->id);
         $globalconfig = get_config('block_course_contents');
 
-        $text = html_writer::start_tag('ul', array('class' => 'section-list'));
+        $text = html_writer::start_tag('ul', array('class' => 'section-list list-group'));
         foreach ($sections as $section) {
             $i = $section->section;
             if (isset($course->numsections) && ($i > $course->numsections)) {
@@ -154,8 +155,11 @@ class block_course_contents extends block_base {
                 // Attempt to extract the title from the section summary.
                 $summary = file_rewrite_pluginfile_urls($section->summary, 'pluginfile.php', $context->id, 'course',
                     'section', $section->id);
+                $summary = '<nolink>' . $summary . '</nolink>';
                 $summary = format_text($summary, $section->summaryformat, array('para' => false, 'context' => $context));
-                $title = format_string($this->extract_title($summary), true, array('context' => $context));
+                $title = \block_course_contents\autotitle::extract_title($summary);
+                $title = format_string($title, true, ['context' => $context]);
+                unset($summary);
             }
 
             // If at this point we have no title available, use the default one.
@@ -188,14 +192,15 @@ class block_course_contents extends block_base {
 
             // If we want to display the course link, display it before displaying the section 0.
             if (($i == 0) && ($displaycourselink)) {
-                $sectionclass = 'section-item';
+                $sectionclass = 'section-item list-group-item';
 
                 if ($selected === null) {
-                    $sectionclass .= ' selected';
+                    $sectionclass .= ' selected active';
                 }
                 $text .= html_writer::start_tag('li', array('class' => $sectionclass));
 
-                $text .= html_writer::span('&gt;', 'section-number');
+                $text .= html_writer::span($OUTPUT->pix_icon('i/course', ''), 'section-number');
+
                 if (!empty($this->config->display_course_link_text)) {
                     $anchortext = $this->config->display_course_link_text;
                 } else if (!empty($globalconfig->display_course_link_text)) {
@@ -213,14 +218,17 @@ class block_course_contents extends block_base {
                 $text .= html_writer::end_tag('li');
             }
 
-            $sectionclass = 'section-item';
+            $sectionclass = 'section-item list-group-item';
+            $numberclass = 'badge badge-secondary';
 
             if (isset($selected) && $i == $selected) {
-                $sectionclass .= ' selected';
+                $sectionclass .= ' selected active';
+                $numberclass .= ' badge-light';
             }
 
             if ($format->is_section_current($section)) {
-                $sectionclass .= ' current';
+                $sectionclass .= ' current active';
+                $numberclass .= ' badge-light';
             }
 
             $text .= html_writer::start_tag('li', array('class' => $sectionclass));
@@ -276,7 +284,8 @@ class block_course_contents extends block_base {
             }
 
             if ($enumerate) {
-                $title = html_writer::span($sectionnumber, 'section-number').' '.html_writer::span($title, 'section-title');
+                $title = html_writer::span($sectionnumber, 'section-number ' . $numberclass) . ' ' .
+                    html_writer::span($title, 'section-title');
 
             } else {
                 $title = html_writer::span($title, 'section-title not-enumerated');
@@ -293,47 +302,5 @@ class block_course_contents extends block_base {
 
         $this->content->text = $text;
         return $this->content;
-    }
-
-
-    /**
-     * Given a section summary, exctract a text suitable as a section title
-     *
-     * @param string $summary Section summary as returned from database (no slashes)
-     * @return string Section title
-     */
-    private function extract_title($summary) {
-        global $CFG;
-        require_once(dirname(__FILE__).'/lib/simple_html_dom.php');
-
-        $node = new simple_html_dom();
-        $node->load($summary);
-        return $this->node_plain_text($node);
-    }
-
-
-    /**
-     * Recursively find the first suitable plaintext from the HTML DOM.
-     *
-     * Internal private function called only from {@link extract_title()}
-     *
-     * @param simple_html_dom $node Current root node
-     * @return string
-     */
-    private function node_plain_text($node) {
-        if ($node->nodetype == HDOM_TYPE_TEXT) {
-            $t = trim($node->plaintext);
-            if (!empty($t)) {
-                return $t;
-            }
-        }
-        $t = '';
-        foreach ($node->nodes as $n) {
-            $t = $this->node_plain_text($n);
-            if (!empty($t)) {
-                break;
-            }
-        }
-        return $t;
     }
 }

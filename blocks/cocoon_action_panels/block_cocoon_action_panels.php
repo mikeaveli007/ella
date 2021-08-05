@@ -133,7 +133,7 @@ class block_cocoon_action_panels extends block_base
                                             >'.format_text($this->content->panel_1_text, FORMAT_HTML, array('filter' => true)).'</p>';
                 }
                 if (!empty($this->content->panel_1_button_url) && !empty($this->content->panel_1_button_text)){
-                  $this->content->text .='<a target="'.$this->content->panel_1_button_target.'" class="btn btn-thm" href="'.format_text($this->content->panel_1_button_url, FORMAT_HTML, array('filter' => true)).'"
+                  $this->content->text .='<div data-ccn-btn><a target="'.$this->content->panel_1_button_target.'" class="btn btn-thm" href="'.format_text($this->content->panel_1_button_url, FORMAT_HTML, array('filter' => true)).'"
                                             data-ccn="panel_1_button_text"
                                             data-ccn-c="panel_1_color_btn"
                                             data-ccn-co="ccnBg, ccnBd"
@@ -142,7 +142,7 @@ class block_cocoon_action_panels extends block_base
                                             data-ccn-ch-cv="'.$this->content->panel_1_color_btn_hover.'"
                                             data-ccn-ch="panel_1_color_btn_hover"
                                             data-ccn-ch-self
-                                            >'.format_text($this->content->panel_1_button_text, FORMAT_HTML, array('filter' => true)).' <span class="flaticon-right-arrow-1"></span></a>';
+                                            >'.format_text($this->content->panel_1_button_text, FORMAT_HTML, array('filter' => true)).' <span class="flaticon-right-arrow-1"></span></a></div>';
                 }
                 $this->content->text .='</div>
               </div>
@@ -151,7 +151,7 @@ class block_cocoon_action_panels extends block_base
               <div class="becomea_instructor style2 text-right tac-xxsd"
                 data-ccn-c="panel_2_color_bg"
                 data-ccn-co="bg"
-                data-ccn-cv="'.$this->content->panel_1_color_bg.'"
+                data-ccn-cv="'.$this->content->panel_2_color_bg.'"
                 >
                 <div class="bi_grid">';
                 if (!empty($this->content->panel_2_title)){
@@ -167,7 +167,7 @@ class block_cocoon_action_panels extends block_base
                                             >'.format_text($this->content->panel_2_text, FORMAT_HTML, array('filter' => true)).'</p>';
                 }
                 if (!empty($this->content->panel_2_button_url) && !empty($this->content->panel_2_button_text)){
-                  $this->content->text .='<a target="'.$this->content->panel_2_button_target.'" class="btn btn-dark" href="'.format_text($this->content->panel_2_button_url, FORMAT_HTML, array('filter' => true)).'"
+                  $this->content->text .='<div data-ccn-btn><a target="'.$this->content->panel_2_button_target.'" class="btn btn-dark" href="'.format_text($this->content->panel_2_button_url, FORMAT_HTML, array('filter' => true)).'"
                                             data-ccn="panel_2_button_text"
                                             data-ccn-c="panel_2_color_btn"
                                             data-ccn-co="ccnBg, ccnBd"
@@ -176,7 +176,7 @@ class block_cocoon_action_panels extends block_base
                                             data-ccn-ch-cv="'.$this->content->panel_2_color_btn_hover.'"
                                             data-ccn-ch="panel_2_color_btn_hover"
                                             data-ccn-ch-self
-                                            >'.format_text($this->content->panel_2_button_text, FORMAT_HTML, array('filter' => true)).' <span class="flaticon-right-arrow-1"></span></a>';
+                                            >'.format_text($this->content->panel_2_button_text, FORMAT_HTML, array('filter' => true)).' <span class="flaticon-right-arrow-1"></span></a></div>';
                 }
                 $this->content->text .='</div>
               </div>

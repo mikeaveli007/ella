@@ -158,6 +158,7 @@ $string['event'] = 'Event';
 $string['rated_by'] ='{$a} student ratings';
 $string['rate_course'] ='Submit rating';
 $string['number_of_courses'] ='Over {$a} courses';
+$string['categories'] = 'Categories';
 $string['hidden'] ='Hidden';
 $string['back_to_course'] ='Back to Course';
 $string['course_navigation'] ='Course Navigation';

@@ -2711,16 +2711,27 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2020061504.07);
     }
 
-    if ($oldversion < 2020061504.08) {
-        // This upgrade step will update all shared events setting userid to 0.
-        // Site, category, course, group and action events (except user overrides) dont belong to the user who creates them.
-        $DB->execute("UPDATE {event} SET userid = 0 WHERE eventtype <> 'user' OR priority <> 0");
+    if ($oldversion < 2020061506.05) {
+        require_once($CFG->libdir . '/db/upgradelib.php');
 
-        // Only user type of subscription should record user id.
-        $DB->execute("UPDATE {event_subscriptions} SET userid = 0 WHERE eventtype <> 'user'");
+        // Check if this site has executed the problematic upgrade steps.
+        $needsfixing = upgrade_calendar_site_status(false);
+
+        // Only queue the task if this site has been affected by the problematic upgrade step.
+        if ($needsfixing) {
+
+            // Create adhoc task to search and recover orphaned calendar events.
+            $record = new \stdClass();
+            $record->classname = '\core\task\calendar_fix_orphaned_events';
+
+            // Next run time based from nextruntime computation in \core\task\manager::queue_adhoc_task().
+            $nextruntime = time() - 1;
+            $record->nextruntime = $nextruntime;
+            $DB->insert_record('task_adhoc', $record);
+        }
 
         // Main savepoint reached.
-        upgrade_main_savepoint(true, 2020061504.08);
+        upgrade_main_savepoint(true, 2020061506.05);
     }
 
     return true;

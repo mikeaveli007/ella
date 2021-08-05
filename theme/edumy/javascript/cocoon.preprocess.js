@@ -133,13 +133,13 @@ $(function() {
     }
     $(".ccn_blog-row > #maincontent,.ccn_blog-row > h2,.ccn_blog-row > .addbloglink").prependTo("#ccn-main .container");
     $(".ccn-faq_according #accordion .panel:first-child .panel-collapse").addClass("show");
-    $(".dashbord_nav_list > a:first-child").prepend("<span class='flaticon-puzzle-1'></span>");
-    $(".dashbord_nav_list > a:nth-child(2)").prepend("<span class='flaticon-student'></span>");
-    $(".dashbord_nav_list > a:nth-child(3)").prepend("<span class='flaticon-rating'></span>");
-    $(".dashbord_nav_list > a:nth-child(4)").prepend("<span class='flaticon-speech-bubble'></span>");
-    $(".dashbord_nav_list > a:nth-child(5)").prepend("<span class='flaticon-settings'></span>");
-    $(".dashbord_nav_list > a:nth-child(6)").prepend("<span class='flaticon-logout'></span>");
-    $(".dashbord_nav_list > a:nth-child(7)").prepend("<span class='flaticon-add-contact'></span>");
+    // $(".dashbord_nav_list > a:first-child").prepend("<span class='flaticon-puzzle-1'></span>");
+    // $(".dashbord_nav_list > a:nth-child(2)").prepend("<span class='flaticon-student'></span>");
+    // $(".dashbord_nav_list > a:nth-child(3)").prepend("<span class='flaticon-rating'></span>");
+    // $(".dashbord_nav_list > a:nth-child(4)").prepend("<span class='flaticon-speech-bubble'></span>");
+    // $(".dashbord_nav_list > a:nth-child(5)").prepend("<span class='flaticon-settings'></span>");
+    // $(".dashbord_nav_list > a:nth-child(6)").prepend("<span class='flaticon-logout'></span>");
+    // $(".dashbord_nav_list > a:nth-child(7)").prepend("<span class='flaticon-add-contact'></span>");
     $(".dashbord_nav_list > a").each(function() {
       $(this).removeClass("dropdown-item").wrap("<li></li>");
     });
@@ -151,7 +151,7 @@ $(function() {
     $(".addbloglink").each(function() {
       $(this).find("a").addClass("btn dbxshad btn-primary btn-thm");
     });
-    $("body.role-standard #ccn-main-region").each(function() {
+    $("body.role-standard:not(.path-contentbank):not(#page-contentbank) #ccn-main-region").each(function() {
       if (!$(this).find(".block").length && !$(this).find("#ccn-main").text().trim().length) {
         $("#ccn-main-region").css({
           'padding-top': '0',

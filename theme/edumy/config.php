@@ -152,7 +152,7 @@ $THEME->layouts = [
         'file' => 'ccn_minimal.php',
         'regions' => array('side-pre'),
         'defaultregion' => 'side-pre'
-    )
+    ),
 ];
 
 $ccnSheetsReset = array();
@@ -184,8 +184,6 @@ $ccnSheetsTheme = array(
   'responsive'
 );
 $ccnSheetsAppend = array();
-
-// ccnComm: No else, chained because we combine.
 $ccnSheetsReset[] = 'cocoon-mdl-reset';
 if($ccnMdlVersion == '37') {
   $ccnSheetsReset[] = 'cocoon.mdl.reset.37';
@@ -203,7 +201,10 @@ if($ccnMdlVersion == '310') {
   $ccnSheetsReset[] = 'cocoon.mdl.reset.310';
   $ccnSheetsAppend[] = 'cocoon.mdl.310';
 }
-
+if($ccnMdlVersion == '311') {
+  $ccnSheetsReset[] = 'cocoon.mdl.reset.311';
+  $ccnSheetsAppend[] = 'cocoon.mdl.311';
+}
 
 if(!empty($THEME->settings->headertype) && $THEME->settings->headertype == 2 ){
   $ccnSheetsAppend[] = 'cocoon.header.2';

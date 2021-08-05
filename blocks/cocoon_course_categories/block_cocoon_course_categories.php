@@ -74,7 +74,7 @@ class block_cocoon_course_categories extends block_base {
         if(!empty($this->config->button_link)){$this->content->button_link = $this->config->button_link;}else{$this->content->button_link = "#our-courses";}
         if(!empty($this->config->button_text)){$this->content->button_text = $this->config->button_text;} else {$this->content->button_text = '';}
         if(!empty($this->config->categories)){$this->content->categories = $this->config->categories;} else {$this->content->categories = NULL ;}
-        if(!empty($this->config->style)){$this->content->style = $this->config->style;} else {$this->content->style = 1;}
+        if(!empty($this->config->style)){$this->content->style = $this->config->style;} else {$this->content->style = 0;}
         if(!empty($this->config->color_bg)){$this->content->color_bg = $this->config->color_bg;} else {$this->content->color_bg = 'rgb(255,255,255)';}
         if(!empty($this->config->color_title)){$this->content->color_title = $this->config->color_title;} else {$this->content->color_title = '#0a0a0a';}
         if(!empty($this->config->color_subtitle)){$this->content->color_subtitle = $this->config->color_subtitle;} else {$this->content->color_subtitle = '#6f7074';}

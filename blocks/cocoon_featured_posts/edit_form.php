@@ -55,52 +55,52 @@ class block_cocoon_featured_posts_edit_form extends block_edit_form {
 
 
 
-        $slidesrange = range(0, 12);
-        $mform->addElement('select', 'config_slidesnumber', get_string('slides_number', 'block_cocoon_featured_posts'), $slidesrange);
-        $mform->setDefault('config_slidesnumber', $data->slidesnumber);
+        // $slidesrange = range(0, 12);
+        // $mform->addElement('select', 'config_slidesnumber', get_string('slides_number', 'block_cocoon_featured_posts'), $slidesrange);
+        // $mform->setDefault('config_slidesnumber', $data->slidesnumber);
 
-        for($i = 1; $i <= $data->slidesnumber; $i++) {
-            $mform->addElement('header', 'config_header' . $i , 'Slide ' . $i);
-
-            $mform->addElement('text', 'config_slide_title' . $i, get_string('config_slide_title', 'block_cocoon_featured_posts', $i));
-            $mform->setDefault('config_slide_title' .$i , 'An Overworked Newspaper Editor');
-            $mform->setType('config_slide_title' . $i, PARAM_TEXT);
-
-            $mform->addElement('date_selector', 'config_slide_date' . $i, get_string('config_slide_date', 'block_cocoon_featured_posts', $i));
-
-            $mform->addElement('text', 'config_slide_subtitle' . $i, get_string('config_slide_subtitle', 'block_cocoon_featured_posts', $i));
-            $mform->setDefault('config_slide_subtitle' .$i , 'Marketing');
-            $mform->setType('config_slide_subtitle' . $i, PARAM_TEXT);
-
-            $mform->addElement('url', 'config_slide_url' . $i, get_string('config_slide_url', 'block_customslider', $i), array('size' => '60'), array('usefilepicker' => true));
-            $mform->setDefault('config_slide_url' .$i , '#');
-            $mform->setType('config_slide_url' . $i, PARAM_URL);
-
-            $filemanageroptions = array('maxbytes'      => $CFG->maxbytes,
-                                        'subdirs'       => 0,
-                                        'maxfiles'      => 1,
-                                        'accepted_types' => array('.jpg', '.png', '.gif'));
-
-            $f = $mform->addElement('filemanager', 'config_file_slide' . $i, get_string('file_slide', 'block_cocoon_featured_posts', $i), null, $filemanageroptions);
-        }
+        // for($i = 1; $i <= $data->slidesnumber; $i++) {
+        //     $mform->addElement('header', 'config_header' . $i , 'Slide ' . $i);
+        //
+        //     $mform->addElement('text', 'config_slide_title' . $i, get_string('config_slide_title', 'block_cocoon_featured_posts', $i));
+        //     $mform->setDefault('config_slide_title' .$i , 'An Overworked Newspaper Editor');
+        //     $mform->setType('config_slide_title' . $i, PARAM_TEXT);
+        //
+        //     $mform->addElement('date_selector', 'config_slide_date' . $i, get_string('config_slide_date', 'block_cocoon_featured_posts', $i));
+        //
+        //     $mform->addElement('text', 'config_slide_subtitle' . $i, get_string('config_slide_subtitle', 'block_cocoon_featured_posts', $i));
+        //     $mform->setDefault('config_slide_subtitle' .$i , 'Marketing');
+        //     $mform->setType('config_slide_subtitle' . $i, PARAM_TEXT);
+        //
+        //     $mform->addElement('url', 'config_slide_url' . $i, get_string('config_slide_url', 'block_customslider', $i), array('size' => '60'), array('usefilepicker' => true));
+        //     $mform->setDefault('config_slide_url' .$i , '#');
+        //     $mform->setType('config_slide_url' . $i, PARAM_URL);
+        //
+        //     $filemanageroptions = array('maxbytes'      => $CFG->maxbytes,
+        //                                 'subdirs'       => 0,
+        //                                 'maxfiles'      => 1,
+        //                                 'accepted_types' => array('.jpg', '.png', '.gif'));
+        //
+        //     $f = $mform->addElement('filemanager', 'config_file_slide' . $i, get_string('file_slide', 'block_cocoon_featured_posts', $i), null, $filemanageroptions);
+        // }
 
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/edit.php');
 
     }
 
-    function set_data($defaults) {
-        if (!empty($this->block->config) && is_object($this->block->config)) {
-
-            for($i = 1; $i <= $this->block->config->slidesnumber; $i++) {
-                $field = 'file_slide' . $i;
-                $conffield = 'config_file_slide' . $i;
-                $draftitemid = file_get_submitted_draft_itemid($conffield);
-                file_prepare_draft_area($draftitemid, $this->block->context->id, 'block_cocoon_featured_posts', 'slides', $i, array('subdirs'=>false));
-                $defaults->$conffield['itemid'] = $draftitemid;
-                $this->block->config->$field = $draftitemid;
-            }
-        }
-
-        parent::set_data($defaults);
-    }
+    // function set_data($defaults) {
+    //     if (!empty($this->block->config) && is_object($this->block->config)) {
+    //
+    //         for($i = 1; $i <= $this->block->config->slidesnumber; $i++) {
+    //             $field = 'file_slide' . $i;
+    //             $conffield = 'config_file_slide' . $i;
+    //             $draftitemid = file_get_submitted_draft_itemid($conffield);
+    //             file_prepare_draft_area($draftitemid, $this->block->context->id, 'block_cocoon_featured_posts', 'slides', $i, array('subdirs'=>false));
+    //             $defaults->$conffield['itemid'] = $draftitemid;
+    //             $this->block->config->$field = $draftitemid;
+    //         }
+    //     }
+    //
+    //     parent::set_data($defaults);
+    // }
 }

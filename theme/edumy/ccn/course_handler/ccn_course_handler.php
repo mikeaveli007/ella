@@ -642,6 +642,23 @@ class ccnCourseHandler {
       $categoryCourses = $categoryObject->get_courses();
       $categoryCoursesCount = count($categoryCourses);
 
+      $categoryGetSubcategories = [];
+      $categorySubcategories = [];
+      if (!$chelper->get_categories_display_option('nodisplay')) {
+        $categoryGetSubcategories = $categoryObject->get_children($chelper->get_categories_display_options());
+      }
+      foreach($categoryGetSubcategories as $k=>$ccnSubcategory) {
+        $ccnSubcat = new \stdClass();
+        $ccnSubcat->id = $ccnSubcategory->id;
+        $ccnSubcat->name = $ccnSubcategory->name;
+        $ccnSubcat->description = $ccnSubcategory->description;
+        $ccnSubcat->depth = $ccnSubcategory->depth;
+        $ccnSubcat->coursecount = $ccnSubcategory->coursecount;
+        $categorySubcategories[$ccnSubcategory->id] = $ccnSubcat;
+      }
+
+      $categorySubcategoriesCount = count($categorySubcategories);
+
       /* Do image */
       $outputimage = '';
       //ccnComm: Fetching the image manually added to the coursecat description via the editor.
@@ -685,7 +702,8 @@ class ccnCourseHandler {
       $ccnCategory->coverImage = $outputimage;
       $ccnCategory->courses = $categoryCourses;
       $ccnCategory->coursesCount = $categoryCoursesCount;
-
+      $ccnCategory->subcategories = $categorySubcategories;
+      $ccnCategory->subcategoriesCount = $categorySubcategoriesCount;
       return $ccnCategory;
 
     }

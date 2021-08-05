@@ -166,6 +166,14 @@
 .vh-95 {
   height: 95vh !important;
 }
+.ccn-text-divider:before {
+  content: "";
+  height: 100%;
+  border-left: 1px solid rgba(0, 0, 0, .1);
+  position: relative;
+  top: 1px;
+  margin: 0 10px 0 6px;
+}
 .invisibleblock {
   height: 85px;
   background: #e2c0c070;
@@ -303,12 +311,18 @@ body.ccn_context_dashboard {
 .ccn-drops a:active {
   color: [[setting:color_primary]]
 }
+.page-context-header {
+  float: right;
+  padding: 0;
+}
 /* Override, leave it */
 /* body.ccn_context_frontend#page-my-index {
   background: #fff !important;
 } */
 /* MDL Dashboard Inputs */
 .dashboard_main_content input[type=text],
+.dashboard_main_content input[type=number],
+.dashboard_main_content input[type=email],
 .dashboard_main_content textarea,
 .dashboard_main_content select,
 .dashboard_main_content .filemanager,
@@ -328,6 +342,8 @@ body.ccn_context_dashboard {
   box-shadow: 0px 1px 4px 0px rgba(0, 0, 0, 0.09);
 }
 .dashboard_main_content input[type=text],
+.dashboard_main_content input[type=number],
+.dashboard_main_content input[type=email],
 .dashboard_main_content select,
 .modal:not(.sign_up_modal) input[type=text],
 .modal:not(.sign_up_modal) select,
@@ -358,7 +374,8 @@ body.ccn_context_dashboard {
   margin-bottom: 10px;
 }
 .btn-primary,
-.btn-secondary {
+.btn-secondary,
+.page-context-header .btn {
   font-size: 15px;
   font-family: "[[setting:secondary_font]]";
   color: #fff;
@@ -423,6 +440,7 @@ body.ccn_context_dashboard {
 .modal:not(.sign_up_modal) .btn:not(.btn-link):hover,
 .btn-secondary:hover,
 .btn-primary:hover,
+.page-context-header .btn:hover,
 /* Additional button-type selectors that we want to apply btn-secondary to: */
 .ccn-forum-discussion-tools .btn.btn-link.dropdown-toggle:hover,
 .format-remuiformat .course-content .cards .wdm-card-section .card-section-leftnav .btn:hover,
@@ -524,7 +542,7 @@ body.ccn_context_dashboard {
 .badge, .badge-pill {
   padding: 3px 8px;
   color: #fff;
-  background-color: #ff1053 !important;
+  background-color: [[setting:color_secondary]] !important;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, .1);
   border-radius: 19px;
   font-weight: 800;
@@ -560,6 +578,9 @@ body.ccn_context_dashboard {
 }
 .ccn-msg-del-icon span {
   background-color: transparent !important;
+}
+.path-course.format-weeks .course-content ul.weeks>li.section:first-child {
+  margin-top: 0;
 }
 .my_course_content .ccn-pagination {
   padding: 30px 40px;
@@ -1095,10 +1116,6 @@ table {
   max-width: 100%;
   display: block;
 }
-/* .course_content .pagination-sm .page-item:first-child .page-link,
-.course_content .pagination-sm .page-item:last-child .page-link {
-  border-radius: 0 !important;
-} */
 .path-course .pagination {
   margin-right: 10px;
 }
@@ -1109,27 +1126,12 @@ table {
 .course_content .generaltable {
   font-size: 13px !important;
 }
-/* .dashboard_main_content .nav-tabs {
-  background-color: [[setting:color_primary]];
-  border-bottom: 0;
-  border-radius: 4px;
-  padding: 10px 15px;
-  margin-bottom: 40px;
+.generaltable img.userpicture {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  max-width: 50px;
 }
-.dashboard_main_content .nav-tabs .nav-link {
-  color: #ffffff;
-  height: 43px;
-  line-height: 27px;
-  text-align: center;
-}
-.dashboard_main_content .nav-tabs .nav-link:focus, .dashboard_main_content .nav-tabs .nav-link:hover {
-  border-color: transparent;
-}
-.dashboard_main_content .nav-tabs .nav-link.active {
-  border-radius: 5px;
-  color: [[setting:color_primary]];
-  border: none;
-} */
 /* MDL general */
 .ccnBlockControls {
   z-index: 9;
@@ -1314,7 +1316,7 @@ div[class*="block_cocoon_slider"] .ccnBlockControls {
   #ccnSettingsMenuContainer #ccnSettingsMenu .dropdown-menu.show,
   #ccnSettingsMenuContainer #region-main-settings-menu .dropdown-menu.show {
     max-height: calc(100vh - 150px);
-    overflow: scroll;
+    overflow: auto;
   }
 }
 #ccnSettingsMenuContainer #region-main-settings-menu {}
@@ -1426,9 +1428,9 @@ div[class*="block_cocoon_slider"] .ccnBlockControls {
 #page-enrol-index .ccn-enrol-cta-box button,
 #page-enrol-index .ccn-enrol-cta-box a:not(.fheader) {
   background-color: #ffffff;
-  border: 2px solid #ff1053;
+  border: 2px solid [[setting:color_secondary]];
   border-radius: 27px;
-  color: #ff1053;
+  color: [[setting:color_secondary]];
   display: block;
   font-size: 15px;
   font-family: "[[setting:secondary_font]]";
@@ -1446,7 +1448,7 @@ div[class*="block_cocoon_slider"] .ccnBlockControls {
 #page-enrol-index .ccn-enrol-cta-box input[type=submit]:hover,
 #page-enrol-index .ccn-enrol-cta-box a:not(.fheader):hover,
 #page-enrol-index .ccn-enrol-cta-box button:hover {
-  background-color: #ff1053;
+  background-color: [[setting:color_secondary]];
   color: #ffffff;
 }
 #page-enrol-index .ccn-enrol-cta-box legend.ftoggler {
@@ -2066,6 +2068,7 @@ body.pagelayout-mydashboard {
 }
 .que .content {
   margin: 0 0 0 22.5em;
+  text-align: left;
 }
 .que .formulation {
   margin: 0;
@@ -2804,6 +2807,8 @@ body.ccn_context_dashboard.ccnDarkMode.ccn_context_dashboard,
 }
 /* Inputs */
 .ccnDarkMode.ccn_context_dashboard .dashboard_main_content input[type=text],
+.ccnDarkMode.ccn_context_dashboard .dashboard_main_content input[type=number],
+.ccnDarkMode.ccn_context_dashboard .dashboard_main_content input[type=email],
 .ccnDarkMode.ccn_context_dashboard .dashboard_main_content textarea,
 .ccnDarkMode.ccn_context_dashboard .dashboard_main_content select,
 .ccnDarkMode.ccn_context_dashboard .dashboard_main_content .filemanager,
@@ -2827,6 +2832,8 @@ body.ccn_context_dashboard.ccnDarkMode.ccn_context_dashboard,
   color: rgb(108, 119, 177);
 }
 .ccnDarkMode.ccn_context_dashboard .dashboard_main_content input[type=text],
+.ccnDarkMode.ccn_context_dashboard .dashboard_main_content input[type=number],
+.ccnDarkMode.ccn_context_dashboard .dashboard_main_content input[type=email],
 .ccnDarkMode.ccn_context_dashboard .dashboard_main_content select,
 .ccnDarkMode.ccn_context_dashboard .modal:not(.sign_up_modal) input[type=text],
 .ccnDarkMode.ccn_context_dashboard .modal:not(.sign_up_modal) select,

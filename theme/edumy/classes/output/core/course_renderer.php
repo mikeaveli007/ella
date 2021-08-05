@@ -159,6 +159,21 @@ class course_renderer extends \core_course_renderer {
 
       $ccnCourseHandler = new ccnCourseHandler();
       $ccnCourseCount = $ccnCourseHandler->ccnGetCourseCategoryFilterCount($coursecat);
+      $ccnCategoryDetails = $ccnCourseHandler->ccnGetCategoryDetails($category);
+      $ccnSubcategoryCount = $ccnCategoryDetails->subcategoriesCount;
+
+      $ccnCourseCountRender = '';
+      if($ccnCourseCount > 0) {
+        $ccnCourseCountRender .= '<span class="color-dark pr5">'.$ccnCourseCount . '</span> ' . get_string('courses') . ' ';
+      }
+      if($ccnSubcategoryCount > 0) {
+        if($ccnCourseCountRender === '') {
+          $ccnCourseCountRender .= '<span class="color-dark pr5">'.$ccnSubcategoryCount . '</span> ' . get_string('categories'). ' ';
+        } else {
+          $ccnCourseCountRender .= '<span class="ccn-text-divider"></span><span class="color-dark pr5">'.$ccnSubcategoryCount . '</span> ' . get_string('categories', 'theme_edumy'). ' ';  
+        }
+
+      }
 
       $site = get_site();
       $output = '';
@@ -195,7 +210,7 @@ class course_renderer extends \core_course_renderer {
             $output .= '<div class="row courses_list_heading">
     						<div class="col-xl-3 p0">
     							<div class="instructor_search_result style2">
-    								<p class="mt10 fz15"><span class="color-dark pr5">'.$ccnCourseCount.' </span> '.get_string('courses').'</p>
+    								<p class="mt10 fz15">'.$ccnCourseCountRender.'</p>
     							</div>
     						</div>
     						<div class="col-xl-9 p0">
@@ -211,7 +226,7 @@ class course_renderer extends \core_course_renderer {
             $output .= '<div class="row">
     						<div class="col-xl-4">
     							<div class="instructor_search_result style2">
-    								<p class="mt10 fz15"><span class="color-dark pr5">'.$ccnCourseCount.' </span> '.get_string('courses').'</p>
+    								<p class="mt10 fz15">'.$ccnCourseCountRender.'</p>
     							</div>
     						</div>
     						<div class="col-xl-8">
@@ -231,7 +246,7 @@ class course_renderer extends \core_course_renderer {
             $output .= '<div class="row courses_list_heading">
                 <div class="col-xl-4 p0">
                   <div class="instructor_search_result style2">
-                    <p class="mt10 fz15"><span class="color-dark pr5">'.count($categorieslist).' </span> '.get_string('categories').'</p>
+                    <p class="mt10 fz15">'.$ccnCourseCountRender.'</p>
                   </div>
                 </div>
                 <div class="col-xl-8 p0">
@@ -247,7 +262,7 @@ class course_renderer extends \core_course_renderer {
             $output .= '<div class="row">
                 <div class="col-xl-4">
                   <div class="instructor_search_result style2">
-                    <p class="mt10 fz15"><span class="color-dark pr5">'.count($categorieslist).' </span> '.get_string('categories').'</p>
+                    <p class="mt10 fz15">'.$ccnCourseCountRender.'</p>
                   </div>
                 </div>
                 <div class="col-xl-8">

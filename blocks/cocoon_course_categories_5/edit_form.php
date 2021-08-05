@@ -1,24 +1,26 @@
 <?php
-
+require_once($CFG->dirroot.'/theme/edumy/ccn/course_handler/ccn_course_handler.php');
 class block_cocoon_course_categories_5_edit_form extends block_edit_form
 {
     protected function specific_definition($mform)
     {
       global $CFG;
       $ccnFontList = include($CFG->dirroot . '/theme/edumy/ccn/font_handler/ccn_font_select.php');
-      include_once($CFG->dirroot . '/course/lib.php');
-      require_once($CFG->dirroot. '/course/renderer.php');
-      $topcategory = core_course_category::top();
-      $topcategorykids = $topcategory->get_children();
-      $searchareas = \core_search\manager::get_search_areas_list(true);
-      $areanames = array();
-      foreach ($topcategorykids as $areaid => $topcategorykids) {
-          $areanames[$areaid] = $topcategorykids->get_formatted_name();
-          // print_object($areaid->get_formatted_name());
-          // print_object($areaid);
+      // include_once($CFG->dirroot . '/course/lib.php');
+      // require_once($CFG->dirroot. '/course/renderer.php');
+      // $topcategory = core_course_category::top();
+      // $topcategorykids = $topcategory->get_children();
+      // $searchareas = \core_search\manager::get_search_areas_list(true);
+      // $areanames = array();
+      // foreach ($topcategorykids as $areaid => $topcategorykids) {
+      //     $areanames[$areaid] = $topcategorykids->get_formatted_name();
+      //     // print_object($areaid->get_formatted_name());
+      //     // print_object($areaid);
+      //
+      // }
 
-      }
-
+      $ccnCourseHandler = new ccnCourseHandler();
+      $ccnCourseCategories = $ccnCourseHandler->ccnListCategories();
 
       if (!empty($this->block->config) && is_object($this->block->config)) {
           $data = $this->block->config;
@@ -94,7 +96,8 @@ class block_cocoon_course_categories_5_edit_form extends block_edit_form
                 'multiple' => false,
                 'noselectionstring' => get_string('select_from_dropdown', 'theme_edumy'),
             );
-            $mform->addElement('autocomplete', 'config_category' . $i, get_string('category'), $areanames, $options);
+            // $mform->addElement('autocomplete', 'config_category' . $i, get_string('category'), $areanames, $options);
+            $mform->addElement('autocomplete', 'config_category' . $i, get_string('category'), $ccnCourseCategories, $options);
             $mform->addRule('config_category' . $i, get_string('required'), 'required', null, 'client', false, false);
 
             $select = $mform->addElement('select', 'config_icon' .$i, get_string('config_icon_class', 'theme_edumy'), $ccnFontList, array('class'=>'ccn_icon_class'));
@@ -107,43 +110,4 @@ class block_cocoon_course_categories_5_edit_form extends block_edit_form
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/edit.php');
 
     }
-
-    // function set_data($defaults)
-    // {
-    //
-    //     // Begin CCN Image Processing
-    //     if (empty($entry->id)) {
-    //         $entry = new stdClass;
-    //         $entry->id = null;
-    //     }
-    //     $draftitemid = file_get_submitted_draft_itemid('config_image');
-    //     file_prepare_draft_area($draftitemid, $this->block->context->id, 'block_cocoon_course_categories_5', 'content', 0,
-    //         array('subdirs' => true));
-    //     $entry->attachments = $draftitemid;
-    //     parent::set_data($defaults);
-    //     if ($data = parent::get_data()) {
-    //         file_save_draft_area_files($data->config_image, $this->block->context->id, 'block_cocoon_course_categories_5', 'content', 0,
-    //             array('subdirs' => true));
-    //     }
-    //     // END CCN Image Processing
-    //
-    //
-    //
-    //     // if (!empty($this->block->config) && is_object($this->block->config)) {
-    //     //     $text = $this->block->config->bio;
-    //     //     $draftid_editor = file_get_submitted_draft_itemid('config_bio');
-    //     //     if (empty($text)) {
-    //     //         $currenttext = '';
-    //     //     } else {
-    //     //         $currenttext = $text;
-    //     //     }
-    //     //     $defaults->config_bio['text'] = file_prepare_draft_area($draftid_editor, $this->block->context->id, 'block_cocoon_course_categories_5', 'content', 0, array('subdirs'=>true), $currenttext);
-    //     //     $defaults->config_bio['itemid'] = $draftid_editor;
-    //     //     $defaults->config_bio['format'] = $this->block->config->format;
-    //     // } else {
-    //     //     $text = '';
-    //     // }
-    //
-    //
-    // }
 }

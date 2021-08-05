@@ -158,6 +158,7 @@ $string['event'] = 'حدث';
 $string['rated_by'] ='{$a} تقييم الطالب';
 $string['rate_course'] ='تقديم التقييم';
 $string['number_of_courses'] ='أكثر {$a} دورة/دورات';
+$string['categories'] = 'فئات';
 $string['hidden'] ='مخفي';
 $string['back_to_course'] ='العودة للدورة';
 $string['course_navigation'] ='التنقل في الدورة';
