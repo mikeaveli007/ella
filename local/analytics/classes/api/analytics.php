@@ -106,13 +106,14 @@ abstract class analytics {
 
         // If in the library add the entry category or name
         if(isset($_REQUEST["eid"]) || isset($_REQUEST["mode"])) {
+            $module = $pageinfo[2]->modname;
             if(isset($_REQUEST["mode"]) && $_REQUEST["mode"] == "cat") { 
-                $category = get_entry_category($_REQUEST["hook"]);
+                $category = get_entry_category($_REQUEST["hook"], $module);
                 $trackurl .= '/category/';
                 $trackurl .= self::might_encode($category->name, $urlencode);
             }
             if(isset($_REQUEST["eid"])) {
-                $entry = get_entry($_REQUEST["eid"]);
+                $entry = get_entry($_REQUEST["eid"], $module);
                 $trackurl .= '/entry/';
                 $trackurl .= self::might_encode($entry->concept, $urlencode);
             }

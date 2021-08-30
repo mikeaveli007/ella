@@ -46,15 +46,15 @@ function local_analytics_before_http_headers() {
     injector::inject();
 }
 
-function get_entry($id) {
+function get_entry($id, $module) {
     global $DB;
-    $entry = $DB->get_record('library_entries', ['id' => $id]);
+    $entry = $DB->get_record("{$module}_entries", ['id' => $id]);
     return $entry;
 }
 
-function get_entry_category($id) {
+function get_entry_category($id, $module) {
     global $DB;
-    $cat = $DB->get_record('library_categories', ['id' => $id]);
+    $cat = $DB->get_record("{$module}_categories", ['id' => $id]);
     return $cat;
 }
 
