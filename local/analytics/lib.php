@@ -65,7 +65,7 @@ function get_user_cohort_name($id) {
                     FROM {cohort} c
                     JOIN {cohort_members} cm ON c.id = cm.cohortid
                     WHERE cm.userid=? 
-                    AND c.name LIKE ?', array($id, "ochin-crowd-sa%"));    
+                    AND (c.name LIKE ? OR c.name LIKE ?)', array($id, "ochin-crowd-s%", "ochin-crowd-staff-all"));    
 }
 
 function get_user_service_area($id) {
