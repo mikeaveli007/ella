@@ -1,4 +1,4 @@
-[submodule "crowd"]
-	path = auth/crowd
+[submodule "auth/ella-auth-crowd"]
+	path = auth/ella-auth-crowd
 	url = git@github.com:OCHININC/ella-auth-crowd.git
-	branch = master
+  branch = master
