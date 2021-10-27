@@ -2,3 +2,60 @@
 	path = auth/ella-auth-crowd
 	url = git@github.com:OCHININC/ella-auth-crowd.git
   branch = master
+[submodule "blocks/completion_progress"]
+	path = blocks/completion_progress
+	url = git@github.com:jonof/moodle-block_completion_progress.git
+[submodule "blocks/course_contents"]
+	path = blocks/course_contents
+	url = git@github.com:mudrd8mz/moodle-block_course_contents.git
+[submodule "blocks/grade_me"]
+	path = blocks/grade_me
+	url = git@github.com:remotelearner/moodle-block_grade_me.git
+[submodule "blocks/groups"]
+	path = blocks/groups
+	url = git@github.com:learnweb/moodle-block_groups.git
+[submodule "blocks/my_enrolled_courses"]
+	path = blocks/my_enrolled_courses
+	url = git@github.com:dualcube/moodle-block_my_enrolled_courses.git
+[submodule "filter/toc"]
+	path = filter/toc
+	url = git@github.com:benchen71/moodle-filter_toc.git
+[submodule "local/autogroup"]
+	path = local/autogroup
+	url = git@github.com:emmarichardson/local_autogroup.git
+[submodule "local/boostnavigation"]
+	path = local/boostnavigation
+	url = git@github.com:moodleuulm/moodle-local_boostnavigation.git
+[submodule "local/metagroups"]
+	path = local/metagroups
+	url = git@github.com:paulholden/moodle-local_metagroups.git
+[submodule "mod/certificate"]
+	path = mod/certificate
+	url = git@github.com:mdjnelson/moodle-mod_certificate.git
+[submodule "mod/customcert"]
+	path = mod/customcert
+	url = git@github.com:mdjnelson/moodle-mod_customcert.git
+[submodule "mod/questionnaire"]
+	path = mod/questionnaire
+	url = git@github.com:PoetOS/moodle-mod_questionnaire.git
+[submodule "mod/subcourse"]
+	path = mod/subcourse
+	url = git@github.com:mudrd8mz/moodle-mod_subcourse.git
+[submodule "report/completionoverview"]
+	path = report/completionoverview
+	url = git@github.com:Twoscope/moodle-report_completionoverview.git
+[submodule "report/customsql"]
+	path = report/customsql
+	url = git@github.com:moodleou/moodle-report_customsql.git
+[submodule "report/extendedlog"]
+	path = report/extendedlog
+	url = git@github.com:vadimonus/moodle-report_extendedlog.git
+[submodule "admin/tool/mergeusers"]
+	path = admin/tool/mergeusers
+	url = git@github.com:ndunand/moodle-tool_mergeusers.git
+[submodule "mod/library"]
+	path = mod/library
+	url = git@github.com:OCHININC/ella-epic-library.git
+[submodule "local/analytics"]
+	path = local/analytics
+	url = git@github.com:mikeaveli007/moodle-local_analytics.git
