@@ -741,7 +741,11 @@ Feature: Course participants can be filtered
 
     Then I should see "Nothing to display"
 
+<<<<<<< HEAD
   @javascript
+=======
+  @javascript @skip_chrome_zerosize
+>>>>>>> 114f603d0b214f4abbfb01e548bf2b5c34bc511f
   Scenario: Filter by user identity fields when cannot see the field data
     Given I log in as "admin"
     And I set the following system permissions of "Teacher" role:

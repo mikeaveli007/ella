@@ -33,7 +33,7 @@ require_once($CFG->dirroot . '/calendar/tests/helpers.php');
 /**
  * Tests various classes and functions in upgradelib.php library.
  */
-class core_upgradelib_testcase extends advanced_testcase {
+class upgradelib_test extends advanced_testcase {
 
     /**
      * Test the {@link upgrade_stale_php_files_present() function
@@ -1068,6 +1068,49 @@ class core_upgradelib_testcase extends advanced_testcase {
         global $DB, $USER;
 
         $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $generator = $this->getDataGenerator();
+
+        // Create a new course and few groups.
+        $course = $generator->create_course();
+        $group1 = $generator->create_group(['courseid' => $course->id]);
+        $group2 = $generator->create_group(['courseid' => $course->id]);
+        $group3 = $generator->create_group(['courseid' => $course->id]);
+
+        // Create some activities and some override events.
+        foreach (['assign', 'lesson', 'quiz'] as $modulename) {
+            $instance = $generator->create_module($modulename, ['course' => $course->id]);
+            create_group_override_event($modulename, $instance->id, $course->id, $group1->id);
+            create_group_override_event($modulename, $instance->id, $course->id, $group2->id);
+            create_group_override_event($modulename, $instance->id, $course->id, $group3->id);
+        }
+
+        // There should be 9 override events to be fixed (three from each module).
+        $eventscount = $DB->count_records('event');
+        $this->assertEquals(9, $eventscount);
+
+        // Get the events info.
+        $info = upgrade_calendar_events_status(false);
+
+        // We classify group overrides as action events since they do not record the userid.
+        $groupoverrideinfo = $info['action'];
+
+        // There should be no events to be fixed.
+        $this->assertEquals(0, $groupoverrideinfo->bad);
+
+        // No events to be fixed, should return false.
+        $this->assertFalse(upgrade_calendar_action_events_fix($groupoverrideinfo, false));
+
+        // Run same problematic DB query.
+        $this->run_upgrade_step_query();
+
+        // Get the events info.
+        $info = upgrade_calendar_events_status(false);
+        $this->assertEquals(9, $info['action']->bad);
+
+        // Call the function again, this time it will run until all events have been fixed.
+        $this->assertFalse(upgrade_calendar_action_events_fix($info['action'], false));
 
         $model = (object)[
             'name' => 'asd',
@@ -1489,5 +1532,41 @@ class core_upgradelib_testcase extends advanced_testcase {
 
         // Since group override events do not set userid, these events should not be flagged to be fixed.
         $this->assertEquals(0, $groupoverrideinfo->bad);
+    }
+
+    /**
+     * Test the admin_dir_usage check with no admin setting specified.
+     */
+    public function test_admin_dir_usage_not_set(): void {
+        $result = new environment_results("custom_checks");
+
+        $this->assertNull(check_admin_dir_usage($result));
+    }
+
+    /**
+     * Test the admin_dir_usage check with the default admin setting specified.
+     */
+    public function test_admin_dir_usage_is_default(): void {
+        global $CFG;
+
+        $CFG->admin = 'admin';
+
+        $result = new environment_results("custom_checks");
+        $this->assertNull(check_admin_dir_usage($result));
+    }
+
+    /**
+     * Test the admin_dir_usage check with a custom admin setting specified.
+     */
+    public function test_admin_dir_usage_non_standard(): void {
+        global $CFG;
+
+        $this->resetAfterTest(true);
+        $CFG->admin = 'notadmin';
+
+        $result = new environment_results("custom_checks");
+        $this->assertInstanceOf(environment_results::class, check_admin_dir_usage($result));
+        $this->assertEquals('admin_dir_usage', $result->getInfo());
+        $this->assertFalse($result->getStatus());
     }
 }
