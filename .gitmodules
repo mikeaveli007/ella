@@ -55,3 +55,6 @@
 [submodule "local/analytics"]
 	path = local/analytics
 	url = git@github.com:mikeaveli007/moodle-local_analytics.git
+[submodule "auth/crowd"]
+	path = auth/crowd
+	url = git@github.com:OCHININC/ella-auth-crowd.git
