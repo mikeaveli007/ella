@@ -12,7 +12,7 @@
 	url = git@github.com:learnweb/moodle-block_groups.git
 [submodule "blocks/my_enrolled_courses"]
 	path = blocks/my_enrolled_courses
-	url = git@github.com:dualcube/moodle-block_my_enrolled_courses.git
+	url = git@github.com:OCHININC/moodle-block_my_enrolled_courses.git
 [submodule "filter/toc"]
 	path = filter/toc
 	url = git@github.com:benchen71/moodle-filter_toc.git
