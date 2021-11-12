@@ -121,7 +121,7 @@ class main implements renderable, templatable {
      *
      * @var boolean
      */
-    private $displaygroupingstarred;
+    private $displaygroupingfavourites;
 
     /**
      * Store a course grouping option setting.
@@ -164,6 +164,7 @@ class main implements renderable, templatable {
      * @throws \dml_exception
      */
     public function __construct($grouping, $sort, $view, $paging, $customfieldvalue = null) {
+        global $CFG;
         // Get plugin config.
         $config = get_config('block_myoverview');
 
@@ -185,13 +186,25 @@ class main implements renderable, templatable {
         $this->customfieldvalue = $customfieldvalue;
 
         // Check and remember the given sorting.
-        $this->sort = $sort ? $sort : BLOCK_MYOVERVIEW_SORTING_TITLE;
+        if ($sort) {
+            $this->sort = $sort;
+        } else if ($CFG->courselistshortnames) {
+            $this->sort = BLOCK_MYOVERVIEW_SORTING_SHORTNAME;
+        } else {
+            $this->sort = BLOCK_MYOVERVIEW_SORTING_TITLE;
+        }
+        // In case sorting remembered is shortname and display extended course names not checked,
+        // we should revert sorting to title.
+        if (!$CFG->courselistshortnames && $sort == BLOCK_MYOVERVIEW_SORTING_SHORTNAME) {
+            $this->sort = BLOCK_MYOVERVIEW_SORTING_TITLE;
+        }
 
         // Check and remember the given view.
         $this->view = $view ? $view : BLOCK_MYOVERVIEW_VIEW_CARD;
 
-        // Check and remember the given page size.
-        if ($paging == BLOCK_MYOVERVIEW_PAGING_ALL) {
+        // Check and remember the given page size, `null` indicates no page size set
+        // while a `0` indicates a paging size of `All`.
+        if (!is_null($paging) && $paging == BLOCK_MYOVERVIEW_PAGING_ALL) {
             $this->paging = BLOCK_MYOVERVIEW_PAGING_ALL;
         } else {
             $this->paging = $paging ? $paging : BLOCK_MYOVERVIEW_PAGING_12;
@@ -214,7 +227,7 @@ class main implements renderable, templatable {
         $this->displaygroupinginprogress = $config->displaygroupinginprogress;
         $this->displaygroupingfuture = $config->displaygroupingfuture;
         $this->displaygroupingpast = $config->displaygroupingpast;
-        $this->displaygroupingstarred = $config->displaygroupingstarred;
+        $this->displaygroupingfavourites = $config->displaygroupingfavourites;
         $this->displaygroupinghidden = $config->displaygroupinghidden;
         $this->displaygroupingcustomfield = ($config->displaygroupingcustomfield && $config->customfiltergrouping);
         $this->customfiltergrouping = $config->customfiltergrouping;
@@ -226,7 +239,7 @@ class main implements renderable, templatable {
                 $this->displaygroupinginprogress,
                 $this->displaygroupingfuture,
                 $this->displaygroupingpast,
-                $this->displaygroupingstarred,
+                $this->displaygroupingfavourites,
                 $this->displaygroupinghidden);
         $displaygroupingselectorscount = count(array_filter($displaygroupingselectors));
         if ($displaygroupingselectorscount > 1 || $this->displaygroupingcustomfield) {
@@ -236,7 +249,6 @@ class main implements renderable, templatable {
         }
         unset ($displaygroupingselectors, $displaygroupingselectorscount);
     }
-
     /**
      * Determine the most sensible fallback grouping to use (in cases where the stored selection
      * is no longer available).
@@ -259,7 +271,7 @@ class main implements renderable, templatable {
         if ($config->displaygroupingpast == true) {
             return BLOCK_MYOVERVIEW_GROUPING_PAST;
         }
-        if ($config->displaygroupingstarred == true) {
+        if ($config->displaygroupingfavourites == true) {
             return BLOCK_MYOVERVIEW_GROUPING_FAVOURITES;
         }
         if ($config->displaygroupinghidden == true) {
@@ -359,8 +371,9 @@ class main implements renderable, templatable {
         $select = "instanceid $csql AND fieldid = :fieldid";
         $params['fieldid'] = $fieldid;
         $distinctablevalue = $DB->sql_compare_text('value');
-        $values = $DB->get_records_select_menu('customfield_data', $select, $params, $DB->sql_order_by_text('value'),
+        $values = $DB->get_records_select_menu('customfield_data', $select, $params, '',
             "DISTINCT $distinctablevalue, $distinctablevalue AS value2");
+        \core_collator::asort($values, \core_collator::SORT_NATURAL);
         $values = array_filter($values);
         if (!$values) {
             return [];
@@ -393,7 +406,7 @@ class main implements renderable, templatable {
      *
      */
     public function export_for_template(renderer_base $output) {
-        global $USER;
+        global $CFG, $USER;
 
         $nocoursesurl = $output->image_url('courses', 'block_myoverview')->out();
 
@@ -422,12 +435,18 @@ class main implements renderable, templatable {
         }
         $preferences = $this->get_preferences_as_booleans();
         $availablelayouts = $this->get_formatted_available_layouts_for_export();
+        $sort = '';
+        if ($this->sort == BLOCK_MYOVERVIEW_SORTING_SHORTNAME) {
+            $sort = 'shortname';
+        } else {
+            $sort = $this->sort == BLOCK_MYOVERVIEW_SORTING_TITLE ? 'fullname' : 'ul.timeaccess desc';
+        }
 
         $defaultvariables = [
             'totalcoursecount' => count(enrol_get_all_users_courses($USER->id, true)),
             'nocoursesimg' => $nocoursesurl,
             'grouping' => $this->grouping,
-            'sort' => $this->sort == BLOCK_MYOVERVIEW_SORTING_TITLE ? 'fullname' : 'ul.timeaccess desc',
+            'sort' => $sort,
             // If the user preference display option is not available, default to first available layout.
             'view' => in_array($this->view, $this->layouts) ? $this->view : reset($this->layouts),
             'paging' => $this->paging,
@@ -439,7 +458,7 @@ class main implements renderable, templatable {
             'displaygroupinginprogress' => $this->displaygroupinginprogress,
             'displaygroupingfuture' => $this->displaygroupingfuture,
             'displaygroupingpast' => $this->displaygroupingpast,
-            'displaygroupingstarred' => $this->displaygroupingstarred,
+            'displaygroupingfavourites' => $this->displaygroupingfavourites,
             'displaygroupinghidden' => $this->displaygroupinghidden,
             'displaygroupingselector' => $this->displaygroupingselector,
             'displaygroupingcustomfield' => $this->displaygroupingcustomfield && $customfieldvalues,
@@ -447,6 +466,7 @@ class main implements renderable, templatable {
             'customfieldvalue' => $this->customfieldvalue,
             'customfieldvalues' => $customfieldvalues,
             'selectedcustomfield' => $selectedcustomfield,
+            'showsortbyshortname' => $CFG->courselistshortnames,
         ];
         return array_merge($defaultvariables, $preferences);
 

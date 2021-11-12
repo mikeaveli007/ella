@@ -60,7 +60,7 @@ class block_cocoon_mynews extends block_base {
 
             require_once($CFG->dirroot.'/mod/forum/lib.php');   // We'll need this
 
-            $text = '';
+            $text = '<div class="recent_job_activity">';
 
             if (!$forum = forum_get_course_forum($this->page->course->id, 'news')) {
                 return '';
@@ -84,14 +84,15 @@ class block_cocoon_mynews extends block_base {
             }
 
 
-            $text .= '<div class="recent_job_activity"><h4 class="title">'. get_string('notifications', 'theme_edumy').'</h4>';
+            // $text .= '<h4 class="title">'. get_string('notifications', 'theme_edumy').'</h4>';
         /// First work out whether we can post to this group and if so, include a link
             $groupmode    = groups_get_activity_groupmode($cm);
             $currentgroup = groups_get_activity_group($cm, true);
 
             if (forum_user_can_post_discussion($forum, $currentgroup, $groupmode, $cm, $context)) {
-                $text .= '<div class="mb15"><a class="view_all_noti text-thm" href="'.$CFG->wwwroot.'/mod/forum/post.php?forum='.$forum->id.'">'.
-                          get_string('addanewtopic', 'forum').'</a></div>';
+                $text .= '<div class="mb15">
+                            <a class="btn btn-primary btn-sm" href="'.$CFG->wwwroot.'/mod/forum/post.php?forum='.$forum->id.'">'.get_string('addanewtopic', 'forum').'</a>
+                          </div>';
             }
 
         /// Get all the recent discussions we're allowed to see
@@ -106,8 +107,8 @@ class block_cocoon_mynews extends block_base {
                                                         -1, $this->page->course->newsitems,
                                                         false, -1, 0, FORUM_POSTS_ALL_USER_GROUPS) ) {
                 $text .= '('.get_string('nonews', 'forum').')';
-                $this->content->text = $text;
-                return $this->content;
+                // $this->content->text = $text;
+                // return $this->content;
             }
 
         /// Actually create the listing now
@@ -141,8 +142,7 @@ class block_cocoon_mynews extends block_base {
             // $text .= "</ul>\n";
 
 
-            $text .= '<a class="view_all_noti text-thm" href="'.$CFG->wwwroot.'/mod/forum/view.php?f='.$forum->id.'">'.
-                                      get_string('oldertopics', 'forum').'</a>';
+            $text .= '<div class="mt15"><a class="view_all_noti text-thm" href="'.$CFG->wwwroot.'/mod/forum/view.php?f='.$forum->id.'">'.get_string('oldertopics', 'forum').'</a></div>';
 
         /// If RSS is activated at site and forum level and this forum has rss defined, show link
             if (isset($CFG->enablerssfeeds) && isset($CFG->forum_enablerssfeeds) &&

@@ -67,8 +67,8 @@ class block_cocoon_gallery extends block_base
             <div class="row">
 				      <div class="col-lg-6 offset-lg-3">
 					      <div class="main-title text-center">
-						      <h3 class="mt0">'.$this->content->title.'</h3>
-						      <p>'.$this->content->subtitle.'</p>
+						      <h3 class="mt0">'.format_text($this->content->title, FORMAT_HTML, array('filter' => true)).'</h3>
+						      <p>'.format_text($this->content->subtitle, FORMAT_HTML, array('filter' => true)).'</p>
 					      </div>
 				      </div>
 			      </div>';

@@ -22,6 +22,8 @@
  * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+$string['activeparticipantnumberaverage'] = 'Average number of recently active participants ({$a})';
+$string['activeusersnumber'] = 'Number of recently active users ({$a})';
 $string['analyticsactions'] = 'Number of actions taken on generated predictions ({$a})';
 $string['analyticsactionsnotuseful'] = 'Number of actions marking a prediction as not useful ({$a})';
 $string['analyticsenabledmodels'] = 'Number of enabled prediction models ({$a})';
@@ -108,7 +110,7 @@ $string['registerwithmoodleorginfo'] = 'We\'d love to stay in touch and provide 
 $string['registerwithmoodleorginfoapp'] = 'About the Moodle app';
 $string['registerwithmoodleorginfostats'] = 'Moodle statistics';
 $string['registerwithmoodleorginfosites'] = 'Other sites in my country';
-$string['registerwithmoodleorgremove'] = 'You are going to unregister your site. If you continue, you will no longer have access to important notifications and security alerts. Your users will not be able to receive push notifications from your site to their Moodle mobile app. Are you sure you want to unregister your site?';
+$string['registerwithmoodleorgremove'] = 'You are about to unregister your site. You will no longer receive security alert notifications and users will not be able to receive push notifications from your site to their Moodle app. However, you will be able to re-register at any time! Are you sure you want to continue?';
 $string['registrationconfirmed'] = 'Site registration confirmed';
 $string['registrationconfirmedon'] = 'Thank you for registering your site. Registration information will be kept up to date by the \'Site registration\' scheduled task.';
 $string['renewregistration'] = 'Renew registration';
@@ -118,7 +120,7 @@ $string['roleassignmentsnumber'] = 'Number of role assignments ({$a})';
 $string['search'] = 'Search';
 $string['sendingsize'] = 'Please wait the course file is uploading ({$a->total}Mb)...';
 $string['sendfollowinginfo'] = 'More information';
-$string['sendfollowinginfo_help'] = 'The following information will be sent to contribute to overall statistics only.  It will not be made public on any site listing.';
+$string['sendfollowinginfo_help'] = 'The following information will be sent to Moodle each time your site registration is updated (by default weekly, when the \'Site registration\' scheduled task is run). The information contributes to overall statistics only and will not be made public on any site listing.';
 $string['sent'] = '...finished';
 $string['siteadmin'] = 'Administrator';
 $string['siteadmin_help'] = 'The full name of the site administrator.';

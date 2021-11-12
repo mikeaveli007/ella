@@ -18,14 +18,14 @@
         </button>
       </div>
       {{#logo}}
-        <a href="{{{ config.wwwroot }}}" class="navbar_brand float-left dn-smd">
+        <a href="{{{ ccnLogoUrl }}}" class="navbar_brand float-left dn-smd">
           {{#logo_image}}<img class="logo1 img-fluid" src="{{{headerlogo1}}}" alt="{{{sitename}}}" {{#logo_styles}} style="{{{logo_styles}}}" {{/logo_styles}}>{{/logo_image}}
           {{#logo_image}}<img class="logo2 img-fluid" src="{{{headerlogo2}}}" alt="{{{sitename}}}" {{#logo_styles}} style="{{{logo_styles}}}" {{/logo_styles}}>{{/logo_image}}
           {{#logotype}}<span>{{{sitename}}}</span>{{/logotype}}
         </a>
       {{/logo}}
       {{#display_library_list}}
-        <ul class="mt20 pull-left mr20 ml10">
+        <ul class="mt15 pull-left mr20 ml10">
           <li class="list-inline-item">
             <div class="header_top_lang_widget">
               <div class="ht-widget-container">
@@ -61,11 +61,16 @@
         </ul>
       {{/header_search_bar}}
       <!-- Responsive Menu Structure-->
+
       <!--Note: declare the Menu style in the data-menu-style="horizontal" (options: horizontal, vertical, accordion) -->
       <ul id="respMenu" class="ace-responsive-menu" data-menu-style="horizontal">
         {{{ output.custom_menu }}}
         {{> theme_edumy/ccn_navbar_user }}
+        <ul class="sign_up_btn pull-right dn-smd mt20">
+          {{> theme_edumy/ccn_navbar_user_popup }}
+        </ul><!-- Button trigger modal -->
       </ul>
+
     </nav>
     <!-- End of Responsive Menu -->
   </div>

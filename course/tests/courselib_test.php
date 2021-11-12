@@ -1653,11 +1653,8 @@ class core_course_courselib_testcase extends advanced_testcase {
             case 'quiz':
                 $qgen = $this->getDataGenerator()->get_plugin_generator('core_question');
                 $qcat = $qgen->create_question_category(array('contextid' => $modcontext->id));
-                $questions = array(
-                    $qgen->create_question('shortanswer', null, array('category' => $qcat->id)),
-                    $qgen->create_question('shortanswer', null, array('category' => $qcat->id)),
-                );
-                $this->expectOutputRegex('/'.get_string('unusedcategorydeleted', 'question').'/');
+                $qgen->create_question('shortanswer', null, array('category' => $qcat->id));
+                $qgen->create_question('shortanswer', null, array('category' => $qcat->id));
                 break;
             default:
                 break;
@@ -4553,7 +4550,7 @@ class core_course_courselib_testcase extends advanced_testcase {
                 'totalcourses' => 0,
                 'limit' => 0,
                 'offset' => 0,
-                'expecteddbqueries' => 1,
+                'expecteddbqueries' => 4,
                 'expectedresult' => $buildexpectedresult(0, 0)
             ],
             'less than query limit' => [
@@ -4561,7 +4558,7 @@ class core_course_courselib_testcase extends advanced_testcase {
                 'totalcourses' => 2,
                 'limit' => 0,
                 'offset' => 0,
-                'expecteddbqueries' => 1,
+                'expecteddbqueries' => 2,
                 'expectedresult' => $buildexpectedresult(2, 0)
             ],
             'more than query limit' => [
@@ -4569,7 +4566,7 @@ class core_course_courselib_testcase extends advanced_testcase {
                 'totalcourses' => 7,
                 'limit' => 0,
                 'offset' => 0,
-                'expecteddbqueries' => 3,
+                'expecteddbqueries' => 4,
                 'expectedresult' => $buildexpectedresult(7, 0)
             ],
             'limit less than query limit' => [
@@ -4577,7 +4574,7 @@ class core_course_courselib_testcase extends advanced_testcase {
                 'totalcourses' => 7,
                 'limit' => 2,
                 'offset' => 0,
-                'expecteddbqueries' => 1,
+                'expecteddbqueries' => 2,
                 'expectedresult' => $buildexpectedresult(2, 0)
             ],
             'limit less than query limit with offset' => [
@@ -4585,7 +4582,7 @@ class core_course_courselib_testcase extends advanced_testcase {
                 'totalcourses' => 7,
                 'limit' => 2,
                 'offset' => 2,
-                'expecteddbqueries' => 1,
+                'expecteddbqueries' => 2,
                 'expectedresult' => $buildexpectedresult(2, 2)
             ],
             'limit less than total' => [
@@ -4593,7 +4590,7 @@ class core_course_courselib_testcase extends advanced_testcase {
                 'totalcourses' => 9,
                 'limit' => 6,
                 'offset' => 0,
-                'expecteddbqueries' => 2,
+                'expecteddbqueries' => 3,
                 'expectedresult' => $buildexpectedresult(6, 0)
             ],
             'less results than limit' => [
@@ -4601,7 +4598,7 @@ class core_course_courselib_testcase extends advanced_testcase {
                 'totalcourses' => 9,
                 'limit' => 20,
                 'offset' => 0,
-                'expecteddbqueries' => 3,
+                'expecteddbqueries' => 4,
                 'expectedresult' => $buildexpectedresult(9, 0)
             ],
             'less results than limit exact divisible' => [
@@ -4609,7 +4606,7 @@ class core_course_courselib_testcase extends advanced_testcase {
                 'totalcourses' => 9,
                 'limit' => 20,
                 'offset' => 0,
-                'expecteddbqueries' => 4,
+                'expecteddbqueries' => 5,
                 'expectedresult' => $buildexpectedresult(9, 0)
             ],
             'less results than limit with offset' => [
@@ -4617,7 +4614,7 @@ class core_course_courselib_testcase extends advanced_testcase {
                 'totalcourses' => 9,
                 'limit' => 10,
                 'offset' => 5,
-                'expecteddbqueries' => 2,
+                'expecteddbqueries' => 3,
                 'expectedresult' => $buildexpectedresult(4, 5)
             ],
         ];
@@ -5445,7 +5442,16 @@ class core_course_courselib_testcase extends advanced_testcase {
         // Every course accessed, order by shortname DESC. The last create course ($course[2]) should have the greater shortname.
         $result = course_get_recent_courses($student->id, 0, 0, 'shortname DESC');
         $this->assertCount(3, $result);
-        $this->assertEquals($courses[2]->id, array_shift($result)->id);
+        $this->assertEquals($courses[2]->id, array_values($result)[0]->id);
+        $this->assertEquals($courses[1]->id, array_values($result)[1]->id);
+        $this->assertEquals($courses[0]->id, array_values($result)[2]->id);
+
+        // Every course accessed, order by shortname ASC.
+        $result = course_get_recent_courses($student->id, 0, 0, 'shortname ASC');
+        $this->assertCount(3, $result);
+        $this->assertEquals($courses[0]->id, array_values($result)[0]->id);
+        $this->assertEquals($courses[1]->id, array_values($result)[1]->id);
+        $this->assertEquals($courses[2]->id, array_values($result)[2]->id);
 
         $guestcourse = $generator->create_course(
             (object)array('shortname' => 'guestcourse',
@@ -5465,6 +5471,100 @@ class core_course_courselib_testcase extends advanced_testcase {
         $result = course_get_recent_courses($student->id);
         $this->assertCount(3, $result);
         $this->assertArrayNotHasKey($courses[0]->id, $result);
+    }
+
+    /**
+     * Test the validation of the sort value in course_get_recent_courses().
+     *
+     * @dataProvider course_get_recent_courses_sort_validation_provider
+     * @param string $sort The sort value
+     * @param string $expectedexceptionmsg The expected exception message
+     */
+    public function test_course_get_recent_courses_sort_validation(string $sort, string $expectedexceptionmsg) {
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+
+        if (!empty($expectedexceptionmsg)) {
+            $this->expectException('invalid_parameter_exception');
+            $this->expectExceptionMessage($expectedexceptionmsg);
+        }
+        course_get_recent_courses($user->id, 0, 0, $sort);
+    }
+
+    /**
+     * Data provider for test_course_get_recent_courses_sort_validation().
+     *
+     * @return array
+     */
+    function course_get_recent_courses_sort_validation_provider() {
+        return [
+            'Invalid sort format (SQL injection attempt)' =>
+                [
+                    'shortname DESC LIMIT 1--',
+                    'Invalid structure of the sort parameter, allowed structure: fieldname [ASC|DESC].',
+                ],
+            'Sort uses \'sort by\' field that does not exist' =>
+                [
+                    'shortname DESC, xyz ASC',
+                    'Invalid field in the sort parameter, allowed fields: id, idnumber, summary, summaryformat, ' .
+                    'startdate, enddate, category, shortname, fullname, timeaccess, component, visible.',
+            ],
+            'Sort uses invalid value for the sorting direction' =>
+                [
+                    'shortname xyz, lastaccess',
+                    'Invalid sort direction in the sort parameter, allowed values: asc, desc.',
+                ],
+            'Valid sort format' =>
+                [
+                    'shortname asc, timeaccess',
+                    ''
+                ]
+        ];
+    }
+
+    /**
+     * Test the course_get_recent_courses function.
+     */
+    public function test_course_get_recent_courses_with_guest() {
+        global $DB;
+        $this->resetAfterTest(true);
+
+        $student = $this->getDataGenerator()->create_user();
+
+        // Course 1 with guest access and no direct enrolment.
+        $course1 = $this->getDataGenerator()->create_course();
+        $context1 = context_course::instance($course1->id);
+        $record = $DB->get_record('enrol', ['courseid' => $course1->id, 'enrol' => 'guest']);
+        enrol_get_plugin('guest')->update_status($record, ENROL_INSTANCE_ENABLED);
+
+        // Course 2 where student is enrolled with two enrolment methods.
+        $course2 = $this->getDataGenerator()->create_course();
+        $context2 = context_course::instance($course2->id);
+        $record = $DB->get_record('enrol', ['courseid' => $course2->id, 'enrol' => 'self']);
+        enrol_get_plugin('guest')->update_status($record, ENROL_INSTANCE_ENABLED);
+        $this->getDataGenerator()->enrol_user($student->id, $course2->id, 'student', 'manual', 0, 0, ENROL_USER_ACTIVE);
+        $this->getDataGenerator()->enrol_user($student->id, $course2->id, 'student', 'self', 0, 0, ENROL_USER_ACTIVE);
+
+        // Course 3.
+        $course3 = $this->getDataGenerator()->create_course();
+        $context3 = context_course::instance($course3->id);
+
+        // Student visits first two courses, course_get_recent_courses returns two courses.
+        $this->setUser($student);
+        course_view($context1);
+        course_view($context2);
+
+        $result = course_get_recent_courses($student->id);
+        $this->assertEqualsCanonicalizing([$course2->id, $course1->id], array_column($result, 'id'));
+
+        // Admin visits all three courses. Only the one with guest access is returned.
+        $this->setAdminUser();
+        course_view($context1);
+        course_view($context2);
+        course_view($context3);
+        $result = course_get_recent_courses(get_admin()->id);
+        $this->assertEqualsCanonicalizing([$course1->id], array_column($result, 'id'));
     }
 
     /**
@@ -6923,4 +7023,100 @@ class core_course_courselib_testcase extends advanced_testcase {
         $this->setAdminUser();
         $this->assertTrue($request2->can_approve());
     }
+
+    /**
+     * Test the course allowed module method.
+     */
+    public function test_course_allowed_module() {
+        $this->resetAfterTest();
+        global $DB;
+
+        $course = $this->getDataGenerator()->create_course();
+        $teacher = $this->getDataGenerator()->create_and_enrol($course, 'editingteacher');
+        $manager = $this->getDataGenerator()->create_and_enrol($course, 'manager');
+
+        $teacherrole = $DB->get_record('role', array('shortname' => 'editingteacher'));
+        assign_capability('mod/assign:addinstance', CAP_PROHIBIT, $teacherrole->id, \context_course::instance($course->id));
+
+        // Global user (teacher) has no permissions in this course.
+        $this->setUser($teacher);
+        $this->assertFalse(course_allowed_module($course, 'assign'));
+
+        // Manager has permissions.
+        $this->assertTrue(course_allowed_module($course, 'assign', $manager));
+    }
+
+    /**
+     * Test the {@link average_number_of_participants()} function.
+     */
+    public function test_average_number_of_participants() {
+        global $DB;
+        $this->resetAfterTest(true);
+
+        $generator = $this->getDataGenerator();
+        $now = time();
+
+        // If there are no courses, expect zero number of participants per course.
+        $this->assertEquals(0, average_number_of_participants());
+
+        $c1 = $generator->create_course();
+        $c2 = $generator->create_course();
+
+        // If there are no users, expect zero number of participants per course.
+        $this->assertEquals(0, average_number_of_participants());
+
+        $t1 = $generator->create_user(['lastlogin' => $now]);
+        $s1 = $generator->create_user(['lastlogin' => $now]);
+        $s2 = $generator->create_user(['lastlogin' => $now - WEEKSECS]);
+        $s3 = $generator->create_user(['lastlogin' => $now - WEEKSECS]);
+        $s4 = $generator->create_user(['lastlogin' => $now - YEARSECS]);
+
+        // We have courses, we have users, but no enrolments yet.
+        $this->assertEquals(0, average_number_of_participants());
+
+        // Front page enrolments are ignored.
+        $generator->enrol_user($t1->id, SITEID, 'teacher');
+        $this->assertEquals(0, average_number_of_participants());
+
+        // The teacher enrolled into one of the two courses.
+        $generator->enrol_user($t1->id, $c1->id, 'editingteacher');
+        $this->assertEquals(0.5, average_number_of_participants());
+
+        // The teacher enrolled into both courses.
+        $generator->enrol_user($t1->id, $c2->id, 'editingteacher');
+        $this->assertEquals(1, average_number_of_participants());
+
+        // Student 1 enrolled in the Course 1 only.
+        $generator->enrol_user($s1->id, $c1->id, 'student');
+        $this->assertEquals(1.5, average_number_of_participants());
+
+        // Student 2 enrolled in both courses, but the enrolment in the Course 2 not active yet (enrolment starts in the future).
+        $generator->enrol_user($s2->id, $c1->id, 'student');
+        $generator->enrol_user($s2->id, $c2->id, 'student', 'manual', $now + WEEKSECS);
+        $this->assertEquals(2.5, average_number_of_participants());
+        $this->assertEquals(2, average_number_of_participants(true));
+
+        // Student 3 enrolled in the Course 1, but the enrolment already expired.
+        $generator->enrol_user($s3->id, $c1->id, 'student', 'manual', 0, $now - YEARSECS);
+        $this->assertEquals(3, average_number_of_participants());
+        $this->assertEquals(2, average_number_of_participants(true));
+
+        // Student 4 enrolled in both courses, but the enrolment has been suspended.
+        $generator->enrol_user($s4->id, $c1->id, 'student', 'manual', 0, 0, ENROL_USER_SUSPENDED);
+        $generator->enrol_user($s4->id, $c2->id, 'student', 'manual', $now - DAYSECS, $now + YEARSECS, ENROL_USER_SUSPENDED);
+        $this->assertEquals(4, average_number_of_participants());
+        $this->assertEquals(2, average_number_of_participants(true));
+
+        // Consider only t1 and s1 who logged in recently.
+        $this->assertEquals(1.5, average_number_of_participants(false, $now - DAYSECS));
+
+        // Consider only t1, s1, s2 and s3 who logged in in recent weeks.
+        $this->assertEquals(3, average_number_of_participants(false, $now - 4 * WEEKSECS));
+
+        // Hidden courses are excluded from stats.
+        $DB->set_field('course', 'visible', 0, ['id' => $c1->id]);
+        $this->assertEquals(3, average_number_of_participants());
+        $this->assertEquals(1, average_number_of_participants(true));
+    }
+
 }

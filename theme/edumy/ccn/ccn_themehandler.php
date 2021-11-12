@@ -6,13 +6,15 @@
 defined('MOODLE_INTERNAL') || die();
 global $USER, $CFG, $SESSION, $OUTPUT, $COURSE, $DB;
 require_once($CFG->libdir . '/behat/lib.php');
+// require_once($CFG->libdir . '/lib/blocklib.php');
 include($CFG->dirroot . '/theme/edumy/ccn/ccn_loginform.php');
-// include($CFG->dirroot . '/theme/edumy/ccn/ccn_registrationform.php');
 include($CFG->dirroot . '/theme/edumy/ccn/ccn_globalsearch.php');
 include($CFG->dirroot . '/theme/edumy/ccn/ccn_globalsearch_navbar.php');
 include($CFG->dirroot . '/theme/edumy/ccn/ccn_librarylist.php');
 include($CFG->dirroot . '/theme/edumy/ccn/course_handler/ccn_activity_nav.php');
 require_once($CFG->dirroot. '/theme/edumy/ccn/user_handler/ccn_user_handler.php');
+require_once($CFG->dirroot. '/theme/edumy/ccn/page_handler/ccn_page_handler.php');
+require_once($CFG->dirroot. '/theme/edumy/ccn/mdl_handler/ccn_mdl_handler.php');
 
 /* @ccnComm: Initialize */
 $ccnUserHandler = new ccnUserHandler();
@@ -20,10 +22,17 @@ $ccnIsCourseCreator = $ccnUserHandler->ccnCheckRoleIsCourseCreatorAnywhere($USER
 $ccnIsManager = $ccnUserHandler->ccnCheckRoleIsManagerAnywhere($USER->id);
 $ccnCurrentUserIsAuthenticated = $ccnUserHandler->ccnCurrentUserIsAuthenticated();
 
+$ccnPageHandler = new ccnPageHandler();
+$pageheading = $ccnPageHandler->ccnGetPageTitle();
+
+$ccnMdlHandler = new ccnMdlHandler();
+$ccnMdlVersion = $ccnMdlHandler->ccnGetCoreVersion();
+
 /* @ccnComm: Visualize */
-if (isset($_GET['bui_editid'])) {
-  // Perform actions
+if (isset($_GET['cocoon_customizer'])) {
+  require_once($CFG->dirroot. '/theme/edumy/ccn/visualize/ccn_lcvb_construct.php');
 }
+
 
 /* @ccnBreak */
 if (is_siteadmin()) {$user_status = 'role-supreme';} else {$user_status = 'role-standard';}
@@ -77,6 +86,7 @@ $back_to_top = get_config('theme_edumy', 'back_to_top');
 $dashboard_scroll_header = get_config('theme_edumy', 'dashboard_sticky_header');
 $dashboard_scroll_drawer = get_config('theme_edumy', 'dashboard_sticky_drawer');
 $dashboard_left_drawer = get_config('theme_edumy', 'dashboard_left_drawer');
+$ccnSettingLogoUrl = get_config('theme_edumy', 'logo_url');
 $logo_image_width = preg_replace("/[^0-9]/", "", get_config('theme_edumy', 'logo_image_width'));
 $logo_image_height = preg_replace("/[^0-9]/", "", get_config('theme_edumy', 'logo_image_height'));
 $logo_image_width_footer = preg_replace("/[^0-9]/", "", get_config('theme_edumy', 'logo_image_width_footer'));
@@ -94,6 +104,10 @@ if ($logo_image_width_footer) {
 }
 if ($logo_image_height_footer) {
   $logo_styles_footer .= 'height:'.$logo_image_height_footer.'px;max-height:none!important;';
+}
+$ccnLogoUrl = $CFG->wwwroot;
+if(!empty($ccnSettingLogoUrl) && $ccnSettingLogoUrl !== ''){
+  $ccnLogoUrl = $ccnSettingLogoUrl;
 }
 $breadcrumb_clip_setting = get_config('theme_edumy', 'breadcrumb_clip');
 $breadcrumb_caps_setting = get_config('theme_edumy', 'breadcrumb_caps');
@@ -216,7 +230,8 @@ $extraclasses = array(
   $ccnHook_custMenAuth,
   $ccnUserBodyClass
 );
-$pageheading = $PAGE->heading;
+// $pageheading = $PAGE->heading;
+
 $blockshtml = $OUTPUT->blocks('side-pre');
 $leftblocks = $OUTPUT->blocks('left');
 /* Deprecate these variables soon; copied & renamed immediately below */

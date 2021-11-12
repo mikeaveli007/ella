@@ -24,10 +24,7 @@ Feature: Render H5P content using filters
 
   @javascript @external
   Scenario: Render an external H5P content URL.
-    Given I log in as "teacher1"
-    And I am on "Course 1" course homepage
-    And I follow "PageName1"
-    And I navigate to "Edit settings" in current page administration
+    Given I am on the PageName1 "page activity editing" page logged in as teacher1
     And I set the field "Page content" to "<div>Go for it</div>https://moodle.h5p.com/content/1290772960722742119/embed"
     When I click on "Save and display" "button"
     And I wait until the page is ready
@@ -35,13 +32,19 @@ Feature: Render H5P content using filters
     Then I should see "Lorum ipsum"
 
   @javascript
-  Scenario: Add an external H5P content URL in a link. Shouldn't be rendered.
-    Given I log in as "teacher1"
-    And I am on "Course 1" course homepage
-    And I follow "PageName1"
-    And I navigate to "Edit settings" in current page administration
+  Scenario: Add an external H5P content URL in a link with the URL. Should be rendered.
+    Given I am on the PageName1 "page activity editing" page logged in as teacher1
 #   This content won't be displayed, so this scenario shouldn't be labeled as external.
-    And I set the field "Page content" to "<a href='https://moodle.h5p.com/content/1290772960722742119/embed'>Go to https://moodle.h5p.com/content/1290772960722742119/embed</a>"
+    And I set the field "Page content" to "<a href='https://moodle.h5p.com/content/1290772960722742119/embed'>https://moodle.h5p.com/content/1290772960722742119/embed</a>"
+    When I click on "Save and display" "button"
+    And I wait until the page is ready
+    And I switch to "h5p-iframe" class iframe
+    Then I should see "Lorum ipsum"
+
+  Scenario: Add an external H5P content URL in a link with text. Shouldn't be rendered.
+    Given I am on the PageName1 "page activity editing" page logged in as teacher1
+#   This content won't be displayed, so this scenario shouldn't be labeled as external.
+    And I set the field "Page content" to "<a href='https://moodle.h5p.com/content/1290772960722742119/embed'>Here you are the content</a>"
     When I click on "Save and display" "button"
     And I wait until the page is ready
     Then ".h5p-iframe" "css_element" should not exist
@@ -53,10 +56,9 @@ Feature: Render H5P content using filters
     And I add a "File" to section "1"
     And I set the following fields to these values:
       | Name                      | ipsumFile     |
-    And I upload "filter/displayh5p/tests/fixtures/ipsums.h5p" file to "Select files" filemanager
+    And I upload "h5p/tests/fixtures/ipsums.h5p" file to "Select files" filemanager
     And I press "Save and return to course"
-    And I follow "PageName1"
-    And I navigate to "Edit settings" in current page administration
+    And I am on the PageName1 "page activity editing" page
     And I click on "Insert H5P" "button" in the "#fitem_id_page" "css_element"
     And I click on "Browse repositories..." "button" in the "Insert H5P" "dialogue"
     And I click on "Server files" "link" in the ".fp-repo-area" "css_element"
@@ -73,9 +75,7 @@ Feature: Render H5P content using filters
     Then I should see "Lorum ipsum"
     And I switch to the main frame
     And I log out
-    And I log in as "student1"
-    And I am on "Course 1" course homepage
-    And I follow "PageName1"
+    And I am on the PageName1 "page activity" page logged in as student1
 #   Switch to iframe created by filter
     And I switch to "h5p-iframe" class iframe
 #   Switch to iframe created by embed.php page
@@ -90,10 +90,9 @@ Feature: Render H5P content using filters
     And I add a "File" to section "1"
     And I set the following fields to these values:
       | Name                      | ipsumFile     |
-    And I upload "filter/displayh5p/tests/fixtures/ipsums.h5p" file to "Select files" filemanager
+    And I upload "h5p/tests/fixtures/ipsums.h5p" file to "Select files" filemanager
     And I press "Save and return to course"
-    And I follow "PageName1"
-    And I navigate to "Edit settings" in current page administration
+    And I am on the PageName1 "page activity editing" page
     And I click on "Insert H5P" "button" in the "#fitem_id_page" "css_element"
     And I click on "Browse repositories..." "button" in the "Insert H5P" "dialogue"
     And I click on "Server files" "link" in the ".fp-repo-area" "css_element"
@@ -115,10 +114,9 @@ Feature: Render H5P content using filters
     And I add a "File" to section "1"
     And I set the following fields to these values:
       | Name                      | ipsumFileTeacher     |
-    And I upload "filter/displayh5p/tests/fixtures/ipsums.h5p" file to "Select files" filemanager
+    And I upload "h5p/tests/fixtures/ipsums.h5p" file to "Select files" filemanager
     And I press "Save and return to course"
-    And I follow "PageName1"
-    And I navigate to "Edit settings" in current page administration
+    And I am on the PageName1 "page activity editing" page
     And I click on "Insert H5P" "button" in the "#fitem_id_page" "css_element"
     And I click on "Browse repositories..." "button" in the "Insert H5P" "dialogue"
     And I click on "Server files" "link" in the ".fp-repo-area" "css_element"
@@ -139,10 +137,9 @@ Feature: Render H5P content using filters
     And I add a "File" to section "1"
     And I set the following fields to these values:
       | Name                      | ipsumFile     |
-    And I upload "filter/displayh5p/tests/fixtures/ipsums.h5p" file to "Select files" filemanager
+    And I upload "h5p/tests/fixtures/ipsums.h5p" file to "Select files" filemanager
     And I press "Save and return to course"
-    And I follow "PageName2"
-    And I navigate to "Edit settings" in current page administration
+    And I am on the PageName2 "page activity editing" page
     And I click on "Insert H5P" "button" in the "#fitem_id_page" "css_element"
     And I click on "Browse repositories..." "button" in the "Insert H5P" "dialogue"
     And I click on "Server files" "link" in the ".fp-repo-area" "css_element"
@@ -160,9 +157,7 @@ Feature: Render H5P content using filters
     And I should see "Lorum ipsum"
     And I switch to the main frame
     And I log out
-    When I log in as "teacher1"
-    And I am on "Course 1" course homepage
-    And I follow "PageName1"
+    And I am on the PageName1 "page activity" page logged in as teacher1
 #   Switch to iframe created by filter
     And I switch to "h5p-iframe" class iframe
 #   Switch to iframe created by embed.php page

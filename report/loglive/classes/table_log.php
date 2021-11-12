@@ -64,7 +64,7 @@ class report_loglive_table_log extends table_sql {
     public function __construct($uniqueid, $filterparams = null) {
         parent::__construct($uniqueid);
 
-        $this->set_attribute('class', 'reportloglive generaltable generalbox');
+        $this->set_attribute('class', 'reportloglive generaltable table-sm');
         $this->set_attribute('aria-live', 'polite');
         $this->filterparams = $filterparams;
         // Add course column if logs are displayed for site.
@@ -377,7 +377,7 @@ class report_loglive_table_log extends table_sql {
             $users = $DB->get_records_sql("SELECT id," . get_all_user_name_fields(true) . " FROM {user} WHERE id " . $usql,
                     $uparams);
             foreach ($users as $userid => $user) {
-                $this->userfullnames[$userid] = fullname($user);
+                $this->userfullnames[$userid] = fullname($user, has_capability('moodle/site:viewfullnames', $this->get_context()));
             }
         }
 

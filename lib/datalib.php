@@ -609,7 +609,7 @@ function get_course($courseid, $clone = true) {
  * @uses CONTEXT_COURSE
  * @param string|int $categoryid Either a category id or 'all' for everything
  * @param string $sort A field and direction to sort by
- * @param string $fields The additional fields to return
+ * @param string $fields The additional fields to return (note that "id, category, visible" are always present)
  * @return array Array of courses
  */
 function get_courses($categoryid="all", $sort="c.sortorder ASC", $fields="c.*") {
@@ -636,6 +636,19 @@ function get_courses($categoryid="all", $sort="c.sortorder ASC", $fields="c.*") 
     $ccselect = ', ' . context_helper::get_preload_record_columns_sql('ctx');
     $ccjoin = "LEFT JOIN {context} ctx ON (ctx.instanceid = c.id AND ctx.contextlevel = :contextlevel)";
     $params['contextlevel'] = CONTEXT_COURSE;
+
+    // The fields "id, category, visible" are required in the subsequent loop and must always be present.
+    if ($fields !== 'c.*') {
+        $fieldarray = array_merge(
+            // Split fields on comma + zero or more whitespace, merge with required fields.
+            preg_split('/,\s*/', $fields), [
+                'c.id',
+                'c.category',
+                'c.visible',
+            ]
+        );
+        $fields = implode(',', array_unique($fieldarray));
+    }
 
     $sql = "SELECT $fields $ccselect
               FROM {course} c
@@ -1639,6 +1652,10 @@ function print_object($object) {
     if (CLI_SCRIPT) {
         fwrite(STDERR, print_r($object, true));
         fwrite(STDERR, PHP_EOL);
+    } else if (AJAX_SCRIPT) {
+        foreach (explode("\n", print_r($object, true)) as $line) {
+            error_log($line);
+        }
     } else {
         echo html_writer::tag('pre', s(print_r($object, true)), array('class' => 'notifytiny'));
     }

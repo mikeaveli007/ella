@@ -69,11 +69,10 @@ Feature: Submission types
     Given the following "activities" exist:
       | activity | name         | intro                     | course | idnumber  | submissiontypetext | submissiontypefile |
       | workshop | All required | Test workshop description | TEST   | workshop1 | 2                  | 2                  |
-    And I am on "Test" course homepage
-    And I follow "All required"
+    And I am on the "All required" "workshop activity" page
     And I follow "Switch to the submission phase"
     And I press "Continue"
-    And I press "Start preparing your submission"
+    And I press "Add submission"
     And I set the field "Title" to "Test submission"
     When I press "Save changes"
     Then I should see "You must supply a value here." in the "Submission content" "form_row"
@@ -91,11 +90,10 @@ Feature: Submission types
     Given the following "activities" exist:
       | activity | name          | intro                     | course | idnumber  | submissiontypetext | submissiontypefile |
       | workshop | Optional file | Test workshop description | TEST   | workshop1 | 2                  | 1                  |
-    And I am on "Test" course homepage
-    And I follow "Optional file"
+    And I am on the "Optional file" "workshop activity" page
     And I follow "Switch to the submission phase"
     And I press "Continue"
-    And I press "Start preparing your submission"
+    And I press "Add submission"
     And I set the field "Title" to "Test submission"
     When I press "Save changes"
     Then I should see "You must supply a value here." in the "Submission content" "form_row"
@@ -111,11 +109,10 @@ Feature: Submission types
     Given the following "activities" exist:
       | activity | name          | intro                     | course | idnumber  | submissiontypetext | submissiontypefile |
       | workshop | Optional text | Test workshop description | TEST   | workshop1 | 1                  | 2                  |
-    And I am on "Test" course homepage
-    And I follow "Optional text"
+    And I am on the "Optional text" "workshop activity" page
     And I follow "Switch to the submission phase"
     And I press "Continue"
-    And I press "Start preparing your submission"
+    And I press "Add submission"
     And I set the field "Title" to "Test submission"
     When I press "Save changes"
     Then I should see "You must supply a value here." in the "Attachment" "form_row"
@@ -130,11 +127,10 @@ Feature: Submission types
     Given the following "activities" exist:
       | activity | name      | intro                     | course | idnumber  | submissiontypetext | submissiontypefile |
       | workshop | Only text | Test workshop description | TEST   | workshop1 | 2                  | 0                  |
-    And I am on "Test" course homepage
-    And I follow "Only text"
+    And I am on the "Only text" "workshop activity" page
     And I follow "Switch to the submission phase"
     And I press "Continue"
-    When I press "Start preparing your submission"
+    When I press "Add submission"
     Then "Attachment" "field" should not exist
     And I set the field "Title" to "Test submission"
     And I press "Save changes"
@@ -151,11 +147,10 @@ Feature: Submission types
     Given the following "activities" exist:
       | activity | name      | intro                     | course | idnumber  | submissiontypetext | submissiontypefile |
       | workshop | Only file | Test workshop description | TEST   | workshop1 | 0                  | 2                  |
-    And I am on "Test" course homepage
-    And I follow "Only file"
+    And I am on the "Only file" "workshop activity" page
     And I follow "Switch to the submission phase"
     And I press "Continue"
-    When I press "Start preparing your submission"
+    When I press "Add submission"
     Then "Submission content" "field" should not exist
     And I set the field "Title" to "Test submission"
     And I press "Save changes"
@@ -173,11 +168,10 @@ Feature: Submission types
     Given the following "activities" exist:
       | activity | name             | intro                     | course | idnumber  |
       | workshop | Neither required | Test workshop description | TEST   | workshop1 |
-    And I am on "Test" course homepage
-    And I follow "Neither required"
+    And I am on the "Neither required" "workshop activity" page
     And I follow "Switch to the submission phase"
     And I press "Continue"
-    And I press "Start preparing your submission"
+    And I press "Add submission"
     And I set the field "Title" to "Test submission"
     When I press "Save changes"
     Then I should see "You need to add a file or enter some text." in the "Attachment" "form_row"

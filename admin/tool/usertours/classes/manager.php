@@ -139,12 +139,27 @@ class manager {
     const CONFIG_SHIPPED_VERSION = 'shipped_version';
 
     /**
+     * Helper method to initialize admin page, setting appropriate extra URL parameters
+     *
+     * @param string $action
+     */
+    protected function setup_admin_externalpage(string $action): void {
+        admin_externalpage_setup('tool_usertours/tours', '', array_filter([
+            'action' => $action,
+            'id' => optional_param('id', 0, PARAM_INT),
+            'tourid' => optional_param('tourid', 0, PARAM_INT),
+            'direction' => optional_param('direction', 0, PARAM_INT),
+        ]));
+    }
+
+    /**
      * This is the entry point for this controller class.
      *
      * @param   string  $action     The action to perform.
      */
     public function execute($action) {
-        admin_externalpage_setup('tool_usertours/tours');
+        $this->setup_admin_externalpage($action);
+
         // Add the main content.
         switch($action) {
             case self::ACTION_NEWTOUR:
@@ -423,17 +438,7 @@ class manager {
         $filename = 'tour_export_' . $tour->get_id() . '_' . time() . '.json';
 
         // Force download.
-        header('Last-Modified: ' . gmdate('D, d M Y H:i:s', time()) . ' GMT');
-        header('Cache-Control: private, must-revalidate, pre-check=0, post-check=0, max-age=0');
-        header('Expires: ' . gmdate('D, d M Y H:i:s', 0) . 'GMT');
-        header('Pragma: no-cache');
-        header('Accept-Ranges: none');
-        header('Content-disposition: attachment; filename=' . $filename);
-        header('Content-length: ' . strlen($exportstring));
-        header('Content-type: text/calendar; charset=utf-8');
-
-        echo $exportstring;
-        die;
+        send_file($exportstring, $filename, 0, 0, true, true);
     }
 
     /**
@@ -762,6 +767,13 @@ class manager {
      * @param   int     $direction
      */
     protected static function _move_tour(tour $tour, $direction) {
+        // We can't move the first tour higher, nor the last tour any lower.
+        if (($tour->is_first_tour() && $direction == helper::MOVE_UP) ||
+                ($tour->is_last_tour() && $direction == helper::MOVE_DOWN)) {
+
+            return;
+        }
+
         $currentsortorder   = $tour->get_sortorder();
         $targetsortorder    = $currentsortorder + $direction;
 
@@ -838,21 +850,19 @@ class manager {
         // the format filename => version. The version value needs to
         // be increased if the tour has been updated.
         $shippedtours = [
-            '36_dashboard.json' => 3
         ];
 
         // These are tours that we used to ship but don't ship any longer.
         // We do not remove them, but we do disable them.
         $unshippedtours = [
+            // Formerly included in Moodle 3.2.0.
             'boost_administrator.json' => 1,
             'boost_course_view.json' => 1,
-        ];
 
-        if ($CFG->messaging) {
-            $shippedtours['36_messaging.json'] = 3;
-        } else {
-            $unshippedtours['36_messaging.json'] = 3;
-        }
+            // Formerly included in Moodle 3.6.0.
+            '36_dashboard.json' => 3,
+            '36_messaging.json' => 3,
+        ];
 
         $existingtourrecords = $DB->get_recordset('tool_usertours_tours');
 
@@ -889,6 +899,9 @@ class manager {
             }
         }
         $existingtourrecords->close();
+
+        // Ensure we correct the sortorder in any existing tours, prior to adding latest shipped tours.
+        helper::reset_tour_sortorder();
 
         foreach (array_reverse($shippedtours) as $filename => $version) {
             $filepath = $CFG->dirroot . "/{$CFG->admin}/tool/usertours/tours/" . $filename;

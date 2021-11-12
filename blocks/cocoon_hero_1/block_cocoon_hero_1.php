@@ -20,6 +20,8 @@ class block_cocoon_hero_1 extends block_base
           $this->config->subtitle = 'Technology is brining a massive wave of evolution on learning things on different ways.';
           $this->config->button_text = 'Ready to Get Started?';
           $this->config->button_link = 'https://www.youtube.com/watch?v=UdDwKI4DcGw';
+          $this->config->color_gradient_start = 'rgb(54,159,219)';
+          $this->config->color_gradient_end = 'rgb(5,25,37)';
         }
     }
     public function get_content(){
@@ -48,6 +50,9 @@ class block_cocoon_hero_1 extends block_base
           }
         }
         if(!empty($this->config->button_text)){$this->content->button_text = $this->config->button_text;}
+        if(!empty($this->config->color_gradient_start)){$this->content->color_gradient_start = $this->config->color_gradient_start;} else {$this->content->color_gradient_start = 'rgb(54,159,219)';}
+        if(!empty($this->config->color_gradient_end)){$this->content->color_gradient_end = $this->config->color_gradient_end;} else {$this->content->color_gradient_end = 'rgb(5,25,37)';}
+
         $fs = get_file_storage();
         $files = $fs->get_area_files($this->context->id, 'block_cocoon_hero_1', 'content');
         $this->content->image = '';
@@ -61,7 +66,18 @@ class block_cocoon_hero_1 extends block_base
 
 
         $this->content->text = '
-        <section class="home-three home3-overlay home3_bgi6" data-ccn="image" data-ccn-img="bg-img-url" style="background-image:url('.$this->content->image.');background-size:cover;">
+        <section
+          class="home-three home3-overlay home3_bgi6"
+          data-ccn="image"
+          data-ccn-img="bg-img-url"
+          data-ccn-cg-cv-a="'.$this->content->color_gradient_start.'"
+          data-ccn-cg-cv-b="'.$this->content->color_gradient_end.'"
+          data-ccn-cg-a="color_gradient_start"
+          data-ccn-cg-b="color_gradient_end"
+          data-ccn-cg-co="ccnBfBg"
+          data-ccn-cg-d="135"
+          style="background-image:url('.$this->content->image.');background-size:cover;"
+        >
       		<div class="container">
       			<div class="row posr">
       				<div class="col-lg-12">

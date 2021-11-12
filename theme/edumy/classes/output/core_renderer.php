@@ -26,6 +26,7 @@ use block_move_target;
 use coding_exception;
 use context_course;
 use context_system;
+use context_header;
 use core_text;
 use custom_menu;
 use custom_menu_item;
@@ -33,6 +34,7 @@ use html_writer;
 use moodle_page;
 use moodle_url;
 use navigation_node;
+use renderer_base;
 use pix_icon;
 use stdClass;
 use ccnUserHandler;
@@ -120,7 +122,17 @@ class core_renderer extends \core_renderer {
           return new moodle_url($url);
           return parent::get_theme_image_heading_bg($maxwidth, $maxheight);
       }
-
+  }
+  public function get_theme_image_login_bg($maxwidth = null, $maxheight = 100) {
+    global $CFG;
+    if (!empty($this->page->theme->settings->login_bg)) {
+      $url = $this->page->theme->setting_file_url('login_bg', 'login_bg');
+      // Get a URL suitable for moodle_url.
+      $relativebaseurl = preg_replace('|^https?://|i', '//', $CFG->wwwroot);
+      $url = str_replace($relativebaseurl, '', $url);
+      return new moodle_url($url);
+      return parent::get_theme_image_login_bg($maxwidth, $maxheight);
+    }
   }
   public function get_theme_image_favicon($maxwidth = null, $maxheight = 100) {
       global $CFG;
@@ -226,8 +238,8 @@ class core_renderer extends \core_renderer {
           } else {
               $url = '#cm_submenu_'.$submenucount;
           }
-          // $content .= html_writer::link($url, format_text($menunode->get_text(), FORMAT_HTML), array('class'=>'ccn-menu-item', 'title'=>$menunode->get_title()));
-          $content .= html_writer::link($url, $menunode->get_text(), array('class'=>'ccn-menu-item', 'title'=>$menunode->get_title()));
+          $content .= html_writer::link($url, strip_tags(format_text($menunode->get_text(), FORMAT_HTML)), array('class'=>'ccn-menu-item', 'title'=>$menunode->get_title()));
+          // $content .= html_writer::link($url, $menunode->get_text(), array('class'=>'ccn-menu-item', 'title'=>$menunode->get_title()));
           // $content .= html_writer::start_tag('div', array('id'=>'cm_submenu_'.$submenucount, 'class'=>'yui3-menu custom_menu_submenu'));
           // $content .= html_writer::start_tag('div', array('class'=>'yui3-menu-content'));
           $content .= html_writer::start_tag('ul');
@@ -260,12 +272,9 @@ class core_renderer extends \core_renderer {
               } else {
                   $url = '#';
               }
-              $content .= html_writer::link(
-                  $url,
-                  // format_text($menunode->get_text(), FORMAT_HTML),
-                  $menunode->get_text(),
-                  array('class' => '', 'title' => $menunode->get_title())
-              );
+              $content .=
+
+              html_writer::link($url, strip_tags(format_text($menunode->get_text(), FORMAT_HTML)), array('class'=>'ccn-menu-item', 'title'=>$menunode->get_title()));
           }
           $content .= html_writer::end_tag('li');
       }
@@ -641,7 +650,35 @@ return $output;
           $navitemcount = count($opts->navitems);
           $idx = 0;
           foreach ($opts->navitems as $key => $value) {
-            $ccn_nav_items .= '<a class="dropdown-item" href="'. $value->url .'">'. $value->title .'</a>';
+
+            $ccnMenuItemIcon = '';
+
+            if(strpos($value->url, '/my')){
+              $ccnMenuItemIcon = '<i class="icon fa fa-fw flaticon-puzzle-1"></i>';
+            }
+            if(strpos($value->url, '/profile.php')){
+              $ccnMenuItemIcon = '<i class="icon fa fa-fw flaticon-student"></i>';
+            }
+            if(strpos($value->url, '/grade')){
+              $ccnMenuItemIcon = '<i class="icon fa fa-fw flaticon-rating"></i>';
+            }
+            if(strpos($value->url, '/message')){
+              $ccnMenuItemIcon = '<i class="icon fa fa-fw flaticon-speech-bubble"></i>';
+            }
+            if(strpos($value->url, '/preferences.php')){
+              $ccnMenuItemIcon = '<i class="icon fa fa-fw flaticon-settings"></i>';
+            }
+            if(strpos($value->url, '/logout.php')){
+              $ccnMenuItemIcon = '<i class="icon fa fa-fw flaticon-logout"></i>';
+            }
+            if(strpos($value->url, '/switchrole.php')){
+              $ccnMenuItemIcon = '<i class="icon fa fa-fw flaticon-add-contact"></i>';
+            }
+            if(isset($value->imgsrc) && !empty($value->imgsrc)){
+              $ccnMenuItemIcon = '<img class="iconsmall" src="'.$value->imgsrc.'" alt=""/>';
+            }
+            
+            $ccn_nav_items .= '<a class="dropdown-item" href="'. $value->url .'"> '. $ccnMenuItemIcon . $value->title .'</a>';
 
 
               switch ($value->itemtype) {
@@ -723,6 +760,7 @@ return $output;
         "cocoon_course_categories_2",
         "cocoon_course_categories_3",
         "cocoon_course_categories_4",
+        "cocoon_course_categories_5",
         "cocoon_course_details",
         "cocoon_course_enrl_c",
         "cocoon_course_feat_a",
@@ -731,6 +769,10 @@ return $output;
         "cocoon_course_grid_2",
         "cocoon_course_grid_3",
         "cocoon_course_grid_4",
+        "cocoon_course_grid_5",
+        "cocoon_course_grid_6",
+        "cocoon_course_grid_7",
+        "cocoon_course_grid_8",
         "cocoon_course_info",
         "cocoon_course_instructor",
         "cocoon_course_intro",
@@ -742,14 +784,19 @@ return $output;
         "cocoon_event_body",
         "cocoon_event_contact",
         "cocoon_event_details",
+        "cocoon_event_list",
+        "cocoon_event_list_2",
         "cocoon_event_slider",
         "cocoon_faqs",
         "cocoon_featured_event",
         "cocoon_featured_posts",
+        "cocoon_featured_teacher",
+        "cocoon_featured_video",
         "cocoon_featuredcourses",
         "cocoon_features",
         "cocoon_gallery",
         "cocoon_gallery_slider",
+        "cocoon_gallery_video",
         "cocoon_globalsearch_n",
         "cocoon_globalsearch_sb",
         "cocoon_hero_1",
@@ -757,6 +804,8 @@ return $output;
         "cocoon_hero_3",
         "cocoon_hero_4",
         "cocoon_hero_5",
+        "cocoon_hero_6",
+        "cocoon_hero_7",
         "cocoon_more_courses",
         "cocoon_my_courses",
         "cocoon_mynews",
@@ -767,6 +816,7 @@ return $output;
         "cocoon_parallax_counters",
         "cocoon_parallax_features",
         "cocoon_parallax_subscribe",
+        "cocoon_parallax_subscribe_2",
         "cocoon_parallax_testimonials",
         "cocoon_parallax_white",
         "cocoon_partners",
@@ -784,6 +834,8 @@ return $output;
         "cocoon_slider_4",
         "cocoon_slider_5",
         "cocoon_slider_6",
+        "cocoon_slider_7",
+        "cocoon_slider_8",
         "cocoon_steps",
         "cocoon_steps_dark",
         "cocoon_subscribe",
@@ -791,6 +843,10 @@ return $output;
         "cocoon_tabs",
         "cocoon_tstmnls",
         "cocoon_tstmnls_2",
+        "cocoon_tstmnls_3",
+        "cocoon_tstmnls_4",
+        "cocoon_tstmnls_5",
+        "cocoon_tstmnls_6",
         "cocoon_users",
         "cocoon_users_slider",
         "cocoon_users_slider_2",
@@ -802,6 +858,11 @@ return $output;
         "myoverview",
         "recentlyaccessedcourses",
         "tags",
+      );
+      // for Cocoon blocks we want to default to programmatic styling instead of in-template
+      $ccnBreakoutBlockInvetory = array(
+        "cocoon_myviews",
+        "cocoon_mynews",
       );
       // ccnBreak
       $ccn_lc_vbCollection =  array(
@@ -816,16 +877,27 @@ return $output;
         "cocoon_course_categories_2",
         "cocoon_course_categories_3",
         "cocoon_course_categories_4",
+        "cocoon_course_categories_5",
         "cocoon_course_grid",
         "cocoon_course_grid_2",
         "cocoon_course_grid_3",
         "cocoon_course_grid_4",
+        "cocoon_course_grid_5",
+        "cocoon_course_grid_6",
+        "cocoon_course_grid_7",
+        "cocoon_course_grid_8",
         "cocoon_featuredcourses",
+        "cocoon_featured_posts",
+        "cocoon_featured_teacher",
+        "cocoon_featured_video",
+        "cocoon_gallery_video",
         "cocoon_courses_slider",
         "cocoon_more_courses",
         "cocoon_course_overview",
         "cocoon_course_rating",
         "cocoon_course_instructor",
+        "cocoon_event_list",
+        "cocoon_event_list_2",
         "cocoon_faqs",
         "cocoon_features",
         "cocoon_parallax",
@@ -833,6 +905,8 @@ return $output;
         "cocoon_parallax_counters",
         "cocoon_parallax_features",
         "cocoon_parallax_testimonials",
+        "cocoon_parallax_subscribe",
+        "cocoon_parallax_subscribe_2",
         "cocoon_partners",
         "cocoon_parallax_white",
         "cocoon_pills",
@@ -846,6 +920,8 @@ return $output;
         "cocoon_hero_3",
         "cocoon_hero_4",
         "cocoon_hero_5",
+        "cocoon_hero_6",
+        "cocoon_hero_7",
         "cocoon_slider_1",
         "cocoon_slider_1_v",
         "cocoon_slider_2",
@@ -853,6 +929,8 @@ return $output;
         "cocoon_slider_4",
         "cocoon_slider_5",
         "cocoon_slider_6",
+        "cocoon_slider_7",
+        "cocoon_slider_8",
         "cocoon_steps",
         "cocoon_steps_dark",
         "cocoon_subscribe",
@@ -864,6 +942,10 @@ return $output;
         "cocoon_users_slider_round",
         "cocoon_tstmnls",
         "cocoon_tstmnls_2",
+        "cocoon_tstmnls_3",
+        "cocoon_tstmnls_4",
+        "cocoon_tstmnls_5",
+        "cocoon_tstmnls_6",
       );
       // ccnBreak
       $id = !empty($bc->attributes['id']) ? $bc->attributes['id'] : uniqid('block-');
@@ -888,7 +970,7 @@ return $output;
       }
 
       $ccnControlBlockAppearance = array_merge($ccnBlockInventory, $ccnPseudoBlockInventory);
-      if(in_array($context->type, $ccnControlBlockAppearance)) {
+      if(in_array($context->type, $ccnControlBlockAppearance) && !in_array($context->type, $ccnBreakoutBlockInvetory)) {
         $context->ccn_block = true;
       } else {
         $context->ccn_block = false;
@@ -904,16 +986,219 @@ return $output;
 
       $context->ccn_context_course = false;
 
-      // print_object($PAGE->pagelayout);
-
-      if($PAGE->pagelayout && ($PAGE->pagelayout == 'course' || $PAGE->pagelayout == 'coursecategory')) {
-        // print_object($PAGE->pagelayout);
+      if($PAGE->pagelayout && ($PAGE->pagelayout == 'course' || $PAGE->pagelayout == 'incourse' || $PAGE->pagelayout == 'coursecategory')) {
         $context->ccn_context_course = true;
+      } elseif($PAGE->pagelayout && $PAGE->pagelayout == 'mydashboard' && $this->page->theme->settings->dashboard_layout == '1') {
+        return $this->render_from_template('theme_edumy/ccn_block_dashboard_front', $context);
+      } elseif($PAGE->pagelayout && ($PAGE->pagelayout == 'mydashboard' || $PAGE->pagelayout == 'admin')) {
+        return $this->render_from_template('theme_edumy/ccn_block_dashboard_dash', $context);
       }
 
       return $this->render_from_template('core/block', $context);
   }
 
+  /**
+   * Outputs a heading
+   *
+   * @param string $text The text of the heading
+   * @param int $level The level of importance of the heading. Defaulting to 2
+   * @param string $classes A space-separated list of CSS classes. Defaulting to null
+   * @param string $id An optional ID
+   * @return string the HTML to output.
+   */
+  public function heading($text, $level = 2, $classes = null, $id = null) {
+      $level = (integer) $level;
+      if ($level < 1 or $level > 6) {
+          throw new coding_exception('Heading level must be an integer between 1 and 6.');
+      }
+      return html_writer::tag('h' . $level, $text, array('id' => $id, 'class' => renderer_base::prepare_classes($classes) . ' ccnMdlHeading'));
+  }
+
+  /**
+   * Renders the header bar.
+   *
+   * @param context_header $contextheader Header bar object.
+   * @return string HTML for the header bar.
+   */
+ protected function render_context_header(context_header $contextheader) {
+
+     // Generate the heading first and before everything else as we might have to do an early return.
+     if (!isset($contextheader->heading)) {
+         // $heading = $this->heading($this->page->heading, $contextheader->headinglevel);
+         $heading = NULL;
+     } else {
+         // $heading = $this->heading($contextheader->heading, $contextheader->headinglevel);
+         $heading = NULL;
+     }
+
+     $showheader = empty($this->page->layout_options['nocontextheader']);
+     if (!$showheader) {
+         // Return the heading wrapped in an sr-only element so it is only visible to screen-readers.
+         return html_writer::div($heading, 'sr-only');
+     }
+
+     if($heading !== NULL || isset($contextheader->additionalbuttons) || isset($contextheader->imagedata)){
+       // All the html stuff goes here.
+       $html = html_writer::start_div('page-context-header');
+     }
+
+     // Image data.
+     if (isset($contextheader->imagedata)) {
+         // Header specific image.
+         $html .= html_writer::div($contextheader->imagedata, 'page-header-image');
+     }
+
+     // Headings.
+     if($heading !== NULL){
+       $html .= html_writer::tag('div', $heading, array('class' => 'page-header-headings'));
+     }
+
+     // Buttons.
+     if (isset($contextheader->additionalbuttons)) {
+         $html .= html_writer::start_div('header-button-group');
+         foreach ($contextheader->additionalbuttons as $button) {
+             if (!isset($button->page)) {
+                 // Include js for messaging.
+                 if ($button['buttontype'] === 'togglecontact') {
+                     \core_message\helper::togglecontact_requirejs();
+                 }
+                 if ($button['buttontype'] === 'message') {
+                     \core_message\helper::messageuser_requirejs();
+                 }
+                 $image = $this->pix_icon($button['formattedimage'], $button['title'], 'moodle', array(
+                     'class' => 'iconsmall',
+                     'role' => 'presentation'
+                 ));
+                 $image .= html_writer::span($button['title'], 'header-button-title');
+             } else {
+                 $image = html_writer::empty_tag('img', array(
+                     'src' => $button['formattedimage'],
+                     'role' => 'presentation'
+                 ));
+             }
+             $html .= html_writer::link($button['url'], html_writer::tag('span', $image), $button['linkattributes']);
+         }
+         $html .= html_writer::end_div();
+     }
+     if($heading !== NULL || isset($contextheader->additionalbuttons) || isset($contextheader->imagedata)){
+       $html .= html_writer::end_div();
+     }
+
+     return $html;
+ }
+
+  public function context_header($headerinfo = null, $headinglevel = 1) {
+      global $DB, $USER, $CFG, $SITE, $PAGE;
+      require_once($CFG->dirroot . '/user/lib.php');
+      $context = $this->page->context;
+      $heading = null;
+      $imagedata = null;
+      $subheader = null;
+      $userbuttons = null;
+
+      // Make sure to use the heading if it has been set.
+      if (isset($headerinfo['heading'])) {
+          $heading = $headerinfo['heading'];
+      } else {
+          $heading = $this->page->heading;
+      }
+
+      // The user context currently has images and buttons. Other contexts may follow.
+      if (isset($headerinfo['user']) || $context->contextlevel == CONTEXT_USER) {
+          if (isset($headerinfo['user'])) {
+              $user = $headerinfo['user'];
+          } else {
+              // Look up the user information if it is not supplied.
+              $user = $DB->get_record('user', array('id' => $context->instanceid));
+          }
+
+          // If the user context is set, then use that for capability checks.
+          if (isset($headerinfo['usercontext'])) {
+              $context = $headerinfo['usercontext'];
+          }
+
+          // Only provide user information if the user is the current user, or a user which the current user can view.
+          // When checking user_can_view_profile(), either:
+          // If the page context is course, check the course context (from the page object) or;
+          // If page context is NOT course, then check across all courses.
+          $course = ($this->page->context->contextlevel == CONTEXT_COURSE) ? $this->page->course : null;
+
+          if (user_can_view_profile($user, $course)) {
+              // Use the user's full name if the heading isn't set.
+              if (empty($heading)) {
+                  $heading = fullname($user);
+              }
+
+              $imagedata = $this->user_picture($user, array('size' => 100));
+
+              // Check to see if we should be displaying a message button.
+              if (!empty($CFG->messaging) && has_capability('moodle/site:sendmessage', $context)) {
+                  $userbuttons = array(
+                      'messages' => array(
+                          'buttontype' => 'message',
+                          'title' => get_string('message', 'message'),
+                          'url' => new moodle_url('/message/index.php', array('id' => $user->id)),
+                          'image' => 'message',
+                          'linkattributes' => \core_message\helper::messageuser_link_params($user->id),
+                          'page' => $this->page
+                      )
+                  );
+
+                  if ($USER->id != $user->id) {
+                      $iscontact = \core_message\api::is_contact($USER->id, $user->id);
+                      $contacttitle = $iscontact ? 'removefromyourcontacts' : 'addtoyourcontacts';
+                      $contacturlaction = $iscontact ? 'removecontact' : 'addcontact';
+                      $contactimage = $iscontact ? 'removecontact' : 'addcontact';
+                      $userbuttons['togglecontact'] = array(
+                              'buttontype' => 'togglecontact',
+                              'title' => get_string($contacttitle, 'message'),
+                              'url' => new moodle_url('/message/index.php', array(
+                                      'user1' => $USER->id,
+                                      'user2' => $user->id,
+                                      $contacturlaction => $user->id,
+                                      'sesskey' => sesskey())
+                              ),
+                              'image' => $contactimage,
+                              'linkattributes' => \core_message\helper::togglecontact_link_params($user, $iscontact),
+                              'page' => $this->page
+                          );
+                  }
+
+                  $this->page->requires->string_for_js('changesmadereallygoaway', 'moodle');
+              }
+          } else {
+              $heading = null;
+          }
+      }
+
+      if ($this->should_display_main_logo($headinglevel)) {
+          $sitename = format_string($SITE->fullname, true, ['context' => context_course::instance(SITEID)]);
+          // Logo.
+          $html = html_writer::div(
+              html_writer::empty_tag('img', [
+                  'src' => $this->get_logo_url(null, 150),
+                  'alt' => get_string('logoof', '', $sitename),
+                  'class' => 'img-fluid'
+              ]),
+              'logo'
+          );
+          // Heading.
+          if (!isset($heading)) {
+              $html .= $this->heading($this->page->heading, $headinglevel, 'sr-only');
+          } else {
+              $html .= $this->heading($heading, $headinglevel, 'sr-only');
+          }
+          return $html;
+      }
+
+      $contextheader = new context_header($heading, $headinglevel, $imagedata, $userbuttons);
+
+      if($PAGE->pagetype === 'user-profile') {
+        $contextheader = new context_header('', $headinglevel, null, $userbuttons);
+      }
+
+      return $this->render_context_header($contextheader);
+  }
 
   /**
    * Render the login signup form into a nice template for the theme.

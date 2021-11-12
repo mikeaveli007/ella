@@ -50,6 +50,17 @@ class behat_mod_forum extends behat_base {
     }
 
     /**
+     * Adds a Q&A discussion to the Q&A-type forum specified by it's name with the provided table data.
+     *
+     * @Given /^I add a new question to "(?P<forum_name_string>(?:[^"]|\\")*)" forum with:$/
+     * @param string $forumname
+     * @param TableNode $table
+     */
+    public function i_add_a_new_question_to_forum_with($forumname, TableNode $table) {
+        $this->add_new_discussion($forumname, $table, get_string('addanewquestion', 'forum'));
+    }
+
+    /**
      * Adds a discussion to the forum specified by it's name with the provided table data (usually Subject and Message). The step begins from the forum's course page.
      *
      * @Given /^I add a new discussion to "(?P<forum_name_string>(?:[^"]|\\")*)" forum with:$/
@@ -101,16 +112,15 @@ class behat_mod_forum extends behat_base {
      * @param TableNode $table
      */
     public function i_reply_post_from_forum_using_an_inpage_reply_with($postsubject, $forumname, TableNode $table) {
-
         // Navigate to forum.
-        $this->execute('behat_general::click_link', $this->escape($forumname));
+        $this->execute('behat_navigation::i_am_on_page_instance', [$this->escape($forumname), 'forum activity']);
         $this->execute('behat_general::click_link', $this->escape($postsubject));
         $this->execute('behat_general::click_link', get_string('reply', 'forum'));
 
         // Fill form and post.
         $this->execute('behat_forms::i_set_the_following_fields_to_these_values', $table);
 
-        $this->execute('behat_forms::press_button', get_string('submit', 'core'));
+        $this->execute('behat_forms::press_button', get_string('posttoforum', 'mod_forum'));
     }
 
     /**
@@ -121,9 +131,8 @@ class behat_mod_forum extends behat_base {
      * @param string $forumname The forum name
      */
     public function i_navigate_to_post_in_forum($postsubject, $forumname) {
-
         // Navigate to forum discussion.
-        $this->execute('behat_general::click_link', $this->escape($forumname));
+        $this->execute('behat_navigation::i_am_on_page_instance', [$this->escape($forumname), 'forum activity']);
         $this->execute('behat_general::click_link', $this->escape($postsubject));
     }
 
@@ -164,6 +173,12 @@ class behat_mod_forum extends behat_base {
             if (!empty($discussioninfo['attachments']) || !empty($discussioninfo['inlineattachments'])) {
                 $discussioninfo['attachment'] = 1;
                 $cm = get_coursemodule_from_instance('forum', $discussioninfo['forum']);
+            }
+
+            // Prepare data for groups if needed.
+            if (!empty($discussioninfo['group'])) {
+                $discussioninfo['groupid'] = $this->get_group_id($courseid, $discussioninfo['group']);
+                unset($discussioninfo['group']);
             }
 
             // Create the discussion post.
@@ -369,6 +384,33 @@ class behat_mod_forum extends behat_base {
     }
 
     /**
+     * Fetch Group ID using group name.
+     *
+     * @param int $courseid The course ID the forum exists within.
+     * @param string $groupname The short name of the group.
+     * @return int The group ID.
+     * @throws Exception
+     */
+    protected function get_group_id(int $courseid, string $groupname): int {
+        global $DB;
+
+        if ($groupname === 'All participants') {
+            return -1;
+        }
+
+        $conditions = [
+            'courseid' => $courseid,
+            'idnumber' => $groupname,
+        ];
+
+        if (!$groupid = $DB->get_field('groups', 'id', $conditions)) {
+            throw new Exception("A group with name '{$groupname}' does not exist in the provided course");
+        }
+
+        return $groupid;
+    }
+
+    /**
      * Fetch discussion ID and first post ID by discussion name.
      *
      * @param int $forumid The forum ID where the discussion resides.
@@ -431,11 +473,10 @@ class behat_mod_forum extends behat_base {
      * @param string $buttonstr
      */
     protected function add_new_discussion($forumname, TableNode $table, $buttonstr) {
-
         // Navigate to forum.
-        $this->execute('behat_general::click_link', $this->escape($forumname));
+        $this->execute('behat_navigation::i_am_on_page_instance', [$this->escape($forumname), 'forum activity']);
         $this->execute('behat_general::click_link', $buttonstr);
-        $this->execute('behat_forms::press_button', get_string('advanced'));
+        $this->execute('behat_forms::press_button', get_string('showadvancededitor'));
 
         $this->fill_new_discussion_form($table);
     }
@@ -451,9 +492,8 @@ class behat_mod_forum extends behat_base {
      * @param string $buttonstr
      */
     protected function add_new_discussion_inline($forumname, TableNode $table, $buttonstr) {
-
         // Navigate to forum.
-        $this->execute('behat_general::click_link', $this->escape($forumname));
+        $this->execute('behat_navigation::i_am_on_page_instance', [$this->escape($forumname), 'forum activity']);
         $this->execute('behat_general::click_link', $buttonstr);
         $this->fill_new_discussion_form($table);
     }
@@ -485,6 +525,6 @@ class behat_mod_forum extends behat_base {
         global $DB;
         $post = $DB->get_record("forum_posts", array("subject" => $postsubject), 'id', MUST_EXIST);
         $url = new moodle_url('/mod/forum/post.php', ['reply' => $post->id]);
-        $this->getSession()->visit($this->locate_path($url->out_as_local_url(false)));
+        $this->execute('behat_general::i_visit', [$url]);
     }
 }

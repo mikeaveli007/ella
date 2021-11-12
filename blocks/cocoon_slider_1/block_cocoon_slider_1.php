@@ -30,9 +30,6 @@ class block_cocoon_slider_1 extends block_base {
           $this->config->slide_subtitle1 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
           $this->config->slide_btn_text1 = 'Ready to Get Started?';
           $this->config->slide_btn_url1 = '#';
-          $this->config->file_slide1 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
-          $this->config->file_slide2 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
-          $this->config->file_slide3 = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
           $this->config->slide_title2 = 'Self Education Resources and Infos';
           $this->config->slide_subtitle2 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
           $this->config->slide_btn_text2 = 'Ready to Get Started?';
@@ -151,17 +148,17 @@ class block_cocoon_slider_1 extends block_base {
               <span class="carousel-btn left-btn">
                 <i class="flaticon-left-arrow left"></i> ';
                 if($this->content->arrow_style != '1'){
-                  $text .=' <span class="left">'.$this->content->prev_1.' <br> '.$this->content->prev_2.'</span>';
+                  $text .=' <span class="left">'.format_text($this->content->prev_1, FORMAT_HTML, array('filter' => true)).' <br> '.format_text($this->content->prev_2, FORMAT_HTML, array('filter' => true)).'</span>';
                 } else {
-                  $text .=' <span class="left">'.$this->content->prev.'</span>';
+                  $text .=' <span class="left">'.format_text($this->content->prev, FORMAT_HTML, array('filter' => true)).'</span>';
                 }
                 $text .='
               </span>
 					        <span class="carousel-btn right-btn">';
                   if($this->content->arrow_style != '1'){
-                    $text .='<span class="right">'.$this->content->next_1.' <br> '.$this->content->next_2.'</span> <i class="flaticon-right-arrow-1 right"></i>';
+                    $text .='<span class="right">'.format_text($this->content->next_1, FORMAT_HTML, array('filter' => true)).' <br> '.format_text($this->content->next_2, FORMAT_HTML, array('filter' => true)).'</span> <i class="flaticon-right-arrow-1 right"></i>';
                   } else {
-                    $text .='<span class="right">'.$this->content->next.'</span> <i class="flaticon-right-arrow-1 right"></i>';
+                    $text .='<span class="right">'.format_text($this->content->next, FORMAT_HTML, array('filter' => true)).'</span> <i class="flaticon-right-arrow-1 right"></i>';
                   }
                   $text .='
                   </span>

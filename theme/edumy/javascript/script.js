@@ -154,13 +154,13 @@
     });
     $(window).on('load', function() {
 
-    const cd = new Date().getFullYear() + 1
-    if ($('#countdown').length) {
-      $('#countdown').countdown({
-        year: cd
-      });
-    }
-  });
+      const cd = new Date().getFullYear() + 1
+      if ($('#countdown').length) {
+        $('#countdown').countdown({
+          year: cd
+        });
+      }
+    });
     /* ----- fact-counter ----- */
     function counterNumber() {
       $('div.timer').counterUp({
@@ -296,13 +296,13 @@
           }
         });
         $('.popup-iframe').magnificPopup({
-          disableOn: 700,
+          // disableOn: 700,
           type: 'iframe',
           preloader: false,
           fixedContentPos: false
         });
         $('.popup-youtube, .popup-vimeo, .popup-gmaps').magnificPopup({
-          disableOn: 700,
+          // disableOn: 700,
           type: 'iframe',
           mainClass: 'mfp-fade',
           removalDelay: 160,
@@ -942,12 +942,12 @@
     function ccnProcessSliderAttributes(selector) {
       var ccnSelectorValue = selector;
       var ccnSelector = document.querySelector(ccnSelectorValue);
-      var $ccnDtCaroAo = ccnSelector.getAttribute('data-ccn-caro-ao') !== undefined ? ccnSelector.getAttribute('data-ccn-caro-ao') : 'fadeOut' ;
-      var $ccnDtCaroAi = ccnSelector.getAttribute('data-ccn-caro-ai') !== undefined ? ccnSelector.getAttribute('data-ccn-caro-ai') : 'fadeIn' ;
-      var $ccnDtCaroS = ccnSelector.getAttribute('data-ccn-caro-s') !== undefined ? ccnSelector.getAttribute('data-ccn-caro-s') : 1000 ;
-      var $ccnDtCaroL = ccnSelector.getAttribute('data-ccn-caro-l') !== undefined ? ccnSelector.getAttribute('data-ccn-caro-l') : 1 ;
-      var $ccnDtCaroAutoplayT = ccnSelector.getAttribute('data-ccn-caro-ap-to') !== undefined ? parseInt(ccnSelector.getAttribute('data-ccn-caro-ap-to')) : Boolean(0) ;
-      var $ccnDtCaroAutoplayP = ccnSelector.getAttribute('data-ccn-caro-ap-p') !== undefined ? parseInt(ccnSelector.getAttribute('data-ccn-caro-ap-p')) : 0 ;
+      var $ccnDtCaroAo = ccnSelector.getAttribute('data-ccn-caro-ao') !== undefined ? ccnSelector.getAttribute('data-ccn-caro-ao') : 'fadeOut';
+      var $ccnDtCaroAi = ccnSelector.getAttribute('data-ccn-caro-ai') !== undefined ? ccnSelector.getAttribute('data-ccn-caro-ai') : 'fadeIn';
+      var $ccnDtCaroS = ccnSelector.getAttribute('data-ccn-caro-s') !== undefined ? ccnSelector.getAttribute('data-ccn-caro-s') : 1000;
+      var $ccnDtCaroL = ccnSelector.getAttribute('data-ccn-caro-l') !== undefined ? ccnSelector.getAttribute('data-ccn-caro-l') : 1;
+      var $ccnDtCaroAutoplayT = ccnSelector.getAttribute('data-ccn-caro-ap-to') !== undefined ? parseInt(ccnSelector.getAttribute('data-ccn-caro-ap-to')) : Boolean(0);
+      var $ccnDtCaroAutoplayP = ccnSelector.getAttribute('data-ccn-caro-ap-p') !== undefined ? parseInt(ccnSelector.getAttribute('data-ccn-caro-ap-p')) : 0;
       var $ccnDtCaroAutoplay = ccnSelector.getAttribute('data-ccn-caro-ap') !== undefined ? parseInt(ccnSelector.getAttribute('data-ccn-caro-ap')) : 0;
       var ccnReturn = {
         selector: ccnSelector,
@@ -997,21 +997,43 @@
           autoplayHoverPause: ccnSliderAttr.app,
           autoplay: ccnSliderAttr.ap
         });
-        $('.banner-carousel-btn .left-btn').on('click', function() {
-          $('.banner-style-one').trigger('prev.owl.carousel');
-          return false;
-        });
-        $('.banner-carousel-btn .right-btn').on('click', function() {
-          $('.banner-style-one').trigger('next.owl.carousel');
-          return false;
-        });
+        if ($('.banner-carousel-btn .left-btn').length) {
+          $('.banner-carousel-btn .left-btn').on('click', function() {
+            $('.banner-style-one').trigger('prev.owl.carousel');
+            return false;
+          });
+        }
+        if ($('.banner-carousel-btn .right-btn').length) {
+          $('.banner-carousel-btn .right-btn').on('click', function() {
+            $('.banner-style-one').trigger('next.owl.carousel');
+            return false;
+          });
+        }
       }
       /*  Home7-Main-Slider-Owl-carousel  */
       if ($('.banner-style-two').length) {
         var ccnSliderAttr = ccnProcessSliderAttributes('.banner-style-two');
-        $('.banner-style-two').owlCarousel({
+
+        $('.banner-style-two--single').owlCarousel({
+          items: 1,
+          stagePadding: 0,
+          margin: 0,
+          dots: false,
+          nav: false,
+          touchDrag: false,
+          pullDrag: false,
+          freeDrag: false,
+          mouseDrag: false,
+          // animateOut: 'fadeOut',
+          // animateIn: 'fadeIn',
+          active: true,
+          smartSpeed: 1000,
+          autoplay: false
+        });
+        $('.banner-style-two--multiple').owlCarousel({
           loop: ccnSliderAttr.l,
           items: 1,
+          stagePadding: 0,
           margin: 0,
           dots: true,
           nav: true,
@@ -1019,10 +1041,27 @@
           animateIn: ccnSliderAttr.ai,
           active: true,
           smartSpeed: ccnSliderAttr.s,
-          autoplay: ccnSliderAttr.ap,
           autoplayTimeout: ccnSliderAttr.apt,
-          autoplayHoverPause: ccnSliderAttr.app
+          autoplayHoverPause: ccnSliderAttr.app,
+          autoplay: ccnSliderAttr.ap
         });
+
+
+
+        // $('.banner-style-two').owlCarousel({
+        //   loop: ccnSliderAttr.l,
+        //   items: 1,
+        //   margin: 0,
+        //   dots: true,
+        //   nav: true,
+        //   animateOut: ccnSliderAttr.ao,
+        //   animateIn: ccnSliderAttr.ai,
+        //   active: true,
+        //   smartSpeed: ccnSliderAttr.s,
+        //   autoplay: ccnSliderAttr.ap,
+        //   autoplayTimeout: ccnSliderAttr.apt,
+        //   autoplayHoverPause: ccnSliderAttr.app
+        // });
         $('.banner-carousel-btn2 .left-btn').on('click', function() {
           $('.banner-style-two').trigger('next.owl.carousel');
           return false;
@@ -1214,6 +1253,13 @@
        ====== */
     $(document).on('ready', function() {
       navbarScrollfixed();
+
+      const observer = lozad('[data-ccn-lazy]', {
+        rootMargin: '10px 0px',
+        threshold: 0.1,
+        enableAutoReload: true
+      });
+      observer.observe();
     });
     $(window).on('load', function() {
       // add your functions

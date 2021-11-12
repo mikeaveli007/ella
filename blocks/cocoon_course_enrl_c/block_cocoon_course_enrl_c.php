@@ -41,13 +41,13 @@ class block_cocoon_course_enrl_c extends block_base
         $context = context_course::instance($COURSE->id, MUST_EXIST);
 
 
-        if(!empty($this->config->price_title)){$this->content->price_title = $this->config->price_title;}
-        if(!empty($this->config->price)){$this->content->price = $this->config->price;}
-        if(!empty($this->config->full_price)){$this->content->full_price = $this->config->full_price;}
-        if(!empty($this->config->add_to_cart_text)){$this->content->add_to_cart_text = $this->config->add_to_cart_text;}
-        if(!empty($this->config->add_to_cart_link)){$this->content->add_to_cart_link = $this->config->add_to_cart_link;}
-        if(!empty($this->config->buy_now_text)){$this->content->buy_now_text = $this->config->buy_now_text;}
-        if(!empty($this->config->buy_now_link)){$this->content->buy_now_link = $this->config->buy_now_link;}
+        if(!empty($this->config->price_title)){$this->content->price_title = format_text($this->config->price_title, FORMAT_HTML, array('filter' => true));}
+        if(!empty($this->config->price)){$this->content->price = format_text($this->config->price, FORMAT_HTML, array('filter' => true));}
+        if(!empty($this->config->full_price)){$this->content->full_price = format_text($this->config->full_price, FORMAT_HTML, array('filter' => true));}
+        if(!empty($this->config->add_to_cart_text)){$this->content->add_to_cart_text = format_text($this->config->add_to_cart_text, FORMAT_HTML, array('filter' => true));}
+        if(!empty($this->config->add_to_cart_link)){$this->content->add_to_cart_link = format_text($this->config->add_to_cart_link, FORMAT_HTML, array('filter' => true));}
+        if(!empty($this->config->buy_now_text)){$this->content->buy_now_text = format_text($this->config->buy_now_text, FORMAT_HTML, array('filter' => true));}
+        if(!empty($this->config->buy_now_link)){$this->content->buy_now_link = format_text($this->config->buy_now_link, FORMAT_HTML, array('filter' => true));}
         // if(!empty($this->config->includes_title)){$this->content->includes_title = $this->config->includes_title;}
         // if(!empty($this->config->video_text)){$this->content->video_text = $this->config->video_text;}
         // if(!empty($this->config->download_text)){$this->content->download_text = $this->config->download_text;}

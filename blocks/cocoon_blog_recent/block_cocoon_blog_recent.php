@@ -4,6 +4,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot .'/blog/lib.php');
 require_once($CFG->dirroot .'/blog/locallib.php');
 require_once($CFG->dirroot. '/theme/edumy/ccn/block_handler/ccn_block_handler.php');
+require_once($CFG->dirroot. '/theme/edumy/ccn/blog_handler/ccn_blog_handler.php');
 
 class block_cocoon_blog_recent extends block_base {
 
@@ -58,13 +59,14 @@ class block_cocoon_blog_recent extends block_base {
             $this->config = new stdClass();
         }
 
+        $ccnBlogHandler = new ccnBlogHandler();
         $this->content = new stdClass();
         $this->content->footer = '';
         $this->content->text = '';
-        if(!empty($this->config->title)){$this->content->title = $this->config->title;}
-        if(!empty($this->config->subtitle)){$this->content->subtitle = $this->config->subtitle;}
-        if(!empty($this->config->footer_text)){$this->content->footer_text = $this->config->footer_text;}
-        if(!empty($this->config->button_text)){$this->content->button_text = $this->config->button_text;}
+        if(!empty($this->config->title)){$this->content->title = $this->config->title;} else {$this->content->title = '';}
+        if(!empty($this->config->subtitle)){$this->content->subtitle = $this->config->subtitle;} else {$this->content->subtitle = '';}
+        if(!empty($this->config->footer_text)){$this->content->footer_text = $this->config->footer_text;} else {$this->content->footer_text = '';}
+        if(!empty($this->config->button_text)){$this->content->button_text = $this->config->button_text;} else {$this->content->button_text = '';}
         if(!empty($this->config->button_link)){$this->content->button_link = $this->config->button_link;}else{$this->content->button_link = '/blog/index.php';}
 
         $context = $this->page->context;
@@ -115,6 +117,8 @@ $this->content->text .= '
             $i = 0;
             foreach ($entries as $entryid => $entry) {
                if(($i == 2) || ($i == 3) || ($i == 4)) {
+
+                $ccnGetPostDetails = $ccnBlogHandler->ccnGetPostDetails($entryid);
                 $viewblogurl->param('entryid', $entryid);
                 $entrylink = html_writer::link($viewblogurl, shorten_text($entry->subject));
                 $entrieslist[] = $entrylink;
@@ -125,12 +129,12 @@ $this->content->text .= '
 
                 $this->content->text .= '						<div class="item">
 							<div class="blog_post one">
-              <a href="'.$viewblogurl.'">
+              <a href="'.$ccnGetPostDetails->url.'">
 								<div class="thumb">
 									<div class="post_title">'.get_string('events', 'theme_edumy').'</div>
-									<img class="img-fluid w100" src="'.$blogattachments[0]->url.'" alt="'.$entry->subject.'">';
+									<img class="img-fluid w100" src="'.$ccnGetPostDetails->image.'" alt="'.$ccnGetPostDetails->title.'">';
                   if($PAGE->theme->settings->blog_post_date != 1){
-                    $this->content->text .='<span class="post_date" href="'.$viewblogurl.'"><span>'. userdate($entry->created, '%d', 0) .' <br> '. userdate($entry->created, '%B', 0) .'</span></span>';
+                    $this->content->text .='<span class="post_date" href="'.$ccnGetPostDetails->url.'"><span>'. userdate($entry->created, '%d', 0) .' <br> '. userdate($entry->created, '%B', 0) .'</span></span>';
                   }
                   $this->content->text .='
 								</div>
@@ -148,7 +152,7 @@ $this->content->text .= '
       							  $this->content->text .='
 										</ul>
 									</div>
-									<a href="'.$viewblogurl.'"><h4>'. $entry->subject.'</h4></a>
+									<a href="'.$ccnGetPostDetails->url.'"><h4>'. $ccnGetPostDetails->title.'</h4></a>
 								</div>
 							</div>
 						</div>

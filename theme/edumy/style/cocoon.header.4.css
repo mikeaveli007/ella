@@ -13,10 +13,22 @@ body.ccn_header_style_4.ccn_context_frontend header.header-nav.ccnHeader4:not(.s
 }
 .header_top.home4 {
   background-color: [[setting:color_header_style_4_top]];
+  z-index: 2;
 }
 .home4_header_top_contact {
   margin-bottom: 0;
   margin-top: 5px;
+}
+@media (min-width: 993px) {
+  .home4_header_top_contact {
+    margin-top: 7px;
+  }
+  .sign_up_btn.home4 .btn {
+    padding-top: 7px;
+  }
+  .ccn_header_style_4 .header_top.home4 .mk-search-trigger.mk-fullscreen-trigger #search-button i {
+    font-size: 19px;
+  }
 }
 .sign_up_btn.home4 .btn {
   height: auto;
@@ -95,7 +107,7 @@ header.header-nav.ccnHeader4.menu_style_home_four .ace-responsive-menu li ul.sub
 header.header-nav.ccnHeader4.menu_style_home_four .ace-responsive-menu>li {
   float: right;
 }
-header.header-nav.ccnHeader4.menu_style_home_four .ace-responsive-menu li a {
+header.header-nav.ccnHeader4.menu_style_home_four .ace-responsive-menu>li>a {
   color: #ffffff;
   font-family: "[[setting:primary_font]]", sans-serif;
 }
@@ -136,7 +148,7 @@ header.header-nav.ccnHeader4.menu_style_home_four.stricky-fixed a.navbar_brand s
 }
 .ccn_header_style_4 .header_top.home4 .mk-search-trigger {
   position: relative;
-  top: 2px;
+  top: 1px;
 }
 .ccn_no_hero.ccn_context_frontend header.header-nav.ccnHeader4.menu_style_home_four.navbar-scrolltofixed:not(.stricky-fixed) {
   border-bottom: 1px solid rgba(255, 255, 255, .1);
@@ -164,6 +176,14 @@ header.header-nav.ccnHeader4.menu_style_home_four.stricky-fixed a.navbar_brand s
   .stylehome1.home4:before {
     background-color: transparent !important;
   }
+  .block_cocoon_slider_7.ccn_morphed .home14-slider:not(.style2)>.container.maxw1500 {
+    max-width: none;
+    padding: 0;
+    width: 100%;
+  }
+  .block_cocoon_slider_7.ccn_morphed .home14-slider:not(.style2) .banner-style-one .slide {
+    border-radius: 0;
+  }
 }
 /* This is the reusable code block we use for headers who really desire to be static positioned, but we can't because of scroll jump. Margin-top them behind the absolute header instead. */
 @media only screen and (min-width: 1200px) {
@@ -176,11 +196,10 @@ header.header-nav.ccnHeader4.menu_style_home_four.stricky-fixed a.navbar_brand s
   .ccn_header_style_4 .block_cocoon_slider_6.ccn_morphed,
   .ccn_header_style_4 .block_cocoon_hero_1.ccn_morphed,
   .ccn_header_style_4 .block_cocoon_hero_2.ccn_morphed,
-  .ccn_header_style_4 .block_cocoon_hero_4.ccn_morphed,
-  .ccn_context_frontend .inner_page_breadcrumb {
-    margin-top: 95px;
+  .ccn_header_style_4 .block_cocoon_hero_4.ccn_morphed {
+  /* .ccn_context_frontend .inner_page_breadcrumb { */
+    margin-top: 90px;
   }
-
   .ccn_header_style_4 .block_cocoon_slider_1.ccn_morphed .ccnBlockControls,
   .ccn_header_style_4 .block_cocoon_slider_1_v.ccn_morphed .ccnBlockControls,
   .ccn_header_style_4 .block_cocoon_slider_2.ccn_morphed .ccnBlockControls,
@@ -193,5 +212,8 @@ header.header-nav.ccnHeader4.menu_style_home_four.stricky-fixed a.navbar_brand s
   .ccn_header_style_4 .block_cocoon_hero_3.ccn_morphed .ccnBlockControls,
   .ccn_header_style_4 .block_cocoon_hero_4.ccn_morphed .ccnBlockControls {
     margin-top: 100px;
+  }
+  .block_cocoon_slider_7.ccn_morphed .home14-slider:not(.style2) {
+    margin-top: 103px;
   }
 }

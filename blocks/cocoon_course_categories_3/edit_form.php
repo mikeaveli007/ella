@@ -1,23 +1,28 @@
 <?php
 
+require_once($CFG->dirroot.'/theme/edumy/ccn/course_handler/ccn_course_handler.php');
+
 class block_cocoon_course_categories_3_edit_form extends block_edit_form
 {
     protected function specific_definition($mform)
     {
       global $CFG;
       $ccnFontList = include($CFG->dirroot . '/theme/edumy/ccn/font_handler/ccn_font_select.php');
-      include_once($CFG->dirroot . '/course/lib.php');
-      require_once($CFG->dirroot. '/course/renderer.php');
-      $topcategory = core_course_category::top();
-      $topcategorykids = $topcategory->get_children();
-      $searchareas = \core_search\manager::get_search_areas_list(true);
-      $areanames = array();
-      foreach ($topcategorykids as $areaid => $topcategorykids) {
-          $areanames[$areaid] = $topcategorykids->get_formatted_name();
-          // print_object($areaid->get_formatted_name());
-          // print_object($areaid);
+      // include_once($CFG->dirroot . '/course/lib.php');
+      // require_once($CFG->dirroot. '/course/renderer.php');
+      // $topcategory = core_course_category::top();
+      // $topcategorykids = $topcategory->get_children();
+      // $searchareas = \core_search\manager::get_search_areas_list(true);
+      // $areanames = array();
+      // foreach ($topcategorykids as $areaid => $topcategorykids) {
+      //     $areanames[$areaid] = $topcategorykids->get_formatted_name();
+      //     // print_object($areaid->get_formatted_name());
+      //     // print_object($areaid);
+      //
+      // }
 
-      }
+      $ccnCourseHandler = new ccnCourseHandler();
+      $ccnCourseCategories = $ccnCourseHandler->ccnListCategories();
 
 
       if (!empty($this->block->config) && is_object($this->block->config)) {
@@ -129,7 +134,8 @@ class block_cocoon_course_categories_3_edit_form extends block_edit_form
                 'multiple' => false,
                 'noselectionstring' => get_string('select_from_dropdown', 'theme_edumy'),
             );
-            $mform->addElement('autocomplete', 'config_category' . $i, get_string('category'), $areanames, $options);
+            // $mform->addElement('autocomplete', 'config_category' . $i, get_string('category'), $areanames, $options);
+            $mform->addElement('autocomplete', 'config_category' . $i, get_string('category'), $ccnCourseCategories, $options);
             $mform->addRule('config_category' . $i, get_string('required'), 'required', null, 'client', false, false);
 
             $select = $mform->addElement('select', 'config_icon' .$i, get_string('config_icon_class', 'theme_edumy'), $ccnFontList, array('class'=>'ccn_icon_class'));

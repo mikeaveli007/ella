@@ -30,9 +30,7 @@ Feature: Edit quiz marks with attempts
       | Question text | Answer again    |
       | Default mark  | 3.0             |
     And I log out
-    And I log in as "student1"
-    And I am on "Course 1" course homepage
-    And I follow "Quiz 1"
+    And I am on the "Quiz 1" "mod_quiz > View" page logged in as "student1"
     And I press "Attempt quiz now"
     And I log out
     And I log in as "teacher1"
@@ -46,8 +44,7 @@ Feature: Edit quiz marks with attempts
     And I should see "Total of marks: 10.00"
 
     When I follow "Edit maximum mark"
-    And I wait until "li input[name=maxmark]" "css_element" exists
-    And I take focus off "li input[name=maxmark]" "css_element"
+    And I press the escape key
     Then I should see "7.00"
     And I should see "3.00"
     And I should see "Total of marks: 10.00"
@@ -65,15 +62,14 @@ Feature: Edit quiz marks with attempts
   @javascript
   Scenario: Verify the number of decimal places shown is what the quiz settings say it should be.
     # Then the field "maxgrade" matches value "20.00" -- with exact match on decimal places.
-    Then "//input[@name = 'maxgrade' and @value = '20.00']" "xpath_element" should exist
+    Given "//input[@name = 'maxgrade' and @value = '20.00']" "xpath_element" should exist
     And I should see "2.00"
     And I should see "3.00"
     And I should see "Total of marks: 5.00"
     And I should not see "2.000"
     And I should not see "3.000"
     And I should not see "Total of marks: 5.000"
-    And I follow "Quiz 1"
-    When I navigate to "Edit settings" in current page administration
+    When I am on the "Quiz 1" "quiz activity editing" page
     And I set the following fields to these values:
       | Decimal places in grades | 3 |
       | Decimal places in question grades | 5 |

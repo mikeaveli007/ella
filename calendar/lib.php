@@ -172,6 +172,7 @@ define('CALENDAR_EVENT_TYPE_ACTION', 1);
  * @property int $userid The user the event is associated with (0 if none)
  * @property int $repeatid If this is a repeated event this will be set to the
  *                          id of the original
+ * @property string $component If created by a plugin/component (other than module), the full frankenstyle name of a component
  * @property string $modulename If added by a module this will be the module name
  * @property int $instance If added by a module this will be the module instance
  * @property string $eventtype The event type
@@ -257,6 +258,10 @@ class calendar_event {
             $data->format = editors_get_preferred_format();
         }
 
+        if (empty($data->component)) {
+            $data->component = null;
+        }
+
         $this->properties = $data;
     }
 
@@ -337,6 +342,7 @@ class calendar_event {
             $context = \context_user::instance($this->properties->userid);
         } else if (isset($this->properties->userid) && $this->properties->userid > 0
             && $this->properties->userid != $USER->id &&
+            !empty($this->properties->modulename) &&
             isset($this->properties->instance) && $this->properties->instance > 0) {
             $cm = get_coursemodule_from_instance($this->properties->modulename, $this->properties->instance, 0,
                 false, MUST_EXIST);
@@ -962,6 +968,22 @@ class calendar_event {
     }
 
     /**
+     * Format the event name using the external API.
+     *
+     * This function should we used when text formatting is required in external functions.
+     *
+     * @return string Formatted name.
+     */
+    public function format_external_name() {
+        if ($this->editorcontext === null) {
+            // Switch on the event type to decide upon the appropriate context to use for this event.
+            $this->editorcontext = $this->get_context();
+        }
+
+        return external_format_string($this->properties->name, $this->editorcontext->id);
+    }
+
+    /**
      * Format the text using the external API.
      *
      * This function should we used when text formatting is required in external functions.
@@ -1274,6 +1296,12 @@ class calendar_information {
      * @param string|null $view preference view options (eg: day, month, upcoming)
      */
     public function add_sidecalendar_blocks(core_calendar_renderer $renderer, $showfilters=false, $view=null) {
+        global $PAGE;
+
+        if (!has_capability('moodle/block:view', $PAGE->context) ) {
+            return;
+        }
+
         if ($showfilters) {
             $filters = new block_contents();
             $filters->content = $renderer->event_filter();
@@ -1523,10 +1551,13 @@ function calendar_get_group_cached($groupid) {
 /**
  * Add calendar event metadata
  *
+ * @deprecated since 3.9
+ *
  * @param stdClass $event event info
  * @return stdClass $event metadata
  */
 function calendar_add_event_metadata($event) {
+    debugging('This function is no longer used', DEBUG_DEVELOPER);
     global $CFG, $OUTPUT;
 
     // Support multilang in event->name.
@@ -2276,6 +2307,11 @@ function calendar_edit_event_allowed($event, $manualedit = false) {
         return has_capability('moodle/course:manageactivities', $context);
     }
 
+    if ($manualedit && !empty($event->component)) {
+        // TODO possibly we can later add a callback similar to core_calendar_event_timestart_updated in the modules.
+        return false;
+    }
+
     // You cannot edit URL based calendar subscription events presently.
     if (!empty($event->subscriptionid)) {
         if (!empty($event->subscription->url)) {
@@ -2324,8 +2360,8 @@ function calendar_edit_event_allowed($event, $manualedit = false) {
  * @return bool Whether the user has permission to delete the event or not.
  */
 function calendar_delete_event_allowed($event) {
-    // Only allow delete if you have capabilities and it is not an module event.
-    return (calendar_edit_event_allowed($event) && empty($event->modulename));
+    // Only allow delete if you have capabilities and it is not an module or component event.
+    return (calendar_edit_event_allowed($event) && empty($event->modulename) && empty($event->component));
 }
 
 /**
@@ -2360,9 +2396,7 @@ function calendar_get_default_courses($courseid = null, $fields = '*', $canmanag
         $prefixedfields = array_map(function($value) {
             return 'c.' . trim(strtolower($value));
         }, $fieldlist);
-        if (!in_array('c.visible', $prefixedfields) && !in_array('c.*', $prefixedfields)) {
-            $prefixedfields[] = 'c.visible';
-        }
+
         $courses = get_courses('all', 'c.shortname', implode(',', $prefixedfields));
     } else {
         $courses = enrol_get_users_courses($userid, true, $fields);
@@ -3016,7 +3050,7 @@ function calendar_get_icalendar($url) {
  * Import events from an iCalendar object into a course calendar.
  *
  * @param iCalendar $ical The iCalendar object.
- * @param int $courseid The course ID for the calendar.
+ * @param int $unused Deprecated
  * @param int $subscriptionid The subscription ID.
  * @return string A log of the import progress, including errors.
  */
@@ -3066,7 +3100,8 @@ function calendar_import_icalendar_events($ical, $unused = null, $subscriptionid
         }
     }
 
-    if (!empty($subscriptionid)) {
+    $existing = $DB->get_field('event_subscriptions', 'lastupdated', ['id' => $subscriptionid]);
+    if (!empty($existing)) {
         $eventsuuids = $DB->get_records_menu('event', ['subscriptionid' => $subscriptionid], '', 'id, uuid');
 
         $icaleventscount = count($icaluuids);
@@ -3169,6 +3204,7 @@ function calendar_update_subscription($subscription) {
  * @return bool true if current user can edit the subscription else false
  */
 function calendar_can_edit_subscription($subscriptionorid) {
+    global $USER;
     if (is_array($subscriptionorid)) {
         $subscription = (object)$subscriptionorid;
     } else if (is_object($subscriptionorid)) {
@@ -3189,7 +3225,7 @@ function calendar_can_edit_subscription($subscriptionorid) {
     calendar_get_allowed_types($allowed, $courseid, null, $category);
     switch ($subscription->eventtype) {
         case 'user':
-            return $allowed->user;
+            return ($USER->id == $subscription->userid && $allowed->user);
         case 'course':
             if (isset($allowed->courses[$courseid])) {
                 return $allowed->courses[$courseid];
@@ -3672,6 +3708,7 @@ function calendar_get_filter_types() {
         'course',
         'group',
         'user',
+        'other'
     ];
 
     return array_map(function($type) {

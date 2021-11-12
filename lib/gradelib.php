@@ -676,16 +676,18 @@ function grade_get_grades($courseid, $itemtype, $itemmodule, $iteminstance, $use
 function grade_get_setting($courseid, $name, $default=null, $resetcache=false) {
     global $DB;
 
-    static $cache = array();
+    $cache = cache::make('core', 'gradesetting');
+    $gradesetting = $cache->get($courseid) ?: array();
 
-    if ($resetcache or !array_key_exists($courseid, $cache)) {
-        $cache[$courseid] = array();
+    if ($resetcache or empty($gradesetting)) {
+        $gradesetting = array();
+        $cache->set($courseid, $gradesetting);
 
     } else if (is_null($name)) {
         return null;
 
-    } else if (array_key_exists($name, $cache[$courseid])) {
-        return $cache[$courseid][$name];
+    } else if (array_key_exists($name, $gradesetting)) {
+        return $gradesetting[$name];
     }
 
     if (!$data = $DB->get_record('grade_settings', array('courseid'=>$courseid, 'name'=>$name))) {
@@ -698,7 +700,8 @@ function grade_get_setting($courseid, $name, $default=null, $resetcache=false) {
         $result = $default;
     }
 
-    $cache[$courseid][$name] = $result;
+    $gradesetting[$name] = $result;
+    $cache->set($courseid, $gradesetting);
     return $result;
 }
 
@@ -955,14 +958,11 @@ function grade_get_letters($context=null) {
         return array('93'=>'A', '90'=>'A-', '87'=>'B+', '83'=>'B', '80'=>'B-', '77'=>'C+', '73'=>'C', '70'=>'C-', '67'=>'D+', '60'=>'D', '0'=>'F');
     }
 
-    static $cache = array();
+    $cache = cache::make('core', 'grade_letters');
+    $data = $cache->get($context->id);
 
-    if (array_key_exists($context->id, $cache)) {
-        return $cache[$context->id];
-    }
-
-    if (count($cache) > 100) {
-        $cache = array(); // cache size limit
+    if (!empty($data)) {
+        return $data;
     }
 
     $letters = array();
@@ -978,13 +978,15 @@ function grade_get_letters($context=null) {
         }
 
         if (!empty($letters)) {
-            $cache[$context->id] = $letters;
+            // Cache the grade letters for this context.
+            $cache->set($context->id, $letters);
             return $letters;
         }
     }
 
     $letters = grade_get_letters(null);
-    $cache[$context->id] = $letters;
+    // Cache the grade letters for this context.
+    $cache->set($context->id, $letters);
     return $letters;
 }
 
@@ -1430,6 +1432,9 @@ function remove_grade_letters($context, $showfeedback) {
     if ($showfeedback) {
         echo $OUTPUT->notification($strdeleted.' - '.get_string('letters', 'grades'), 'notifysuccess');
     }
+
+    $cache = cache::make('core', 'grade_letters');
+    $cache->delete($context->id);
 }
 
 /**

@@ -51,13 +51,17 @@ class block_cocoon_slider_5_edit_form extends block_edit_form {
             $mform->setDefault('config_slide_subtitle' .$i , 'Technology is bringing a massive wave of evolution for learning things in different ways.');
             $mform->setType('config_slide_subtitle' . $i, PARAM_TEXT);
 
-            $mform->addElement('text', 'config_slide_btn_text' . $i, get_string('config_button_text', 'theme_edumy', $i));
-            $mform->setDefault('config_slide_btn_text' .$i , 'Ready to Get Started?');
-            $mform->setType('config_slide_btn_text' . $i, PARAM_TEXT);
+            $mform->addElement('text', 'config_slide_accent' . $i, 'Accent');
+            $mform->setDefault('config_slide_accent' .$i , 'Top Seller');
+            $mform->setType('config_slide_accent' . $i, PARAM_TEXT);
 
-            $mform->addElement('text', 'config_slide_btn_url' . $i, get_string('config_button_link', 'theme_edumy', $i));
-            $mform->setDefault('config_slide_btn_url' .$i , '#');
-            $mform->setType('config_slide_btn_url' . $i, PARAM_TEXT);
+            // $mform->addElement('text', 'config_slide_btn_text' . $i, get_string('config_button_text', 'theme_edumy', $i));
+            // $mform->setDefault('config_slide_btn_text' .$i , 'Ready to Get Started?');
+            // $mform->setType('config_slide_btn_text' . $i, PARAM_TEXT);
+            //
+            // $mform->addElement('text', 'config_slide_btn_url' . $i, get_string('config_button_link', 'theme_edumy', $i));
+            // $mform->setDefault('config_slide_btn_url' .$i , '#');
+            // $mform->setType('config_slide_btn_url' . $i, PARAM_TEXT);
 
             $options = array('multiple' => false, 'includefrontpage' => false);
             $mform->addElement('course', 'config_course' . $i, get_string('course'), $options);

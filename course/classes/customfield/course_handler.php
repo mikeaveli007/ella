@@ -69,6 +69,17 @@ class course_handler extends \core_customfield\handler {
     }
 
     /**
+     * Run reset code after unit tests to reset the singleton usage.
+     */
+    public static function reset_caches(): void {
+        if (!PHPUNIT_TEST) {
+            throw new \coding_exception('This feature is only intended for use in unit tests');
+        }
+
+        static::$singleton = null;
+    }
+
+    /**
      * The current user can configure custom fields on this component.
      *
      * @return bool true if the current can configure custom fields, false otherwise
@@ -91,8 +102,13 @@ class course_handler extends \core_customfield\handler {
                     has_capability('moodle/course:changelockedcustomfields', $context));
         } else {
             $context = $this->get_parent_context();
-            return (!$field->get_configdata_property('locked') ||
-                guess_if_creator_will_have_course_capability('moodle/course:changelockedcustomfields', $context));
+            if ($context->contextlevel == CONTEXT_SYSTEM) {
+                return (!$field->get_configdata_property('locked') ||
+                    has_capability('moodle/course:changelockedcustomfields', $context));
+            } else {
+                return (!$field->get_configdata_property('locked') ||
+                    guess_if_creator_will_have_course_capability('moodle/course:changelockedcustomfields', $context));
+            }
         }
     }
 

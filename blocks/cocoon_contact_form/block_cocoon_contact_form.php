@@ -36,6 +36,7 @@ class block_cocoon_contact_form extends block_base
         if(!empty($this->config->subtitle)){$this->content->subtitle = $this->config->subtitle;}
         if(!empty($this->config->map_lat)){$this->content->map_lat = $this->config->map_lat;}
         if(!empty($this->config->map_lng)){$this->content->map_lng = $this->config->map_lng;}
+        if(!empty($this->config->map_address)){$this->content->map_address = $this->config->map_address;}
         if(!empty($this->config->zoom)){$this->content->zoom = $this->config->zoom;}else{$this->content->zoom = '11';}
         if(!empty($this->config->style)){$this->content->style = $this->config->style;}else{$this->content->style = '0';}
 
@@ -188,13 +189,13 @@ class block_cocoon_contact_form extends block_base
                 }
                 $this->content->text .='
       					<h4 class="mb5" data-ccn="title">'.format_text($this->content->title, FORMAT_HTML, array('filter' => true)).'</h4>
-      					<p data-ccn="subtitle">'.$this->content->subtitle.'</p>
+      					<p data-ccn="subtitle">'.format_text($this->content->subtitle, FORMAT_HTML, array('filter' => true)).'</p>
                 <form action="'.$CFG->wwwroot.'/local/contact/index.php" method="post" class="contact_form" id="contact_form">
                    <div class="row">
                       <div class="col-sm-12">
                         <div class="form-group">
                           <label for="name" id="namelabel">'.get_string('your_name', 'theme_edumy').'</label>
-                          <input class="form-control" id="name" name="name" type="text" pattern="[A-zÀ-ž]([A-zÀ-ž\s]){2,}" title="'.get_string('your_name_requirements', 'theme_edumy').'" required="required" value="">
+                          <input class="form-control" id="name" name="name" type="text" title="'.get_string('your_name_requirements', 'theme_edumy').'" required="required" value="">
                         </div>
                       </div>
                       <div class="col-sm-12">
@@ -206,13 +207,13 @@ class block_cocoon_contact_form extends block_base
                      <div class="col-sm-12">
                         <div class="form-group">
                           <label for="subject" id="subjectlabel">'.get_string('subject', 'theme_edumy').'</label>
-                          <input id="subject" name="subject" type="text" maxlength="80" minlength="5" title="'.get_string('subject_requirements', 'theme_edumy').'" required="required" class="form-control">
+                          <input id="subject" name="subject" type="text" title="'.get_string('subject_requirements', 'theme_edumy').'" required="required" class="form-control">
                        </div>
                      </div>
                      <div class="col-sm-12">
                         <div class="form-group">
                           <label for="message" id="messagelabel">'.get_string('message', 'theme_edumy').'</label>
-                          <textarea id="message" name="message" rows="5" minlength="5" title="'.get_string('message_requirements', 'theme_edumy').'" required="required" class="form-control"></textarea>
+                          <textarea id="message" name="message" rows="5" title="'.get_string('message_requirements', 'theme_edumy').'" required="required" class="form-control"></textarea>
                           <input type="hidden" id="sesskey" name="sesskey" value="">
                           <script>document.getElementById(\'sesskey\').value = M.cfg.sesskey;</script>';
                           if($this->config->recaptcha == 0) {
@@ -356,7 +357,7 @@ class block_cocoon_contact_form extends block_base
               position: Kine,
               map: map,
         animation: google.maps.Animation.DROP,
-              title: \' '.$this->content->feature_1_subtitle.'  \',
+              title: \' '.$this->content->map_address.'  \',
         icon: image
           });
 

@@ -621,10 +621,23 @@ abstract class moodleform_mod extends moodleform {
         if (!empty($CFG->enableavailability)) {
             // Add special button to end of previous section if groups/groupings
             // are enabled.
-            if ($this->_features->groups || $this->_features->groupings) {
+
+            $availabilityplugins = \core\plugininfo\availability::get_enabled_plugins();
+            $groupavailability = $this->_features->groups && array_key_exists('group', $availabilityplugins);
+            $groupingavailability = $this->_features->groupings && array_key_exists('grouping', $availabilityplugins);
+
+            if ($groupavailability || $groupingavailability) {
+                // When creating the button, we need to set type=button to prevent it behaving as a submit.
                 $mform->addElement('static', 'restrictgroupbutton', '',
-                        html_writer::tag('button', get_string('restrictbygroup', 'availability'),
-                        array('id' => 'restrictbygroup', 'disabled' => 'disabled', 'class' => 'btn btn-secondary')));
+                    html_writer::tag('button', get_string('restrictbygroup', 'availability'), [
+                        'id' => 'restrictbygroup',
+                        'type' => 'button',
+                        'disabled' => 'disabled',
+                        'class' => 'btn btn-secondary',
+                        'data-groupavailability' => $groupavailability,
+                        'data-groupingavailability' => $groupingavailability
+                    ])
+                );
             }
 
             // Availability field. This is just a textarea; the user interface
@@ -942,7 +955,7 @@ abstract class moodleform_mod extends moodleform {
         $mform->setType('instance', PARAM_INT);
 
         $mform->addElement('hidden', 'add', 0);
-        $mform->setType('add', PARAM_ALPHA);
+        $mform->setType('add', PARAM_ALPHANUM);
 
         $mform->addElement('hidden', 'update', 0);
         $mform->setType('update', PARAM_INT);
@@ -1179,7 +1192,7 @@ abstract class moodleform_mod extends moodleform {
     }
 
     /**
-     * Get the list of admin settings for this module and apply any defaults/advanced/locked settings.
+     * Get the list of admin settings for this module and apply any defaults/advanced/locked/required settings.
      *
      * @param $datetimeoffsets array - If passed, this is an array of fieldnames => times that the
      *                         default date/time value should be relative to. If not passed, all
@@ -1220,6 +1233,10 @@ abstract class moodleform_mod extends moodleform {
                 $advancedsetting = $name . '_adv';
                 if (!empty($settings->$advancedsetting)) {
                     $mform->setAdvanced($name);
+                }
+                $requiredsetting = $name . '_required';
+                if (!empty($settings->$requiredsetting)) {
+                    $mform->addRule($name, null, 'required', null, 'client');
                 }
             }
         }

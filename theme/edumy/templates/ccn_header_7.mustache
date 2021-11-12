@@ -1,11 +1,18 @@
 <div class="header_top home7">
   <div class="container">
     <div class="row">
-      <div class="col-lg-5 col-xl-5"></div>
-      <div class="col-lg-7 col-xl-7 p-xl-0">
+      <div class="col-lg-5 col-xl-3"></div>
+      <div class="col-lg-7 col-xl-9 p-xl-0">
         <ul class="sign_up_btn home7 dn-smd text-right">
-          <li class="list-inline-item"><a class="light_white" href="tel:{{{phone}}}">{{{phone}}}</a></li>
-          <li class="list-inline-item"><a class="light_white" href="mailto:{{{email_address}}}">{{{email_address}}}</a></li>
+          {{#cta_text}}
+            <li class="list-inline-item"><a href="{{{cta_link}}}" class="light_white"><i class="{{{ cta_icon }}}"></i><span class="dn-md">{{{cta_text}}}</span></a></li>
+          {{/cta_text}}
+          {{#phone}}
+            <li class="list-inline-item"><a class="light_white" href="tel:{{{phone}}}">{{{phone}}}</a></li>
+          {{/phone}}
+          {{#email_address}}
+            <li class="list-inline-item"><a class="light_white" href="mailto:{{{email_address}}}">{{{email_address}}}</a></li>
+          {{/email_address}}
           {{#header_search_bar}}
             <li class="list-inline-item dn-1366">
               <div class="ht_search_widget">
@@ -47,7 +54,7 @@
         </button>
       </div>
       {{#logo_image}}
-        <a href="{{{ config.wwwroot }}}" class="navbar_brand float-left dn-smd">
+        <a href="{{{ ccnLogoUrl }}}" class="navbar_brand float-left dn-smd">
           <img class="logo1 home7 img-fluid" src="{{{headerlogo3}}}" alt="{{{sitename}}}" {{#logo_styles}} style="{{{logo_styles}}}" {{/logo_styles}}>
         </a>
       {{/logo_image}}

@@ -303,7 +303,7 @@ class mod_quiz_renderer extends plugin_renderer_base {
     /**
      * Create a preview link
      *
-     * @param $url contains a url to the given page
+     * @param moodle_url $url contains a url to the given page
      */
     public function restart_preview_button($url) {
         return $this->single_button($url, get_string('startnewpreview', 'quiz'));
@@ -351,7 +351,7 @@ class mod_quiz_renderer extends plugin_renderer_base {
      * @return string HTML fragment.
      */
     protected function render_quiz_nav_question_button(quiz_nav_question_button $button) {
-        $classes = array('qnbutton', $button->stateclass, $button->navmethod, 'btn', 'btn-secondary');
+        $classes = array('qnbutton', $button->stateclass, $button->navmethod, 'btn');
         $extrainfo = array();
 
         if ($button->currentpage) {
@@ -1247,10 +1247,12 @@ class mod_quiz_renderer extends plugin_renderer_base {
      *
      * @param \core\chart_base $chart The chart.
      * @param string $title The title to display above the graph.
+     * @param array $attrs extra container html attributes.
      * @return string HTML fragment for the graph.
      */
-    public function chart(\core\chart_base $chart, $title) {
-        return $this->heading($title, 3) . html_writer::tag('div', $this->render($chart), array('class' => 'graph'));
+    public function chart(\core\chart_base $chart, $title, $attrs = []) {
+        return $this->heading($title, 3) . html_writer::tag('div',
+            $this->render($chart), array_merge(['class' => 'graph'], $attrs));
     }
 
     /**

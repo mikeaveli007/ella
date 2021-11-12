@@ -12,21 +12,19 @@ Feature: Edited book chapters handle tags correctly
     And the following "courses" exist:
       | fullname | shortname | format |
       | Course 1 | C1 | topics |
+    And the following "activity" exists:
+      | activity    | book                |
+      | course      | C1                  |
+      | idnumber    | book1               |
+      | name        | Test book           |
+      | description | A book about dreams |
     And the following "course enrolments" exist:
       | user | course | role |
       | teacher1 | C1 | editingteacher |
       | student1 | C1 | student |
-    And I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
-    And I add a "Book" to section "1" and I fill the form with:
-      | Name | Test book |
-      | Description | A book about dreams! |
-    And I log out
 
   Scenario: Book chapter edition of custom tags works as expected
-    Given I log in as "teacher1"
-    And I am on "Course 1" course homepage
-    And I follow "Test book"
+    Given I am on the "Test book" "book activity" page logged in as teacher1
     And I set the following fields to these values:
       | Chapter title | Dummy first chapter |
       | Content | Dream is the start of a journey |
@@ -50,9 +48,7 @@ Feature: Edited book chapters handle tags correctly
     And I set the field "Enter comma-separated list of new tags" to "OT1, OT2, OT3"
     And I press "Continue"
     And I log out
-    And I log in as "teacher1"
-    And I am on "Course 1" course homepage
-    And I follow "Test book"
+    And I am on the "Test book" "book activity" page logged in as teacher1
     And I open the autocomplete suggestions list
     And I should see "OT1" in the ".form-autocomplete-suggestions" "css_element"
     And I should see "OT2" in the ".form-autocomplete-suggestions" "css_element"

@@ -55,8 +55,6 @@ class block_cocoon_hero_4 extends block_base {
           $this->config->form_text = 'Your data is safe and secure with Edumy. We never share your data.';
           $this->config->form_icon = 'ccn-flaticon-locked';
           $this->config->form_button_text = 'Recommend My Courses';
-          $this->config->image = $CFG->wwwroot.'/theme/edumy/images/home/ccnBg.png';
-
           $this->config->feature_1_title = 'Design: Over 800 Courses';
           $this->config->feature_2_title = 'Business: Over 1,400 Courses';
           $this->config->feature_3_title = 'Photography: Over 740 Courses';
@@ -65,7 +63,6 @@ class block_cocoon_hero_4 extends block_base {
           $this->config->feature_2_icon = 'flaticon-student-1';
           $this->config->feature_3_icon = 'flaticon-photo-camera';
           $this->config->feature_4_icon = 'flaticon-medal';
-
           $this->config->color_title = '#fff';
           $this->config->color_title_2 = '#fff';
           $this->config->color_subtitle = '#fff';
@@ -128,7 +125,6 @@ class block_cocoon_hero_4 extends block_base {
         if(!empty($this->config->feature_3_icon)){$this->content->feature_3_icon = $this->config->feature_3_icon;} else {$this->content->feature_3_icon = '';}
         if(!empty($this->config->feature_4_title)){$this->content->feature_4_title = $this->config->feature_4_title;} else {$this->content->feature_4_title = '';}
         if(!empty($this->config->feature_4_icon)){$this->content->feature_4_icon = $this->config->feature_4_icon;} else {$this->content->feature_4_icon = '';}
-
         if(!empty($this->config->color_title)){$this->content->color_title = $this->config->color_title;} else {$this->content->color_title = '#fff';}
         if(!empty($this->config->color_title_2)){$this->content->color_title_2 = $this->config->color_title_2;} else {$this->content->color_title_2 = '#fff';}
         if(!empty($this->config->color_subtitle)){$this->content->color_subtitle = $this->config->color_subtitle;} else {$this->content->color_subtitle = '#fff';}
@@ -166,9 +162,8 @@ class block_cocoon_hero_4 extends block_base {
         				<div class="col-lg-5">
         					<div class="home_content home5 style2">
         						<div class="home1-advnc-search home5">
-        							<form class="home5_advanced_search_form">
-                      <div class="ccn-form-header" data-ccn="form_title" data-ccn-c="color_form_title" data-ccn-co="bg" data-ccn-cv="'.$this->content->color_form_title.'">'.format_text($this->content->form_title, FORMAT_HTML, array('filter' => true)).'</div>
-                      <form action="'.$CFG->wwwroot.'/local/contact/index.php" method="post" class="form-inline mailchimp_form">
+        							<form class="home5_advanced_search_form" action="'.$CFG->wwwroot.'/local/contact/index.php" method="post">
+                        <div class="ccn-form-header" data-ccn="form_title" data-ccn-c="color_form_title" data-ccn-co="bg" data-ccn-cv="'.$this->content->color_form_title.'">'.format_text($this->content->form_title, FORMAT_HTML, array('filter' => true)).'</div>
                         <div class="form-group">
                           <input id="name" name="name" type="name" required="required" class="form-control" placeholder="'.get_string('firstname').'" value="">
                         </div>
@@ -179,7 +174,7 @@ class block_cocoon_hero_4 extends block_base {
                           <input id="email" name="email" type="email" required="required" class="form-control" placeholder="'.get_string('email').'">
                         </div>
                         <div class="form-group">
-                          <input id="interests" name="interests" type="interests" required="required" class="form-control" placeholder="'.get_string('interested_in').'">
+                          <input id="interests" name="interests" type="interests" required="required" class="form-control" placeholder="'.get_string('interested_in', 'theme_edumy').'">
                         </div>
                         <div class="form-group ccn-form-icon">
                           <div class="ccn-form-icon-holder">

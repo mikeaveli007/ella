@@ -60,7 +60,6 @@ $string['deletetokenconfirm'] = 'Do you really want to delete this web service t
 $string['disabledwarning'] = 'All web service protocols are disabled.  The "Enable web services" setting can be found in Advanced features.';
 $string['doc'] = 'Documentation';
 $string['docaccessrefused'] = 'You are not allowed to see the documentation for this token';
-$string['documentation'] = 'web service documentation';
 $string['downloadfiles'] = 'Can download files';
 $string['downloadfiles_help'] = 'If enabled, any user can download files with their security keys. Of course they are restricted to the files they are allowed to download in the site.';
 $string['editaservice'] = 'Edit service';
@@ -79,7 +78,7 @@ $string['errorcodes'] = 'Error message';
 $string['errorcoursecontextnotvalid'] = 'You cannot execute functions in the course context (course id:{$a->courseid}). The context error message was: {$a->message}';
 $string['errorinvalidparam'] = 'The param "{$a}" is invalid.';
 $string['errornotemptydefaultparamarray'] = 'The web service description parameter named \'{$a}\' is an single or multiple structure. The default can only be empty array. Check web service description.';
-$string['erroroptionalparamarray'] = 'The web service description parameter named \'{$a}\' is an single or multiple structure. It can not be set as VALUE_OPTIONAL. Check web service description.';
+$string['erroroptionalparamarray'] = 'The web service description parameter named \'{$a}\' is a single or multiple structure. It cannot be set as VALUE_OPTIONAL. Check the web service description.';
 $string['eventwebservicefunctioncalled'] = 'Web service function called';
 $string['eventwebserviceloginfailed'] = 'Web service login failed';
 $string['eventwebserviceservicecreated'] = 'Web service created';
@@ -241,3 +240,6 @@ $string['wsdocumentationintro'] = 'To create a client we advise you to read the 
 $string['wsdocumentationlogin'] = 'or enter your web service username and password:';
 $string['wspassword'] = 'Web service password';
 $string['wsusername'] = 'Web service username';
+
+// Deprecated since Moodle 3.9.
+$string['documentation'] = 'web service documentation';

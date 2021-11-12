@@ -19,11 +19,9 @@ Feature: In an assignment, students can comment in their submissions
 
   Scenario: Student comments an assignment submission
     Given the following "activities" exist:
-      | activity | course | idnumber | name                 | intro                       | assignsubmission_onlinetext_enabled |
-      | assign   | C1     | assign1  | Test assignment name | Test assignment description | 1 |
-    And I log in as "student1"
-    And I am on "Course 1" course homepage
-    And I follow "Test assignment name"
+      | activity  | course  | name                  | assignsubmission_onlinetext_enabled  |
+      | assign    | C1      | Test assignment name  | 1                                    |
+    And I am on the "Test assignment name" Activity page logged in as student1
     When I press "Add submission"
     And I set the following fields to these values:
       | Online text | I'm the student submission |
@@ -47,18 +45,16 @@ Feature: In an assignment, students can comment in their submissions
 
   Scenario: Teacher can comment on an offline assignment
     Given the following "activities" exist:
-      | activity | course | idnumber | name                 | intro                       | assignsubmission_onlinetext_enabled | assignmentsubmission_file_enabled | assignfeedback_comments_enabled |
-      | assign   | C1     | assign1  | Test assignment name | Test assignment description | 0 | 0 | 1 |
-    And I log in as "teacher1"
-    And I am on "Course 1" course homepage
-    And I follow "Test assignment name"
+      | activity  | course  | name                  | assignsubmission_onlinetext_enabled  | assignmentsubmission_file_enabled  | assignfeedback_comments_enabled  |
+      | assign    | C1      | Test assignment name  | 0                                    | 0                                  | 1                                |
+    And I am on the "Test assignment name" Activity page logged in as teacher1
     And I navigate to "View all submissions" in current page administration
     And I click on "Grade" "link" in the "Student 1" "table_row"
     When I set the following fields to these values:
-      | Grade out of 100 | 50 |
-      | Feedback comments | I'm the teacher feedback |
+      | Grade out of 100   | 50                        |
+      | Feedback comments  | I'm the teacher feedback  |
     And I press "Save changes"
-    And I press "Ok"
+    And I press "OK"
     And I click on "Edit settings" "link"
     And I follow "Test assignment name"
     And I navigate to "View all submissions" in current page administration
@@ -67,18 +63,16 @@ Feature: In an assignment, students can comment in their submissions
 
   Scenario: Teacher can comment on assignments with a zero grade
     Given the following "activities" exist:
-      | activity | course | idnumber | name                 | intro                       | assignsubmission_onlinetext_enabled | assignmentsubmission_file_enabled | assignfeedback_comments_enabled |
-      | assign   | C1     | assign1  | Test assignment name | Test assignment description | 0 | 0 | 1 |
-    And I log in as "teacher1"
-    And I am on "Course 1" course homepage
-    And I follow "Test assignment name"
+      | activity  | course  | name                  | assignsubmission_onlinetext_enabled  | assignmentsubmission_file_enabled  | assignfeedback_comments_enabled  |
+      | assign    | C1      | Test assignment name  | 0                                    | 0                                  | 1                                |
+    And I am on the "Test assignment name" Activity page logged in as teacher1
     And I navigate to "View all submissions" in current page administration
     And I click on "Grade" "link" in the "Student 1" "table_row"
     And I set the following fields to these values:
       | Grade out of 100 | 0 |
     And I press "Save changes"
     And I should see "The changes to the grade and feedback were saved"
-    And I press "Ok"
+    And I press "OK"
     And I set the following fields to these values:
       | Feedback comments | I'm the teacher feedback |
     And I press "Save changes"

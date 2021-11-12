@@ -51,6 +51,13 @@ class block_cocoon_users_slider_round_edit_form extends block_edit_form {
         ]);
         $mform->addRule('config_users', null, 'required');
 
+        $options = array(
+          0 => 'Hide',
+          1 => 'Display',
+        );
+        $select = $mform->addElement('select', 'config_profile_views', get_string('profile_views', 'theme_edumy'), $options, array('class'=>'ccnCommLcRef_change'));
+        $select->setSelected('1');
+
         $mform->addElement('header', 'config_ccn_colors', get_string('block_styles', 'theme_edumy'));
 
         $mform->addElement('text', 'config_color_bg', get_string('config_color_bg', 'theme_edumy'), array('class'=>'ccn_spectrum_class'));

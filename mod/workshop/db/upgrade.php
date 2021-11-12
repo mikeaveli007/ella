@@ -35,32 +35,9 @@ defined('MOODLE_INTERNAL') || die();
  * @return bool result
  */
 function xmldb_workshop_upgrade($oldversion) {
-    global $CFG, $DB;
+    global $DB;
 
     $dbman = $DB->get_manager();
-
-    // Automatically generated Moodle v3.3.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    // Automatically generated Moodle v3.4.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    if ($oldversion < 2018042700) {
-        // Drop the old Moodle 1.x tables, thanks privacy by design for forcing me to do so finally.
-
-        $oldtables = ['workshop_old', 'workshop_elements_old', 'workshop_rubrics_old', 'workshop_submissions_old',
-            'workshop_assessments_old', 'workshop_grades_old', 'workshop_stockcomments_old', 'workshop_comments_old'];
-
-        foreach ($oldtables as $oldtable) {
-            $table = new xmldb_table($oldtable);
-
-            if ($dbman->table_exists($table)) {
-                $dbman->drop_table($table);
-            }
-        }
-
-        upgrade_mod_savepoint(true, 2018042700, 'workshop');
-    }
 
     // Automatically generated Moodle v3.5.0 release upgrade line.
     // Put any upgrade step following this.
@@ -114,6 +91,22 @@ function xmldb_workshop_upgrade($oldversion) {
 
     // Automatically generated Moodle v3.8.0 release upgrade line.
     // Put any upgrade step following this.
+
+    // Automatically generated Moodle v3.9.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    if ($oldversion < 2020061501) {
+
+        // Changing nullability of field grade on table workshop_grades to null.
+        $table = new xmldb_table('workshop_grades');
+        $field = new xmldb_field('grade', XMLDB_TYPE_NUMBER, '10, 5', null, null, null, null, 'dimensionid');
+
+        // Launch change of nullability for field grade.
+        $dbman->change_field_notnull($table, $field);
+
+        // Workshop savepoint reached.
+        upgrade_mod_savepoint(true, 2020061501, 'workshop');
+    }
 
     return true;
 }

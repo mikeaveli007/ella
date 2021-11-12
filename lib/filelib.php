@@ -40,6 +40,16 @@ define('IGNORE_FILE_MERGE', -1);
  */
 define('FILE_AREA_MAX_BYTES_UNLIMITED', -1);
 
+/**
+ * Capacity of the draft area bucket when using the leaking bucket technique to limit the draft upload rate.
+ */
+define('DRAFT_AREA_BUCKET_CAPACITY', 50);
+
+/**
+ * Leaking rate of the draft area bucket when using the leaking bucket technique to limit the draft upload rate.
+ */
+define('DRAFT_AREA_BUCKET_LEAK', 0.2);
+
 require_once("$CFG->libdir/filestorage/file_exceptions.php");
 require_once("$CFG->libdir/filestorage/file_storage.php");
 require_once("$CFG->libdir/filestorage/zip_packer.php");
@@ -390,7 +400,7 @@ function file_get_unused_draft_itemid() {
  * @return string|null returns string if $text was passed in, the rewritten $text is returned. Otherwise NULL.
  */
 function file_prepare_draft_area(&$draftitemid, $contextid, $component, $filearea, $itemid, array $options=null, $text=null) {
-    global $CFG, $USER, $CFG;
+    global $CFG, $USER;
 
     $options = (array)$options;
     if (!isset($options['subdirs'])) {
@@ -604,6 +614,55 @@ function file_is_draft_area_limit_reached($draftitemid, $areamaxbytes, $newfiles
         }
     }
     return false;
+}
+
+/**
+ * Returns whether a user has reached their draft area upload rate.
+ *
+ * @param int $userid The user id
+ * @return bool
+ */
+function file_is_draft_areas_limit_reached(int $userid): bool {
+    global $CFG;
+
+    $capacity = $CFG->draft_area_bucket_capacity ?? DRAFT_AREA_BUCKET_CAPACITY;
+    $leak = $CFG->draft_area_bucket_leak ?? DRAFT_AREA_BUCKET_LEAK;
+
+    $since = time() - floor($capacity / $leak); // The items that were in the bucket before this time are already leaked by now.
+                                                // We are going to be a bit generous to the user when using the leaky bucket
+                                                // algorithm below. We are going to assume that the bucket is empty at $since.
+                                                // We have to do an assumption here unless we really want to get ALL user's draft
+                                                // items without any limit and put all of them in the leaking bucket.
+                                                // I decided to favour performance over accuracy here.
+
+    $fs = get_file_storage();
+    $items = $fs->get_user_draft_items($userid, $since);
+    $items = array_reverse($items); // So that the items are sorted based on time in the ascending direction.
+
+    // We only need to store the time that each element in the bucket is going to leak. So $bucket is array of leaking times.
+    $bucket = [];
+    foreach ($items as $item) {
+        $now = $item->timemodified;
+        // First let's see if items can be dropped from the bucket as a result of leakage.
+        while (!empty($bucket) && ($now >= $bucket[0])) {
+            array_shift($bucket);
+        }
+
+        // Calculate the time that the new item we put into the bucket will be leaked from it, and store it into the bucket.
+        if ($bucket) {
+            $bucket[] = max($bucket[count($bucket) - 1], $now) + (1 / $leak);
+        } else {
+            $bucket[] = $now + (1 / $leak);
+        }
+    }
+
+    // Recalculate the bucket's content based on the leakage until now.
+    $now = time();
+    while (!empty($bucket) && ($now >= $bucket[0])) {
+        array_shift($bucket);
+    }
+
+    return count($bucket) >= $capacity;
 }
 
 /**
@@ -1639,6 +1698,7 @@ function download_file_content($url, $headers=null, $postdata=null, $fullrespons
  *     commonly used in moodle the following groups:
  *       - web_image - image that can be included as <img> in HTML
  *       - image - image that we can parse using GD to find it's dimensions, also used for portfolio format
+ *       - optimised_image - image that will be processed and optimised
  *       - video - file that can be imported as video in text editor
  *       - audio - file that can be imported as audio in text editor
  *       - archive - we can extract files from this archive
@@ -2169,7 +2229,7 @@ function readfile_accel($file, $mimetype, $accelerate) {
         if (is_object($file)) {
             $fs = get_file_storage();
             if ($fs->supports_xsendfile()) {
-                if ($fs->xsendfile($file->get_contenthash())) {
+                if ($fs->xsendfile_file($file)) {
                     return;
                 }
             }
@@ -2219,26 +2279,38 @@ function readfile_accel($file, $mimetype, $accelerate) {
             if ($ranges) {
                 if (is_object($file)) {
                     $handle = $file->get_content_file_handle();
+                    if ($handle === false) {
+                        throw new file_exception('storedfilecannotreadfile', $file->get_filename());
+                    }
                 } else {
                     $handle = fopen($file, 'rb');
+                    if ($handle === false) {
+                        throw new file_exception('cannotopenfile', $file);
+                    }
                 }
                 byteserving_send_file($handle, $mimetype, $ranges, $filesize);
             }
         }
     }
 
-    header('Content-Length: '.$filesize);
+    header('Content-Length: ' . $filesize);
 
     if (!empty($_SERVER['REQUEST_METHOD']) and $_SERVER['REQUEST_METHOD'] === 'HEAD') {
         exit;
     }
 
-    if ($filesize > 10000000) {
-        // for large files try to flush and close all buffers to conserve memory
-        while(@ob_get_level()) {
-            if (!@ob_end_flush()) {
-                break;
+    while (ob_get_level()) {
+        $handlerstack = ob_list_handlers();
+        $activehandler = array_pop($handlerstack);
+        if ($activehandler === 'default output handler') {
+            // We do not expect any content in the buffer when we are serving files.
+            $buffercontents = ob_get_clean();
+            if ($buffercontents !== '') {
+                error_log('Non-empty default output handler buffer detected while serving the file ' . $file);
             }
+        } else {
+            // Some handlers such as zlib output compression may have file signature buffered - flush it.
+            ob_end_flush();
         }
     }
 
@@ -2246,7 +2318,9 @@ function readfile_accel($file, $mimetype, $accelerate) {
     if (is_object($file)) {
         $file->readfile();
     } else {
-        readfile_allow_large($file, $filesize);
+        if (readfile_allow_large($file, $filesize) === false) {
+            throw new file_exception('cannotopenfile', $file);
+        }
     }
 }
 
@@ -2989,7 +3063,7 @@ class curl {
     public  $error;
     /** @var int error code */
     public  $errno;
-    /** @var bool use workaround for open_basedir restrictions, to be changed from unit tests only! */
+    /** @var bool Perform redirects at PHP level instead of relying on native cURL functionality. Always true now. */
     public $emulateredirects = null;
 
     /** @var array cURL options */
@@ -3086,9 +3160,13 @@ class curl {
             $this->proxy = false;
         }
 
-        if (!isset($this->emulateredirects)) {
-            $this->emulateredirects = ini_get('open_basedir');
-        }
+        // All redirects are performed at PHP level now and each one is checked against blocked URLs rules. We do not
+        // want to let cURL naively follow the redirect chain and visit every URL for security reasons. Even when the
+        // caller explicitly wants to ignore the security checks, we would need to fall back to the original
+        // implementation and use emulated redirects if open_basedir is in effect to avoid the PHP warning
+        // "CURLOPT_FOLLOWLOCATION cannot be activated when in safe_mode or an open_basedir". So it is better to simply
+        // ignore this property and always handle redirects at this PHP wrapper level and not inside the native cURL.
+        $this->emulateredirects = true;
 
         // Curl security setup. Allow injection of a security helper, but if not found, default to the core helper.
         if (isset($settings['securityhelper']) && $settings['securityhelper'] instanceof \core\files\curl_security_helper_base) {
@@ -3397,8 +3475,8 @@ class curl {
 
         // Set options.
         foreach($this->options as $name => $val) {
-            if ($name === 'CURLOPT_FOLLOWLOCATION' and $this->emulateredirects) {
-                // The redirects are emulated elsewhere.
+            if ($name === 'CURLOPT_FOLLOWLOCATION') {
+                // All the redirects are emulated at PHP level.
                 curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 0);
                 continue;
             }
@@ -3570,8 +3648,12 @@ class curl {
             }
         }
 
-        // If curl security is enabled, check the URL against the blacklist before calling curl_exec.
-        // Note: This will only check the base url. In the case of redirects, the blacklist is also after the curl_exec.
+        if (empty($this->emulateredirects)) {
+            // Just in case someone had tried to explicitly disable emulated redirects in legacy code.
+            debugging('Attempting to disable emulated redirects has no effect any more!', DEBUG_DEVELOPER);
+        }
+
+        // If curl security is enabled, check the URL against the list of blocked URLs before calling the first curl_exec.
         if (!$this->ignoresecurity && $this->securityhelper->url_is_blocked($url)) {
             $this->error = $this->securityhelper->get_blocked_url_string();
             return $this->error;
@@ -3594,16 +3676,14 @@ class curl {
         $this->errno = curl_errno($curl);
         // Note: $this->response and $this->rawresponse are filled by $hits->formatHeader callback.
 
-        // In the case of redirects (which curl blindly follows), check the post-redirect URL against the blacklist entries too.
-        if (intval($this->info['redirect_count']) > 0 && !$this->ignoresecurity
-            && $this->securityhelper->url_is_blocked($this->info['url'])) {
-            $this->reset_request_state_vars();
-            $this->error = $this->securityhelper->get_blocked_url_string();
-            curl_close($curl);
-            return $this->error;
+        if (intval($this->info['redirect_count']) > 0) {
+            // For security reasons we do not allow the cURL handle to follow redirects on its own.
+            // See setting CURLOPT_FOLLOWLOCATION in {@see self::apply_opt()} method.
+            throw new coding_exception('Internal cURL handle should never follow redirects on its own!',
+                'Reported number of redirects: ' . $this->info['redirect_count']);
         }
 
-        if ($this->emulateredirects and $this->options['CURLOPT_FOLLOWLOCATION'] and $this->info['http_code'] != 200) {
+        if ($this->options['CURLOPT_FOLLOWLOCATION'] && $this->info['http_code'] != 200) {
             $redirects = 0;
 
             while($redirects <= $this->options['CURLOPT_MAXREDIRS']) {
@@ -3637,6 +3717,12 @@ class curl {
                 if (isset($this->info['redirect_url'])) {
                     if (preg_match('|^https?://|i', $this->info['redirect_url'])) {
                         $redirecturl = $this->info['redirect_url'];
+                    } else {
+                        // Emulate CURLOPT_REDIR_PROTOCOLS behaviour which we have set to (CURLPROTO_HTTP | CURLPROTO_HTTPS) only.
+                        $this->errno = CURLE_UNSUPPORTED_PROTOCOL;
+                        $this->error = 'Redirect to a URL with unsuported protocol: ' . $this->info['redirect_url'];
+                        curl_close($curl);
+                        return $this->error;
                     }
                 }
                 if (!$redirecturl) {
@@ -3664,6 +3750,13 @@ class curl {
                             $redirecturl = dirname($current).'/'.$redirecturl;
                         }
                     }
+                }
+
+                if (!$this->ignoresecurity && $this->securityhelper->url_is_blocked($redirecturl)) {
+                    $this->reset_request_state_vars();
+                    $this->error = $this->securityhelper->get_blocked_url_string();
+                    curl_close($curl);
+                    return $this->error;
                 }
 
                 curl_setopt($curl, CURLOPT_URL, $redirecturl);
@@ -4897,8 +4990,29 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
             \core\session\manager::write_close(); // Unlock session during file serving.
             send_stored_file($file, 60*60, 0, $forcedownload, $sendfileoptions);
         }
+    } else if ($component === 'contentbank') {
+        if ($filearea != 'public' || isguestuser()) {
+            send_file_not_found();
+        }
 
-        // ========================================================================================================================
+        if ($context->contextlevel == CONTEXT_SYSTEM || $context->contextlevel == CONTEXT_COURSECAT) {
+            require_login();
+        } else if ($context->contextlevel == CONTEXT_COURSE) {
+            require_login($course);
+        } else {
+            send_file_not_found();
+        }
+
+        $itemid = (int)array_shift($args);
+        $filename = array_pop($args);
+        $filepath = $args ? '/'.implode('/', $args).'/' : '/';
+        if (!$file = $fs->get_file($context->id, $component, $filearea, $itemid, $filepath, $filename) or
+            $file->is_directory()) {
+            send_file_not_found();
+        }
+
+        \core\session\manager::write_close(); // Unlock session during file serving.
+        send_stored_file($file, 0, 0, true, $sendfileoptions); // must force download - security!
     } else if (strpos($component, 'mod_') === 0) {
         $modname = substr($component, 4);
         if (!file_exists("$CFG->dirroot/mod/$modname/lib.php")) {

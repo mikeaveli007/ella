@@ -252,7 +252,7 @@ class block_cocoon_featuredcourses extends block_base {
         if(!empty($this->content->button_text) && !empty($this->content->button_link)){
         $this->content->text .='</div></div>
         <div class="col-lg-6 offset-lg-3">
-					<div class="courses_all_btn text-center">
+					<div class="courses_all_btn text-center" data-ccn-btn>
 						<a class="btn btn-transparent" data-ccn="button_text" href="'.format_text($this->content->button_link, FORMAT_HTML, array('filter' => true)).'">'.format_text($this->content->button_text, FORMAT_HTML, array('filter' => true)).'</a>
 					</div>
 				</div>'  ;

@@ -141,10 +141,14 @@ class block_cocoon_course_grid_4 extends block_base {
 
         if(!empty($this->config->group)){
           $filter = $this->config->group;
-          $coursesContainerClass = 'masonry_abc';
+          $ccnClassMasonry_cont = 'ccn-masonry-grid-1';
+          $ccnClassMasonry_opts = 'ccn-masonry-options';
+          $ccnClassMasonry_grid = 'ccn-masonry-grid';
         } else {
           $filter = null;
-          $coursesContainerClass = '';
+          $ccnClassMasonry_cont = '';
+          $ccnClassMasonry_opts = '';
+          $ccnClassMasonry_grid = '';
         }
         if(!empty($this->config->courses)){
           $coursesArr = $this->config->courses;
@@ -169,7 +173,7 @@ class block_cocoon_course_grid_4 extends block_base {
 
 
         $this->content->text .= '
-        <section id="our-top-courses" class="our-courses ccn-courses-grid-block ccn-courses-grid-block-4" data-ccn-c="color_bg" data-ccn-co="bg" style="background-color: '.$this->content->color_bg.';">
+        <section id="our-top-courses" class="'.$ccnClassMasonry_cont.' our-courses ccn-courses-grid-block ccn-courses-grid-block-4" data-ccn-c="color_bg" data-ccn-co="bg" style="background-color: '.$this->content->color_bg.';">
           <div class="container">
           <div class="row">
             <div class="col-lg-6">
@@ -187,7 +191,7 @@ class block_cocoon_course_grid_4 extends block_base {
               <div class="ccn-section-top-more pull-right mt0 mb20">';
               if($filter == 1){
                 $this->content->text .= '
-                <div id="options" class="alpha-pag full">
+                <div id="options" class="'.$ccnClassMasonry_opts.' alpha-pag full">
                   <div class="option-isotop">
                     <ul id="filter" class="option-set" data-option-key="filter">
                       <li class="list-inline-item"><a data-ccn-c="color_title" data-ccn-cv="'.$this->content->color_title.'" href="#all" data-option-value="*" class="selected ccnLcEl--br--i">'.get_string('all').'</a></li>';
@@ -211,7 +215,7 @@ class block_cocoon_course_grid_4 extends block_base {
               <div class="emply-text-sec">';
               }
               $this->content->text .='
-                  <div class="row" id="'.$coursesContainerClass.'">';
+                  <div class="row '.$ccnClassMasonry_grid.' id="'.$coursesContainerClass.'">';
 
         // $courses = self::get_featured_courses();
         // print_object($courses);

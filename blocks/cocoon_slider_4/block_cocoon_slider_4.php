@@ -40,7 +40,7 @@ class block_cocoon_slider_4 extends block_base {
           $this->config->slide_subtitle1 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
           $this->config->slide_btn_text1 = 'Ready to Get Started?';
           $this->config->slide_btn_url1 = '#';
-          $this->config->image = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
+          // $this->config->image = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
           $this->config->slide_subtitle2 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
           $this->config->slide_btn_text2 = 'Ready to Get Started?';
           $this->config->slide_btn_url2 = '#';

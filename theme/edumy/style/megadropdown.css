@@ -12,7 +12,7 @@
   right: 0;
 }
 .vertical-wrapper .title-vertical {
-  background-color: #2441e7;
+  background-color: [[setting:color_primary]];
   color: #fff;
   cursor: pointer;
   font-size: 16px;

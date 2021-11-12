@@ -97,12 +97,13 @@ header.header-nav.ccnHeader8.menu_style_home_four .ace-responsive-menu li a {
 }
 header.header-nav.ccnHeader8.menu_style_home_four .sign_up_btn .btn {
   background-color: transparent;
-  border: 1px solid #ffffff;
+  border: 1px solid #fff;
   border-radius: 20px;
-  color: #ffffff;
-  height: 45px;
-  line-height: 30px;
-  margin-top: 10px;
+  color: #fff;
+  height: 41px;
+  line-height: 37px;
+  font-size: 15px;
+  padding: 0px 19px;
 }
 header.header-nav.ccnHeader8.menu_style_home_four .sign_up_btn .btn:hover,
 .sign_up_btn .btn:hover {
@@ -140,6 +141,11 @@ header.header-nav.ccnHeader8.menu_style_home_four.stricky-fixed a.navbar_brand s
 /* .ccn_context_frontend.ccn_no_hero .inner_page_breadcrumb {
   margin-top: 80px; */
 /* } */
+.ccn_context_frontend:not(.ccn_hero_2) .vertical-wrapper .title-vertical,
+.ccn_context_frontend:not(.ccn_hero_2) .vertical-wrapper .title-vertical.home3 {
+  background-color: [[setting:color_primary]];
+  color: #fff;
+}
 .ccn_context_frontend:not(.ccn_hero_2) header.header-nav.ccnHeader8:not(.stricky-fixed) {
   background: #fff;
   height: 97px;
@@ -175,6 +181,9 @@ header.header-nav.ccnHeader8.menu_style_home_four.stricky-fixed a.navbar_brand s
   .ccn_header_style_8 .block_cocoon_hero_4.ccn_morphed,
   .ccn_context_frontend .inner_page_breadcrumb {
     margin-top: 96px;
+  }
+  .block_cocoon_slider_7.ccn_morphed .home14-slider:not(.style2) {
+    margin-top: 105px;
   }
 }
 /* @ccnNote: end Home4 begin Home 8 */
@@ -220,6 +229,14 @@ header.header-nav.ccnHeader8.menu_style_home_four.stricky-fixed a.navbar_brand s
   }
   .logo-widget.home8 {
     margin-left: 50px;
+  }
+  .block_cocoon_slider_7.ccn_morphed .home14-slider:not(.style2)>.container.maxw1500 {
+    max-width: none;
+    padding: 0;
+    width: 100%;
+  }
+  .block_cocoon_slider_7.ccn_morphed .home14-slider:not(.style2) .banner-style-one .slide {
+    border-radius: 0;
   }
 }
 @media only screen and (max-width: 767.98px) {

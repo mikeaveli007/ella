@@ -80,7 +80,7 @@ class block_cocoon_featured_event extends block_base
                   $this->content->text .='
                 </ul>';
                 if(!empty($this->content->button_text)){
-                  $this->content->text .='<a data-ccn="button_text" href="'.$this->content->button_link.'" class="btn dbxshad btn-md btn-thm2 rounded mt30">'.$this->content->button_text.'</a>';
+                  $this->content->text .='<a data-ccn="button_text" href="'.$this->content->button_link.'" class="btn dbxshad btn-md btn-thm2 rounded mt30">'.format_text($this->content->button_text, FORMAT_HTML, array('filter' => true)).'</a>';
                 }
                 $this->content->text .='
               </div>

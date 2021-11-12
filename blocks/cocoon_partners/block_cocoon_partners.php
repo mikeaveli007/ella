@@ -59,8 +59,8 @@ class block_cocoon_partners extends block_base
       			<div class="row">
       				<div class="col-lg-6 offset-lg-3">
       					<div class="main-title text-center">
-      						<h3 data-ccn="title" class="mt0" data-ccn-c="color_title" data-ccn-cv="'.$this->content->color_title.'">'.$this->content->title.'</h3>
-      						<p data-ccn="subtitle" data-ccn-c="color_subtitle" data-ccn-cv="'.$this->content->color_subtitle.'">'.$this->content->subtitle.'</p>
+      						<h3 data-ccn="title" class="mt0" data-ccn-c="color_title" data-ccn-cv="'.$this->content->color_title.'">'.format_text($this->content->title, FORMAT_HTML, array('filter' => true)).'</h3>
+      						<p data-ccn="subtitle" data-ccn-c="color_subtitle" data-ccn-cv="'.$this->content->color_subtitle.'">'.format_text($this->content->subtitle, FORMAT_HTML, array('filter' => true)).'</p>
       					</div>
       				</div>
       			</div>

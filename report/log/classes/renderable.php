@@ -203,7 +203,8 @@ class report_log_renderable implements renderable {
             $section = 0;
             $thissection = array();
             foreach ($modinfo->cms as $cm) {
-                if (!$cm->uservisible || !$cm->has_view()) {
+                // Exclude activities that aren't visible or have no view link (e.g. label). Account for folders displayed inline.
+                if (!$cm->uservisible || (!$cm->has_view() && strcmp($cm->modname, 'folder') !== 0)) {
                     continue;
                 }
                 if ($cm->sectionnum > 0 and $section <> $cm->sectionnum) {
@@ -298,7 +299,14 @@ class report_log_renderable implements renderable {
      */
     public function get_selected_user_fullname() {
         $user = core_user::get_user($this->userid);
-        return fullname($user);
+        if (empty($this->course)) {
+            // We are in system context.
+            $context = context_system::instance();
+        } else {
+            // We are in course context.
+            $context = context_course::instance($this->course->id);
+        }
+        return fullname($user, has_capability('moodle/site:viewfullnames', $context));
     }
 
     /**

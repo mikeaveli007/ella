@@ -11,6 +11,10 @@ class block_cocoon_boxes extends block_base {
         return true;
     }
 
+    function instance_allow_multiple() {
+        return true;
+    }
+
     function applicable_formats() {
       $ccnBlockHandler = new ccnBlockHandler();
       return $ccnBlockHandler->ccnGetBlockApplicability(array('all'));
@@ -130,8 +134,8 @@ class block_cocoon_boxes extends block_base {
 
 			</div>
 			<div class="row">
-      <div class="col-xs-12">
-      <div class="row">';
+      <div class="col-12">
+      <div class="row justify-content-center">';
 
           $col_class = "";
           if ($data->items == 1) {
@@ -157,6 +161,7 @@ class block_cocoon_boxes extends block_base {
               $title = 'title' . $i;
               $body = 'body' . $i;
               $link = 'link' . $i;
+              $link_target = 'link_target' . $i;
 
               $this->content->text .='
               <style type="text/css">
@@ -175,15 +180,15 @@ class block_cocoon_boxes extends block_base {
               </style>
               <div class="col-sm-6 col-lg-3">';
               if(!empty($data->$link)){
-                $this->content->text .='<a href="'.$data->$link.'">';
+                $this->content->text .='<a href="'.$data->$link.'" target="'.$data->$link_target.'">';
               }
               $this->content->text .='
       					<div class="icon_hvr_img_box ccn-box sbbg1" data-ccn-c="color'.$i.'" data-ccn-co="bg" style="background-color: '.$data->$color.';">
       						<div class="overlay">
       							<div class="ccn_icon_2 icon"><span data-ccn="icon'.$i.'" data-ccn-c="color_icon'.$i.'" data-ccn-co="content" class="'.$data->$icon.'" style="color:'.$data->$icon_color.'"></span></div>
       							<div class="details">
-      								<h5 data-ccn="title'.$i.'" data-ccn-c="color_title'.$i.'" data-ccn-co="content" style="color:'.$data->$title_color.'">'.$data->$title.'</h5>
-      								<p data-ccn="body'.$i.'" data-ccn-c="color_body'.$i.'" data-ccn-co="content" style="color:'.$data->$body_color.'">'.$data->$body.'</p>
+      								<h5 data-ccn="title'.$i.'" data-ccn-c="color_title'.$i.'" data-ccn-co="content" style="color:'.$data->$title_color.'">'.format_text($data->$title, FORMAT_HTML, array('filter' => true)).'</h5>
+      								<p data-ccn="body'.$i.'" data-ccn-c="color_body'.$i.'" data-ccn-co="content" style="color:'.$data->$body_color.'">'.format_text($data->$body, FORMAT_HTML, array('filter' => true)).'</p>
       							</div>
       						</div>
       					</div>';

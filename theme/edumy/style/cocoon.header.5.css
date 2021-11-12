@@ -151,6 +151,9 @@ header.header-nav.ccnHeader5.menu_style_home_five .ht_left_widget.home5 .cd-drop
 .home5_shop_reg_widget li:first-child {
   margin-right: 0;
 }
+.block_cocoon_slider_7.ccn_morphed .home14-slider:not(.style2) {
+  margin-top: 95px;
+}
 @media only screen and (max-width:1440px) {
   header.header-nav.ccnHeader5.menu_style_home_five .ace-responsive-menu>li a,
   header.header-nav.ccnHeader5.menu_style_home_five .ace-responsive-menu>li>ul>li a {
@@ -194,5 +197,8 @@ header.header-nav.ccnHeader5.menu_style_home_five .ht_left_widget.home5 .cd-drop
   .block_cocoon_hero_4.ccn_morphed,
   .ccn_context_frontend .inner_page_breadcrumb {
     margin-top: 96px;
+  }
+  .block_cocoon_slider_7.ccn_morphed .home14-slider:not(.style2) {
+    margin-top: 115px;
   }
 }

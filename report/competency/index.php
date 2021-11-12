@@ -76,21 +76,21 @@ $output = $PAGE->get_renderer('report_competency');
 echo $output->header();
 $baseurl = new moodle_url('/report/competency/index.php');
 $nav = new \report_competency\output\user_course_navigation($currentuser, $course->id, $baseurl, $currentmodule);
-echo $output->render($nav);
+$top = $output->render($nav);
 if ($currentuser > 0) {
     $user = core_user::get_user($currentuser);
     $usercontext = context_user::instance($currentuser);
     $userheading = array(
-        'heading' => fullname($user),
+        'heading' => fullname($user, has_capability('moodle/site:viewfullnames', $context)),
         'user' => $user,
         'usercontext' => $usercontext
     );
     if ($currentmodule > 0) {
         $title = get_string('filtermodule', 'report_competency', format_string($cm->name));
     }
-    echo $output->context_header($userheading, 3);
+    $top .= $output->context_header($userheading, 3);
 }
-echo $output->container('', 'clearfix');
+echo $output->container($top, 'clearfix');
 echo $output->heading($title, 3);
 
 if ($currentuser > 0) {

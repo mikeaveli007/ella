@@ -146,7 +146,7 @@ class block_cocoon_myviews extends block_base
         $this->content =  new stdClass;
 
           $this->content->text ='  							<div class="mb30 application_statics">
-								<h4>'.get_string('your_profile_views', 'theme_edumy').'</h4>
+								<!--<h4>'.get_string('your_profile_views', 'theme_edumy').'</h4>-->
 								<div class="c_container"></div>
 							</div>
 <script src="'.$chartJs.'"></script>

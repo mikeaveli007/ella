@@ -35,7 +35,10 @@ if ($ADMIN->fulltree) {
         get_string('blogstyle_desc', 'theme_edumy'), null,
                 array('1' => 'Blog style 1',
                       '2' => 'Blog style 2',
-                      '3' => 'Blog style 3'
+                      '3' => 'Blog style 3',
+                      '4' => 'Blog style 4',
+                      '5' => 'Blog style 5',
+                      '6' => 'Blog style 6',
                     ));
     $page->add($setting);
 
@@ -221,19 +224,20 @@ if ($ADMIN->fulltree) {
                       '10' => 'Header 10',
                       '11' => 'Header 11',
                       '12' => 'Header 12',
+                      '13' => 'Header 13',
+                      '14' => 'Header 14',
                     ));
     $setting->set_updatedcallback('theme_reset_all_caches');
     $page->add($setting);
 
     // Header type settings
-    $setting = new admin_setting_configselect('theme_edumy/headertype_settings',
-        get_string('headertype_settings', 'theme_edumy'),
-        get_string('headertype_settings_desc', 'theme_edumy'), '1',
-                array('0' => 'Frontpage only',
-                      '1' => 'All pages (recommended)'
-                    ));
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $page->add($setting);
+    // $setting = new admin_setting_configselect('theme_edumy/headertype_settings',
+    //     get_string('headertype_settings', 'theme_edumy'),
+    //     get_string('headertype_settings_desc', 'theme_edumy'), '1',
+    //             array('1' => 'All pages (recommended)'
+    //                 ));
+    // $setting->set_updatedcallback('theme_reset_all_caches');
+    // $page->add($setting);
 
     // Header email address
     $setting = new admin_setting_configtext('theme_edumy/email_address', get_string('email_address','theme_edumy'), get_string('email_address_desc', 'theme_edumy'), 'hello@edumy.com', PARAM_NOTAGS, 50);
@@ -250,6 +254,11 @@ if ($ADMIN->fulltree) {
     // Call to Action Link
     $setting = new admin_setting_configtext('theme_edumy/cta_link', get_string('cta_link','theme_edumy'), get_string('cta_link_desc', 'theme_edumy'), '#', PARAM_NOTAGS, 50);
     $setting->set_updatedcallback('theme_reset_all_caches');
+    $page->add($setting);
+    // Call to Action icon
+    $setting = new admin_setting_configselect('theme_edumy/cta_icon_ccn_icon_class',
+        get_string('cta_icon', 'theme_edumy'),
+        get_string('cta_icon_desc', 'theme_edumy'), 'flaticon-megaphone', $ccnFontList);
     $page->add($setting);
 
     $settings->add($page);
@@ -882,6 +891,14 @@ if ($ADMIN->fulltree) {
     $setting->set_updatedcallback('theme_reset_all_caches');
     $page->add($setting);
 
+    // Title: Header Style 3
+    $page->add(new admin_setting_heading('theme_edumy/color_settings_header_style_3', get_string('color_settings_header_style_3', 'theme_edumy'), NULL));
+
+    // Header Style 3: Header Top
+    $setting = new admin_setting_configcolourpicker('theme_edumy/color_header_style_3_top', get_string('color_header_color_top','theme_edumy'), get_string('color_header_color_top_desc', 'theme_edumy'), '#051925');
+    $setting->set_updatedcallback('theme_reset_all_caches');
+    $page->add($setting);
+
     // Title: Header Style 4
     $page->add(new admin_setting_heading('theme_edumy/color_settings_header_style_4', get_string('color_settings_header_style_4', 'theme_edumy'), NULL));
 
@@ -1202,6 +1219,27 @@ if ($ADMIN->fulltree) {
     // CCN User settings
     $page = new admin_settingpage('theme_edumy_user_settings', get_string('user_settings', 'theme_edumy'));
 
+    // Login pages
+
+    // Login Layout
+    $setting = new admin_setting_configselect('theme_edumy/login_layout',
+        get_string('login_layout', 'theme_edumy'),
+        get_string('login_layout_desc', 'theme_edumy'), 0,
+                array('0' => 'Style 1 (default)',
+                      '1' => 'Style 2',
+                      '2' => 'Style 3',
+                      '3' => 'Style 4',
+                    ));
+    $page->add($setting);
+
+    // Breadcrumb background
+    $name='theme_edumy/login_bg';
+    $title = get_string('login_bg', 'theme_edumy');
+    $description = get_string('login_bg_desc', 'theme_edumy');
+    $setting = new admin_setting_configstoredfile($name, $title, $description, 'login_bg');
+    $setting->set_updatedcallback('theme_reset_all_caches');
+    $page->add($setting);
+
     // Navigation icon
     $page->add(new admin_setting_heading('theme_edumy/navigation_icon', get_string('navigation_icon', 'theme_edumy'), NULL));
 
@@ -1277,16 +1315,6 @@ if ($ADMIN->fulltree) {
                       '1' => 'Full name'
                     ));
     $page->add($setting);
-
-
-
-
-
-
-
-
-
-
 
     // Order receipts
     $page->add(new admin_setting_heading('theme_edumy/order_receipts', get_string('order_receipts', 'theme_edumy'), NULL));
@@ -1506,6 +1534,21 @@ if ($ADMIN->fulltree) {
                     ));
     $page->add($setting);
 
+
+    $settings->add($page);
+
+    // CCN Optimization
+    $page = new admin_settingpage('theme_edumy_optimization', get_string('optimization_settings', 'theme_edumy'));
+
+    // Lazy Loading
+    $setting = new admin_setting_configselect('theme_edumy/lazy_loading',
+        get_string('lazy_loading', 'theme_edumy'),
+        get_string('lazy_loading_desc', 'theme_edumy'), 0,
+                array('0' => 'Yes (default)',
+                      '1' => 'No',
+                    ));
+    $page->add($setting);
+
     $settings->add($page);
 
     // CCN Advanced settings
@@ -1556,6 +1599,11 @@ if ($ADMIN->fulltree) {
                 array('0' => 'Moodle default (visible based on permissions)',
                       '1' => 'Visible only to course creators, managers and administrators'
                     ));
+    $page->add($setting);
+
+    // Google Maps API Key
+    $setting = new admin_setting_configtext('theme_edumy/logo_url', get_string('logo_url','theme_edumy'), get_string('logo_url_desc', 'theme_edumy'), '', PARAM_NOTAGS, 50);
+    $setting->set_updatedcallback('theme_reset_all_caches');
     $page->add($setting);
 
 

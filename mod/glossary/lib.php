@@ -570,13 +570,13 @@ function glossary_print_recent_activity($course, $viewfullnames, $timestart) {
 
     $joins = array(' FROM {glossary_entries} ge ');
     $joins[] = 'JOIN {user} u ON u.id = ge.userid ';
-    $fromsql = implode($joins, "\n");
+    $fromsql = implode("\n", $joins);
 
     $params['timestart'] = $timestart;
     $clausesql = ' WHERE ge.timemodified > :timestart ';
 
     if (count($approvals) > 0) {
-        $approvalsql = 'AND ('. implode($approvals, ' OR ') .') ';
+        $approvalsql = 'AND ('. implode(' OR ', $approvals) .') ';
     } else {
         $approvalsql = '';
     }
@@ -587,7 +587,7 @@ function glossary_print_recent_activity($course, $viewfullnames, $timestart) {
         return false;
     }
 
-    echo $OUTPUT->heading(get_string('newentries', 'glossary').':', 3);
+    echo $OUTPUT->heading(get_string('newentries', 'glossary') . ':', 6);
     $strftimerecent = get_string('strftimerecent');
     $entrycount = 0;
     foreach ($entries as $entry) {
@@ -877,7 +877,7 @@ function glossary_scale_used() {
 function glossary_scale_used_anywhere($scaleid) {
     global $DB;
 
-    if ($scaleid and $DB->record_exists('glossary', array('scale'=>-$scaleid))) {
+    if ($scaleid and $DB->record_exists_select('glossary', "scale = ? and assessed > 0", [-$scaleid])) {
         return true;
     } else {
         return false;
@@ -3191,7 +3191,7 @@ function glossary_extend_settings_navigation(settings_navigation $settings, navi
     if (!empty($CFG->enablerssfeeds) && !empty($CFG->glossary_enablerssfeeds) && $glossary->rsstype && $glossary->rssarticles && has_capability('mod/glossary:view', $PAGE->cm->context)) {
         require_once("$CFG->libdir/rsslib.php");
 
-        $string = get_string('rsstype','forum');
+        $string = get_string('rsstype', 'glossary');
 
         $url = new moodle_url(rss_get_url($PAGE->cm->context->id, $USER->id, 'mod_glossary', $glossary->id));
         $glossarynode->add($string, $url, settings_navigation::TYPE_SETTING, null, null, new pix_icon('i/rss', ''));

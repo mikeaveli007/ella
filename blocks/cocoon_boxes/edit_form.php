@@ -6,19 +6,6 @@ class block_cocoon_boxes_edit_form extends block_edit_form
     {
       global $CFG;
       $ccnFontList = include($CFG->dirroot . '/theme/edumy/ccn/font_handler/ccn_font_select.php');
-      // include_once($CFG->dirroot . '/course/lib.php');
-      // require_once($CFG->dirroot. '/course/renderer.php');
-      // $topcategory = core_course_category::top();
-      // $topcategorykids = $topcategory->get_children();
-      // $searchareas = \core_search\manager::get_search_areas_list(true);
-      // $areanames = array();
-      // foreach ($topcategorykids as $areaid => $topcategorykids) {
-      //     $areanames[$areaid] = $topcategorykids->get_formatted_name();
-      //     // print_object($areaid->get_formatted_name());
-      //     // print_object($areaid);
-      //
-      // }
-
 
       if (!empty($this->block->config) && is_object($this->block->config)) {
           $data = $this->block->config;
@@ -70,6 +57,15 @@ class block_cocoon_boxes_edit_form extends block_edit_form
             $mform->addElement('text', 'config_link' . $i, get_string('config_link', 'theme_edumy', $i));
             $mform->setDefault('config_link' .$i , '#');
             $mform->setType('config_link' . $i, PARAM_TEXT);
+
+            $options = array(
+                '_self' => 'Self (open in same window)',
+                '_blank' => 'Blank (open in new window)',
+                '_parent' => 'Parent (open in parent frame)',
+                '_top' => 'Top (open in full body of the window)',
+            );
+            $select = $mform->addElement('select', 'config_link_target' . $i, get_string('config_button_target', 'theme_edumy'), $options);
+            $select->setSelected('_self');
 
             $select = $mform->addElement('select', 'config_icon' .$i, get_string('config_icon_class', 'theme_edumy'), $ccnFontList, array('class'=>'ccn_icon_class'));
             $select->setSelected('flaticon-student-3');

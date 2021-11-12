@@ -4,18 +4,16 @@
   {{> theme_edumy/ccn_preloader }}
   <div class="wrapper">
     {{> theme_edumy/ccn_focus_navbar }}
-    {{^disable_dashboard_drawer}}
-      <section data-simplebar="init" class="so_content dashboard_sidebar dn-1199 {{#dashboard_scroll_drawer}} ccn_dashboard_scroll_drawer {{/dashboard_scroll_drawer}}">
-        <div class="dashboard_sidebars">
-          <div class="user_board">
-            <div class="dashbord_nav_list ccn_dashbord_nav_list">
-              {{{ ccn_activitynav }}}
-            </div>
+    <section data-simplebar="init" class="so_content dashboard_sidebar dn-1199 {{#dashboard_scroll_drawer}} ccn_dashboard_scroll_drawer {{/dashboard_scroll_drawer}}">
+      <div class="dashboard_sidebars">
+        <div class="user_board">
+          <div class="dashbord_nav_list ccn_dashbord_nav_list">
+            {{{ ccn_activitynav }}}
           </div>
         </div>
-      </section>
-    {{/disable_dashboard_drawer}}
-    <div class="our-dashbord dashbord {{#disable_dashboard_drawer}} ccn_dashbord_disable_drawer {{/disable_dashboard_drawer}}">
+      </div>
+    </section>
+    <div class="our-dashbord dashbord">
       <div class="dashboard_main_content">
         <div class="container-fluid">
           <div class="main_content_container">

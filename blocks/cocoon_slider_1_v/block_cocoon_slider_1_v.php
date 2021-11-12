@@ -2,116 +2,94 @@
 require_once($CFG->dirroot. '/theme/edumy/ccn/block_handler/ccn_block_handler.php');
 class block_cocoon_slider_1_v extends block_base {
 
-    /**
-     * Start block instance.
-     */
-    function init() {
-        $this->title = get_string('pluginname', 'block_cocoon_slider_1_v');
+  function init() {
+    $this->title = get_string('pluginname', 'block_cocoon_slider_1_v');
+  }
+
+  function applicable_formats() {
+    $ccnBlockHandler = new ccnBlockHandler();
+    return $ccnBlockHandler->ccnGetBlockApplicability(array('all'));
+  }
+
+  function specialization() {
+    global $CFG, $DB;
+    include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
+    if (empty($this->config)) {
+      $this->config = new \stdClass();
+      $this->config->slidesnumber = '3';
+      $this->config->slide_title1 = 'Self Education Resources and Infos';
+      $this->config->slide_subtitle1 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
+      $this->config->slide_btn_text1 = 'Ready to Get Started?';
+      $this->config->slide_btn_url1 = '#';
+      $this->config->youtube = 'LSmgKRx5pBo';
+      $this->config->slide_title2 = 'Self Education Resources and Infos';
+      $this->config->slide_subtitle2 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
+      $this->config->slide_btn_text2 = 'Ready to Get Started?';
+      $this->config->slide_btn_url2 = '#';
+      $this->config->slide_title3 = 'Self Education Resources and Infos';
+      $this->config->slide_subtitle3 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
+      $this->config->slide_btn_text3 = 'Ready to Get Started?';
+      $this->config->slide_btn_url3 = '#';
+      $this->config->prev_1 = 'PR';
+      $this->config->prev_2 = 'EV';
+      $this->config->next_1 = 'NE';
+      $this->config->next_2 = 'XT';
+      include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization/specialization_ccn_carousel.php');
+    }
+  }
+
+  function instance_allow_multiple() {
+    return false;
+  }
+
+  function get_content() {
+    global $CFG, $PAGE;
+    require_once($CFG->libdir . '/filelib.php');
+
+    if ($this->content !== NULL) {
+        return $this->content;
     }
 
-    /**
-     * The block is usable in all pages
-     */
-    function applicable_formats() {
-        $ccnBlockHandler = new ccnBlockHandler();
-        return $ccnBlockHandler->ccnGetBlockApplicability(array('all'));
+    if (!empty($this->config) && is_object($this->config)) {
+        $data = $this->config;
+        $data->slidesnumber = is_numeric($data->slidesnumber) ? (int)$data->slidesnumber : 3;
+    } else {
+        $data = new stdClass();
+        $data->slidesnumber = '3';
     }
+    $this->content = new stdClass();
+    if(!empty($this->config->prev_1)){$this->content->prev_1 = $this->config->prev_1;} else {$this->content->prev_1 = '';}
+    if(!empty($this->config->prev_2)){$this->content->prev_2 = $this->config->prev_2;} else {$this->content->prev_2 = '';}
+    if(!empty($this->config->next_1)){$this->content->next_1 = $this->config->next_1;} else {$this->content->next_1 = '';}
+    if(!empty($this->config->next_2)){$this->content->next_2 = $this->config->next_2;} else {$this->content->next_2 = '';}
+    if(!empty($this->config->yt)){$this->content->yt = $this->config->yt;}else{$this->content->yt = 'LSmgKRx5pBo';}
+    if(!empty($this->config->prev)){$this->content->prev = $this->config->prev;} else {$this->content->prev = '';}
+    if(!empty($this->config->next)){$this->content->next = $this->config->next;} else {$this->content->next = '';}
+    if(!empty($this->config->arrow_style)){$this->content->arrow_style = $this->config->arrow_style;} else {$this->content->arrow_style = '0';}
+    if(!empty($this->config->image) && count($files) >= 1){$this->content->image = $this->config->image;} else { $this->content->image = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';}
+    include($CFG->dirroot . '/theme/edumy/ccn/block_handler/config/config_ccn_carousel.php');
 
-    /**
-     * Customize the block title dynamically.
-     */
-    function specialization() {
-        // if (isset($this->config->title)) {
-        //     $this->title = $this->title = format_string($this->config->title, true, ['context' => $this->context]);
-        // } else {
-        //     $this->title = get_string('newcustomsliderblock', 'block_cocoon_slider_1_v');
-        // }
-        global $CFG, $DB;
-        include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
-        if (empty($this->config)) {
-          $this->config->slidesnumber = '3';
-          $this->config->slide_title1 = 'Self Education Resources and Infos';
-          $this->config->slide_subtitle1 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
-          $this->config->slide_btn_text1 = 'Ready to Get Started?';
-          $this->config->slide_btn_url1 = '#';
-          // $this->config->image = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';
-          $this->config->youtube = 'LSmgKRx5pBo';
-          $this->config->slide_title2 = 'Self Education Resources and Infos';
-          $this->config->slide_subtitle2 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
-          $this->config->slide_btn_text2 = 'Ready to Get Started?';
-          $this->config->slide_btn_url2 = '#';
-          $this->config->slide_title3 = 'Self Education Resources and Infos';
-          $this->config->slide_subtitle3 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
-          $this->config->slide_btn_text3 = 'Ready to Get Started?';
-          $this->config->slide_btn_url3 = '#';
-          $this->config->prev_1 = 'PR';
-          $this->config->prev_2 = 'EV';
-          $this->config->next_1 = 'NE';
-          $this->config->next_2 = 'XT';
-          include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization/specialization_ccn_carousel.php');
+    $fs = get_file_storage();
+    $files = $fs->get_area_files($this->context->id, 'block_cocoon_slider_1_v', 'content');
+    // $this->content->image = '';
+    foreach ($files as $file) {
+        $filename = $file->get_filename();
+        if ($filename <> '.') {
+            $url = moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(), null, $file->get_filepath(), $filename);
+            $this->content->image =  $url;
         }
     }
 
-    /**
-     * The block can be used repeatedly in a page.
-     */
-    function instance_allow_multiple() {
-        return false;
+    $text = '';
+    $bannerstyle = '';
+    if ($data->slidesnumber > 1) {
+      $bannerstyle .= 'banner-style-one--multiple';
+    } else {
+      $bannerstyle .= 'banner-style-one--single';
     }
 
-    /**
-     * Build the block content.
-     */
-    function get_content() {
-        global $CFG, $PAGE;
-
-        require_once($CFG->libdir . '/filelib.php');
-
-
-        if ($this->content !== NULL) {
-            return $this->content;
-        }
-
-        if (!empty($this->config) && is_object($this->config)) {
-            $data = $this->config;
-            $data->slidesnumber = is_numeric($data->slidesnumber) ? (int)$data->slidesnumber : 3;
-        } else {
-            $data = new stdClass();
-            $data->slidesnumber = '3';
-        }
-        $this->content = new stdClass();
-        if(!empty($this->config->prev_1)){$this->content->prev_1 = $this->config->prev_1;} else {$this->content->prev_1 = '';}
-        if(!empty($this->config->prev_2)){$this->content->prev_2 = $this->config->prev_2;} else {$this->content->prev_2 = '';}
-        if(!empty($this->config->next_1)){$this->content->next_1 = $this->config->next_1;} else {$this->content->next_1 = '';}
-        if(!empty($this->config->next_2)){$this->content->next_2 = $this->config->next_2;} else {$this->content->next_2 = '';}
-        if(!empty($this->config->yt)){$this->content->yt = $this->config->yt;}else{$this->content->yt = 'LSmgKRx5pBo';}
-        if(!empty($this->config->prev)){$this->content->prev = $this->config->prev;} else {$this->content->prev = '';}
-        if(!empty($this->config->next)){$this->content->next = $this->config->next;} else {$this->content->next = '';}
-        if(!empty($this->config->arrow_style)){$this->content->arrow_style = $this->config->arrow_style;} else {$this->content->arrow_style = '0';}
-        if(!empty($this->config->image) && count($files) >= 1){$this->content->image = $this->config->image;} else { $this->content->image = $CFG->wwwroot.'/theme/edumy/images/home/1.jpg';}
-        include($CFG->dirroot . '/theme/edumy/ccn/block_handler/config/config_ccn_carousel.php');
-
-        $fs = get_file_storage();
-        $files = $fs->get_area_files($this->context->id, 'block_cocoon_slider_1_v', 'content');
-        // $this->content->image = '';
-        foreach ($files as $file) {
-            $filename = $file->get_filename();
-            if ($filename <> '.') {
-                $url = moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(), null, $file->get_filepath(), $filename);
-                $this->content->image =  $url;
-            }
-        }
-
-        $text = '';
-        $bannerstyle = '';
-        if ($data->slidesnumber > 1) {
-          $bannerstyle .= 'banner-style-one--multiple';
-        } else {
-          $bannerstyle .= 'banner-style-one--single';
-        }
-
-        if ($data->slidesnumber > 0) {
-            $text = '		<div class="home1-mainslider">
+    if ($data->slidesnumber > 0) {
+      $text = '		<div class="home1-mainslider">
 		<div class="container-fluid p0">
 			<div class="row">
 				<div class="col-lg-12">
@@ -192,17 +170,17 @@ class block_cocoon_slider_1_v extends block_base {
               <span class="carousel-btn left-btn">
                 <i class="flaticon-left-arrow left"></i> ';
                 if($this->content->arrow_style != '1'){
-                  $text .=' <span class="left">'.$this->content->prev_1.' <br> '.$this->content->prev_2.'</span>';
+                  $text .=' <span class="left">'.format_text($this->content->prev_1, FORMAT_HTML, array('filter' => true)).' <br> '.format_text($this->content->prev_2, FORMAT_HTML, array('filter' => true)).'</span>';
                 } else {
-                  $text .=' <span class="left">'.$this->content->prev.'</span>';
+                  $text .=' <span class="left">'.format_text($this->content->prev, FORMAT_HTML, array('filter' => true)).'</span>';
                 }
                 $text .='
               </span>
 					        <span class="carousel-btn right-btn">';
                   if($this->content->arrow_style != '1'){
-                    $text .='<span class="right">'.$this->content->next_1.' <br> '.$this->content->next_2.'</span> <i class="flaticon-right-arrow-1 right"></i>';
+                    $text .='<span class="right">'.format_text($this->content->next_1, FORMAT_HTML, array('filter' => true)).' <br> '.format_text($this->content->next_2, FORMAT_HTML, array('filter' => true)).'</span> <i class="flaticon-right-arrow-1 right"></i>';
                   } else {
-                    $text .='<span class="right">'.$this->content->next.'</span> <i class="flaticon-right-arrow-1 right"></i>';
+                    $text .='<span class="right">'.format_text($this->content->next, FORMAT_HTML, array('filter' => true)).'</span> <i class="flaticon-right-arrow-1 right"></i>';
                   }
                   $text .='
                   </span>

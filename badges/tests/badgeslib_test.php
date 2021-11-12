@@ -30,6 +30,8 @@ global $CFG;
 require_once($CFG->libdir . '/badgeslib.php');
 require_once($CFG->dirroot . '/badges/lib.php');
 
+use core_badges\helper;
+
 class core_badges_badgeslib_testcase extends advanced_testcase {
     protected $badgeid;
     protected $course;
@@ -74,6 +76,10 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
         $fordb->status = BADGE_STATUS_INACTIVE;
 
         $this->badgeid = $DB->insert_record('badge', $fordb, true);
+
+        // Set the default Issuer (because OBv2 needs them).
+        set_config('badges_defaultissuername', $fordb->issuername);
+        set_config('badges_defaultissuercontact', $fordb->issuercontact);
 
         // Create a course with activity and auto completion tracking.
         $this->course = $this->getDataGenerator()->create_course(array('enablecompletion' => true));
@@ -614,35 +620,127 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
     }
 
     /**
-     * Test badges observer when cohort_member_added event is fired.
+     * Test badges observer when cohort_member_added event is fired and user required to belong to any cohort.
+     *
+     * @covers award_criteria_cohort
      */
-    public function test_badges_observer_cohort_criteria_review() {
+    public function test_badges_observer_any_cohort_criteria_review() {
         global $CFG;
 
         require_once("$CFG->dirroot/cohort/lib.php");
 
-        $cohort = $this->getDataGenerator()->create_cohort();
+        $cohort1 = $this->getDataGenerator()->create_cohort();
+        $cohort2 = $this->getDataGenerator()->create_cohort();
 
         $this->preventResetByRollback(); // Messaging is not compatible with transactions.
+
         $badge = new badge($this->badgeid);
         $this->assertFalse($badge->is_issued($this->user->id));
+        $this->assertSame(0, $badge->review_all_criteria()); // Verify award_criteria_cohort->get_completed_criteria_sql().
 
         // Set up the badge criteria.
         $criteriaoverall = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $badge->id));
         $criteriaoverall->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ANY));
         $criteriaoverall1 = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_COHORT, 'badgeid' => $badge->id));
-        $criteriaoverall1->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ANY, 'cohort_cohorts' => array('0' => $cohort->id)));
-
-        // Make the badge active.
+        $criteriaoverall1->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ANY,
+            'cohort_cohorts' => array('0' => $cohort1->id, '1' => $cohort2->id)));
         $badge->set_status(BADGE_STATUS_ACTIVE);
 
+        // Reload it to contain criteria.
+        $badge = new badge($this->badgeid);
+        $this->assertFalse($badge->is_issued($this->user->id));
+        $this->assertSame(0, $badge->review_all_criteria()); // Verify award_criteria_cohort->get_completed_criteria_sql().
+
         // Add the user to the cohort.
-        cohort_add_member($cohort->id, $this->user->id);
+        cohort_add_member($cohort2->id, $this->user->id);
+        $this->assertDebuggingCalled();
 
         // Verify that the badge was awarded.
-        $this->assertDebuggingCalled();
         $this->assertTrue($badge->is_issued($this->user->id));
+        // As the badge has been awarded to user because core_badges_observer been called when the member has been added to the
+        // cohort, there are no other users that can award this badge.
+        $this->assertSame(0, $badge->review_all_criteria()); // Verify award_criteria_cohort->get_completed_criteria_sql().
+    }
 
+    /**
+     * Test badges observer when cohort_member_added event is fired and user required to belong to multiple (all) cohorts.
+     *
+     * @covers award_criteria_cohort
+     */
+    public function test_badges_observer_all_cohort_criteria_review() {
+        global $CFG;
+
+        require_once("$CFG->dirroot/cohort/lib.php");
+
+        $cohort1 = $this->getDataGenerator()->create_cohort();
+        $cohort2 = $this->getDataGenerator()->create_cohort();
+        $cohort3 = $this->getDataGenerator()->create_cohort();
+
+        // Add user2 to cohort1 and cohort3.
+        $user2 = $this->getDataGenerator()->create_user();
+        cohort_add_member($cohort3->id, $user2->id);
+        cohort_add_member($cohort1->id, $user2->id);
+
+        // Add user3 to cohort1, cohort2 and cohort3.
+        $user3 = $this->getDataGenerator()->create_user();
+        cohort_add_member($cohort1->id, $user3->id);
+        cohort_add_member($cohort2->id, $user3->id);
+        cohort_add_member($cohort3->id, $user3->id);
+
+        $this->preventResetByRollback(); // Messaging is not compatible with transactions.
+
+        // Cohort criteria are used in site badges.
+        $badge = new badge($this->badgeid);
+
+        $this->assertFalse($badge->is_issued($this->user->id));
+        $this->assertSame(0, $badge->review_all_criteria()); // Verify award_criteria_cohort->get_completed_criteria_sql().
+
+        // Set up the badge criteria.
+        $criteriaoverall = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $badge->id));
+        $criteriaoverall->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ANY));
+        $criteriaoverall1 = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_COHORT, 'badgeid' => $badge->id));
+        $criteriaoverall1->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ALL,
+            'cohort_cohorts' => array('0' => $cohort1->id, '1' => $cohort2->id, '2' => $cohort3->id)));
+        $badge->set_status(BADGE_STATUS_ACTIVE);
+
+        // Reload it to contain criteria.
+        $badge = new badge($this->badgeid);
+
+        // Verify that the badge was not awarded yet (ALL cohorts are needed and review_all_criteria has to be called).
+        $this->assertFalse($badge->is_issued($this->user->id));
+        $this->assertFalse($badge->is_issued($user2->id));
+        $this->assertFalse($badge->is_issued($user3->id));
+
+        // Verify that after calling review_all_criteria, users with the criteria (user3) award the badge instantly.
+        $this->assertSame(1, $badge->review_all_criteria()); // Verify award_criteria_cohort->get_completed_criteria_sql().
+        $this->assertFalse($badge->is_issued($this->user->id));
+        $this->assertFalse($badge->is_issued($user2->id));
+        $this->assertTrue($badge->is_issued($user3->id));
+        $this->assertDebuggingCalled();
+
+        // Add the user to the cohort1.
+        cohort_add_member($cohort1->id, $this->user->id);
+
+        // Verify that the badge was not awarded yet (ALL cohorts are needed).
+        $this->assertFalse($badge->is_issued($this->user->id));
+        $this->assertSame(0, $badge->review_all_criteria()); // Verify award_criteria_cohort->get_completed_criteria_sql().
+
+        // Add the user to the cohort3.
+        cohort_add_member($cohort3->id, $this->user->id);
+
+        // Verify that the badge was not awarded yet (ALL cohorts are needed).
+        $this->assertFalse($badge->is_issued($this->user->id));
+        $this->assertSame(0, $badge->review_all_criteria()); // Verify award_criteria_cohort->get_completed_criteria_sql().
+
+        // Add user to cohort2.
+        cohort_add_member($cohort2->id, $this->user->id);
+        $this->assertDebuggingCalled();
+
+        // Verify that the badge was awarded (ALL cohorts).
+        $this->assertTrue($badge->is_issued($this->user->id));
+        // As the badge has been awarded to user because core_badges_observer been called when the member has been added to the
+        // cohort, there are no other users that can award this badge.
+        $this->assertSame(0, $badge->review_all_criteria()); // Verify award_criteria_cohort->get_completed_criteria_sql().
     }
 
     /**
@@ -670,7 +768,7 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
 
         // Get assertion.
         $award = reset($awards);
-        $assertion = new core_badges_assertion($award->uniquehash);
+        $assertion = new core_badges_assertion($award->uniquehash, OPEN_BADGES_V1);
         $testassertion = $this->assertion;
 
         // Make sure JSON strings have the same structure.
@@ -683,6 +781,16 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
         $award = reset($awards);
         $assertion2 = new core_badges_assertion($award->uniquehash, OPEN_BADGES_V2);
         $testassertion2 = $this->assertion2;
+
+        // Make sure JSON strings have the same structure.
+        $this->assertStringMatchesFormat($testassertion2->badge, json_encode($assertion2->get_badge_assertion()));
+        $this->assertStringMatchesFormat($testassertion2->class, json_encode($assertion2->get_badge_class()));
+        $this->assertStringMatchesFormat($testassertion2->issuer, json_encode($assertion2->get_issuer()));
+
+        // Test Openbadge specification version 2.1. It has the same format as OBv2.0.
+        // Get assertion version 2.1.
+        $award = reset($awards);
+        $assertion2 = new core_badges_assertion($award->uniquehash, OPEN_BADGES_V2P1);
 
         // Make sure JSON strings have the same structure.
         $this->assertStringMatchesFormat($testassertion2->badge, json_encode($assertion2->get_badge_assertion()));
@@ -850,5 +958,59 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
         // Delete alignment.
         $badge->delete_alignment($alignments1[$newid2]->id);
         $this->assertCount(1, $badge->get_alignments());
+    }
+
+    /**
+     * Test badges_delete_site_backpack().
+     *
+     */
+    public function test_badges_delete_site_backpack(): void {
+        global $DB;
+
+        $this->setAdminUser();
+
+        // Create one backpack.
+        $total = $DB->count_records('badge_external_backpack');
+        $this->assertEquals(1, $total);
+
+        $data = new \stdClass();
+        $data->apiversion = OPEN_BADGES_V2P1;
+        $data->backpackapiurl = 'https://dc.imsglobal.org/obchost/ims/ob/v2p1';
+        $data->backpackweburl = 'https://dc.imsglobal.org';
+        badges_create_site_backpack($data);
+        $backpack = $DB->get_record('badge_external_backpack', ['backpackweburl' => $data->backpackweburl]);
+        $user1 = $this->getDataGenerator()->create_user();
+        $user2 = $this->getDataGenerator()->create_user();
+        // User1 is connected to the backpack to be removed and has 2 collections.
+        $backpackuser1 = helper::create_fake_backpack(['userid' => $user1->id, 'externalbackpackid' => $backpack->id]);
+        helper::create_fake_backpack_collection(['backpackid' => $backpackuser1->id]);
+        helper::create_fake_backpack_collection(['backpackid' => $backpackuser1->id]);
+        // User2 is connected to a different backpack and has 1 collection.
+        $backpackuser2 = helper::create_fake_backpack(['userid' => $user2->id]);
+        helper::create_fake_backpack_collection(['backpackid' => $backpackuser2->id]);
+
+        $total = $DB->count_records('badge_external_backpack');
+        $this->assertEquals(2, $total);
+        $total = $DB->count_records('badge_backpack');
+        $this->assertEquals(2, $total);
+        $total = $DB->count_records('badge_external');
+        $this->assertEquals(3, $total);
+
+        // Remove the backpack created previously.
+        $result = badges_delete_site_backpack($backpack->id);
+        $this->assertTrue($result);
+
+        $total = $DB->count_records('badge_external_backpack');
+        $this->assertEquals(1, $total);
+
+        $total = $DB->count_records('badge_backpack');
+        $this->assertEquals(1, $total);
+
+        $total = $DB->count_records('badge_external');
+        $this->assertEquals(1, $total);
+
+        // Try to remove an non-existent backpack.
+        $result = badges_delete_site_backpack($backpack->id);
+        $this->assertFalse($result);
     }
 }

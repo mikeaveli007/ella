@@ -16,4 +16,17 @@ class ccnMdlHandler {
 
     return $ccnReturn;
   }
+
+  public function ccnReflection($ccnObj) {
+    $ccnReflection = new ReflectionClass($ccnObj);
+    $ccnProperties = $ccnReflection->getProperties();
+    $ccnReturn = new \stdClass();
+    foreach($ccnProperties as $k=>$ccnProperty){
+      $ccnProp = $ccnReflection->getProperty($ccnProperty->name);
+      $ccnProp->setAccessible(true);
+      $ccnReturn->{$ccnProperty->name} = $ccnProp->getValue($ccnObj);
+    }
+    return $ccnReturn;
+  }
+
 }

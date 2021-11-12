@@ -225,7 +225,8 @@ class quiz_overview_report extends quiz_attempts_report {
                     $data = quiz_report_grade_bands($bandwidth, $bands, $quiz->id, $groupstudentsjoins);
                     $chart = self::get_chart($labels, $data);
                     $graphname = get_string('overviewreportgraphgroup', 'quiz_overview', groups_get_group_name($currentgroup));
-                    echo $output->chart($chart, $graphname);
+                    // Numerical range data should display in LTR even for RTL languages.
+                    echo $output->chart($chart, $graphname, ['dir' => 'ltr']);
                 }
             }
 
@@ -233,7 +234,8 @@ class quiz_overview_report extends quiz_attempts_report {
                 $data = quiz_report_grade_bands($bandwidth, $bands, $quiz->id, new \core\dml\sql_join());
                 $chart = self::get_chart($labels, $data);
                 $graphname = get_string('overviewreportgraph', 'quiz_overview');
-                echo $output->chart($chart, $graphname);
+                // Numerical range data should display in LTR even for RTL languages.
+                echo $output->chart($chart, $graphname, ['dir' => 'ltr']);
             }
         }
         return true;
@@ -357,6 +359,17 @@ class quiz_overview_report extends quiz_attempts_report {
 
         if (!$dryrun) {
             question_engine::save_questions_usage_by_activity($quba);
+
+            $params = array(
+              'objectid' => $attempt->id,
+              'relateduserid' => $attempt->userid,
+              'context' => $this->context,
+              'other' => array(
+                'quizid' => $attempt->quiz
+              )
+            );
+            $event = \mod_quiz\event\attempt_regraded::create($params);
+            $event->trigger();
         }
 
         $transaction->allow_commit();

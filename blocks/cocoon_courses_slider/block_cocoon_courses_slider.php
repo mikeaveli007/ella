@@ -73,7 +73,7 @@ class block_cocoon_courses_slider extends block_base {
         if(!empty($this->config->hover_accent)){$this->content->hover_accent = $this->config->hover_accent;} else {$this->content->hover_accent = '';}
         if(!empty($this->config->description)){$this->content->description = $this->config->description;} else {$this->content->description = '0';}
         if(!empty($this->config->course_image)){$this->content->course_image = $this->config->course_image;} else {$this->content->course_image = '';}
-        if(!empty($this->config->price)){$this->content->price = $this->config->price;} else {$this->content->price = '1';}
+        if(!empty($this->config->price)){$this->content->price = $this->config->price;} else {$this->content->price = '0';}
         if(!empty($this->config->enrol_btn)){$this->content->enrol_btn = $this->config->enrol_btn;} else {$this->content->enrol_btn = '0';}
         if(!empty($this->config->enrol_btn_text)){$this->content->enrol_btn_text = $this->config->enrol_btn_text;} else {$this->content->enrol_btn_text = '';}
 

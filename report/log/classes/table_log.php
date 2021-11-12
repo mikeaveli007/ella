@@ -59,7 +59,7 @@ class report_log_table_log extends table_sql {
     public function __construct($uniqueid, $filterparams = null) {
         parent::__construct($uniqueid);
 
-        $this->set_attribute('class', 'reportlog generaltable generalbox');
+        $this->set_attribute('class', 'reportlog generaltable generalbox table-sm');
         $this->filterparams = $filterparams;
         // Add course column if logs are displayed for site.
         $cols = array();
@@ -130,7 +130,7 @@ class report_log_table_log extends table_sql {
             return false;
         }
 
-        $this->userfullnames[$userid] = fullname($user);
+        $this->userfullnames[$userid] = fullname($user, has_capability('moodle/site:viewfullnames', $this->get_context()));
         return $this->userfullnames[$userid];
     }
 
@@ -504,7 +504,14 @@ class report_log_table_log extends table_sql {
 
         if (!($this->filterparams->logreader instanceof logstore_legacy\log\store)) {
             // Filter out anonymous actions, this is N/A for legacy log because it never stores them.
-            $joins[] = "anonymous = 0";
+            if ($this->filterparams->modid) {
+                $context = context_module::instance($this->filterparams->modid);
+            } else {
+                $context = context_course::instance($this->filterparams->courseid);
+            }
+            if (!has_capability('moodle/site:viewanonymousevents', $context)) {
+                $joins[] = "anonymous = 0";
+            }
         }
 
         $selector = implode(' AND ', $joins);
@@ -585,7 +592,7 @@ class report_log_table_log extends table_sql {
             $users = $DB->get_records_sql("SELECT id," . get_all_user_name_fields(true) . " FROM {user} WHERE id " . $usql,
                     $uparams);
             foreach ($users as $userid => $user) {
-                $this->userfullnames[$userid] = fullname($user);
+                $this->userfullnames[$userid] = fullname($user, has_capability('moodle/site:viewfullnames', $this->get_context()));
                 unset($userids[$userid]);
             }
 

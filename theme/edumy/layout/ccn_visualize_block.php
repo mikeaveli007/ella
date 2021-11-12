@@ -7,7 +7,6 @@ $bodyattributes = $OUTPUT->body_attributes($bodyclasses);
 include($CFG->dirroot . '/theme/edumy/ccn/ccn_themehandler_context.php');
 
 $PAGE->requires->css('/theme/edumy/style/ccn-visualize.css');
-// $PAGE->requires->js('/theme/edumy/javascript/spectrum.js');
 $PAGE->requires->js('/theme/edumy/javascript/cocoon.lcvb.preprocess.min.js', true);
 
 

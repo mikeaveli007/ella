@@ -498,7 +498,16 @@ class completion_info {
      */
     public function clear_criteria() {
         global $DB;
-        $DB->delete_records('course_completion_criteria', array('course' => $this->course_id));
+
+        // Remove completion criteria records for the course itself, and any records that refer to the course.
+        $select = 'course = :course OR (criteriatype = :type AND courseinstance = :courseinstance)';
+        $params = [
+            'course' => $this->course_id,
+            'type' => COMPLETION_CRITERIA_TYPE_COURSE,
+            'courseinstance' => $this->course_id,
+        ];
+
+        $DB->delete_records_select('course_completion_criteria', $select, $params);
         $DB->delete_records('course_completion_aggr_methd', array('course' => $this->course_id));
 
         $this->delete_course_completion_data();
@@ -918,7 +927,7 @@ class completion_info {
      * Obtains completion data for a particular activity and user (from the
      * completion cache if available, or by SQL query)
      *
-     * @param stcClass|cm_info $cm Activity; only required field is ->id
+     * @param stdClass|cm_info $cm Activity; only required field is ->id
      * @param bool $wholecourse If true (default false) then, when necessary to
      *   fill the cache, retrieves information from the entire course not just for
      *   this one activity
@@ -956,7 +965,9 @@ class completion_info {
             }
         }
 
-        // Not there, get via SQL
+        // If cached completion data is not found, fetch via SQL.
+        // Fetch completion data for all of the activities in the course ONLY if we're caching the fetched completion data.
+        // If we're not caching the completion data, then just fetch the completion data for the user in this course module.
         if ($usecache && $wholecourse) {
             // Get whole course data for cache
             $alldatabycmc = $DB->get_records_sql("

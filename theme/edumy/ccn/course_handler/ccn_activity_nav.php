@@ -7,12 +7,13 @@ defined('MOODLE_INTERNAL') || die();
 include_once($CFG->dirroot . '/course/lib.php');
 
 $_ccnCourseSectionNav = '';
+$ccnCourseUrl = '';
 if ($DB->record_exists('course', array('id' => $COURSE->id))) {
 
   $ccnCourseFormat = $COURSE->format;
 
   /* Begin ccnTktRef: 3083
-   * if($ccnCourseFormat !== 'site'){ 
+   * if($ccnCourseFormat !== 'site'){
    * REPLACE WITH BELOW IF STATEMENT: */
   if (
     $ccnCourseFormat !== 'site' &&
