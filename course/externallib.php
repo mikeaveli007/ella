@@ -3101,6 +3101,7 @@ class core_course_external extends external_api {
                     shortname: course short name
                     idnumber: course id number
                     category: category id the course belongs to
+                    tag: tag id the course belongs to
                 ', VALUE_DEFAULT, ''),
                 'value' => new external_value(PARAM_RAW, 'The value to match', VALUE_DEFAULT, '')
             )
@@ -3136,6 +3137,7 @@ class core_course_external extends external_api {
             switch ($params['field']) {
                 case 'id':
                 case 'category':
+                case 'tag':
                     $value = clean_param($params['value'], PARAM_INT);
                     break;
                 case 'ids':
@@ -3166,6 +3168,12 @@ class core_course_external extends external_api {
                 // more efficiently.
                 list ($courses, $warnings) = external_util::validate_courses($courseids, [],
                         false, true);
+            } else if ($params['field'] === 'tag') {
+                $courses = $DB->get_records_sql("
+                        SELECT c.*
+                        FROM {course} c
+                        JOIN {tag_instance} ti ON ti.itemid = c.id
+                        WHERE ti.tagid = $value");
             } else {
                 $courses = $DB->get_records('course', array($params['field'] => $value), 'id ASC');
             }
