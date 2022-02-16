@@ -26,6 +26,12 @@ $CFG->admin     = 'admin';
 
 $CFG->directorypermissions = 0777;
 
+// Use the following flag to completely disable the installation of plugins 
+// (new plugins, available updates and missing dependencies) and related 
+// features (such as cancelling the plugin installation or upgrade) via the 
+// server administration web interface. 
+$CFG->disableupdateautodeploy = true; 
+
 require_once(__DIR__ . '/lib/setup.php');
 
 // There is no php closing tag in this file,
