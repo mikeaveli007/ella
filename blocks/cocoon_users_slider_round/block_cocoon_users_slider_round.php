@@ -13,6 +13,7 @@ class block_cocoon_users_slider_round extends block_base {
     if (empty($this->config)) {
       $ccnUserHandler = new ccnUserHandler();
       $ccnUsers = $ccnUserHandler->ccnGetExampleUsersIds(8);
+      $this->config = new \stdClass();
       $this->config->title = 'Top Rating Instructors';
       $this->config->subtitle = 'Cum doctus civibus efficiantur in imperdiet deterruisset.';
       $this->config->profile_views = 1;

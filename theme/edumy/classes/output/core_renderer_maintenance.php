@@ -157,4 +157,43 @@ class core_renderer_maintenance extends \core_renderer_maintenance {
 
   }
 
+  public function ccn_render_lang_menu() {
+    global $CFG;
+
+    $langs = get_string_manager()->get_list_of_translations();
+    $strlang = get_string('language');
+    $currentlang = current_language();
+    $haslangmenu = $this->lang_menu() != '';
+    if (isset($langs[$currentlang])) {
+      $currentlang = $langs[$currentlang];
+    } else {
+      $currentlang = $strlang;
+    }
+
+    $langArr = [];
+    foreach ($langs as $langtype => $langname) {
+      $langArr[] = [
+        'name' => $langname,
+        'url' => new moodle_url($this->page->url, array('lang' => $langtype)),
+        'code' => $langtype,
+        'icon' => $CFG->wwwroot.'/theme/edumy/pix/lang/'.strtoupper($langtype).'.svg',
+      ];
+    }
+
+    $current_icon = '';
+    foreach($langArr as $k=>$lang){
+      if($lang['name'] == $currentlang) $current_icon = $langArr[$k]['icon'];
+    }
+
+    $context =[
+      'has_lang_menu'=> $haslangmenu,
+      'current_lang'=> $currentlang,
+      'current_icon'=> $current_icon,
+      'strlang'=> $strlang,
+      'langs'=> $langArr,
+    ];
+
+    return $this->render_from_template('theme_edumy/ccn_lang_menu', $context);
+  }
+
 }

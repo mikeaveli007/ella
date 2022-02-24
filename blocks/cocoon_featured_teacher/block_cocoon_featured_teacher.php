@@ -15,10 +15,9 @@ class block_cocoon_featured_teacher extends block_base {
 
         $ccnCourseHandler = new ccnCourseHandler();
         $ccnCourses = $ccnCourseHandler->ccnGetExampleCoursesIds(8);
-        // print_object($ccnCourses[0]->courseId);
-
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->title = 'Teacher of Week';
           $this->config->body = 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.';
           $this->config->courses_title = 'Teacher Courses';

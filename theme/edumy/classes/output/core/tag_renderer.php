@@ -22,8 +22,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
 namespace theme_edumy\output\core;
+defined('MOODLE_INTERNAL') || die();
 use context_system;
 use html_writer;
 use core_tag_area;

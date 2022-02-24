@@ -23,7 +23,7 @@ class block_cocoon_gallery_slider extends block_base
             return $this->content;
         }
 
-        $this->content         =  new stdClass;
+        $this->content         =  new \stdClass();
         if(!empty($this->config->title)){$this->content->title = $this->config->title;}else{$this->content->title = 'Media';}
         if(!empty($this->config->subtitle)){$this->content->subtitle = $this->config->subtitle;}else{$this->content->subtitle = 'Cum doctus civibus efficiantur in imperdiet deterruisset.';}
         if(!empty($this->config->columns)){

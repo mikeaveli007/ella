@@ -30,14 +30,10 @@ class block_cocoon_event_list extends block_base {
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
 
         if (empty($this->config)) {
-
           $ccnEventHandler = new ccnEventHandler();
           $ccnEventList = $ccnEventHandler->ccnGetExampleEventIds(6);
-
-          // print_object($ccnEventList);
-
+          $this->config = new \stdClass();
           $this->config->items = 6;
-
           $this->config->title = 'Upcoming Events';
           $this->config->subtitle = 'Cum doctus civibus efficiantur in imperdiet deterruisset.';
           $this->config->button_text = 'See All Events';

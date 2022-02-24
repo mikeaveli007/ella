@@ -29,10 +29,9 @@ $ccnMdlHandler = new ccnMdlHandler();
 $ccnMdlVersion = $ccnMdlHandler->ccnGetCoreVersion();
 
 /* @ccnComm: Visualize */
-if (isset($_GET['cocoon_customizer'])) {
-  require_once($CFG->dirroot. '/theme/edumy/ccn/visualize/ccn_lcvb_construct.php');
-}
-
+// if (isset($_GET['cocoon_customizer'])) {
+//   require_once($CFG->dirroot. '/theme/edumy/ccn/visualize/ccn_lcvb_construct.php');
+// }
 
 /* @ccnBreak */
 if (is_siteadmin()) {$user_status = 'role-supreme';} else {$user_status = 'role-standard';}
@@ -71,6 +70,7 @@ if(method_exists('theme_edumy\output\core_renderer', 'get_theme_image_favicon') 
 } else {
   $favicon = $CFG->wwwroot . '/theme/edumy/pix/favicon.ico';
 }
+$langMenu = $OUTPUT->ccn_render_lang_menu();
 $headertype = get_config('theme_edumy', 'headertype');
 $headertype_settings = get_config('theme_edumy', 'headertype_settings');
 $header_search = get_config('theme_edumy', 'header_search');
@@ -329,12 +329,14 @@ if($course_mainpage_layout_setting != 0 && $context->id == $context_site->id) {
   $course_mainpage_layout_dashboard = '0';
 }
 
+$incourse = 0;
+$inCourseActivity = 0;
 if($context->id == $context_site->id) {
   $incourse = 0;
+} elseif($context->id != $context_site->id && !$courseMainPage) {
+  $inCourseActivity = 1;
 } elseif($context->id != $context_site->id){
   $incourse = 1;
-} else {
-  $incourse = 0;
 }
 
 $ccnDashLayoutSetting = get_config('theme_edumy', 'dashboard_layout');
@@ -342,7 +344,6 @@ $ccnDashLayout = 0;
 if($ccnDashLayoutSetting == '1'){
   $ccnDashLayout = 1;
 }
-
 
 $singlecourse_blocks_setting = get_config('theme_edumy', 'singlecourse_blocks');
 $userProfileFromCourseParticipants = strpos($_SERVER['REQUEST_URI'], "user/view.php") !== false && isset($_GET["course"]);
@@ -597,19 +598,19 @@ if($footer_column_count == 4) {
   $footer_col_2_class = "col-sm-6 col-md-6 col-md-3 col-lg-3";
   $footer_col_3_class = "col-sm-6 col-md-6 col-md-3 col-lg-3";
   $footer_col_4_class = "col-sm-6 col-md-6 col-md-3 col-lg-3";
-  $footer_col_5_class = "";
+  $footer_col_5_class = "col-sm-6 col-md-6 col-md-3 col-lg-3";
 } elseif($footer_column_count == 3) {
   $footer_col_1_class = "col-sm-12 col-md-4 col-md-4 col-lg-4";
   $footer_col_2_class = "col-sm-12 col-md-4 col-md-4 col-lg-4";
   $footer_col_3_class = "col-sm-12 col-md-4 col-md-4 col-lg-4";
-  $footer_col_4_class = "";
-  $footer_col_5_class = "";
+  $footer_col_4_class = "col-sm-12 col-md-4 col-md-4 col-lg-4";
+  $footer_col_5_class = "col-sm-12 col-md-4 col-md-4 col-lg-4";
 } elseif($footer_column_count == 2) {
   $footer_col_1_class = "col-sm-6 col-md-6 col-md-6 col-lg-6";
   $footer_col_2_class = "col-sm-6 col-md-6 col-md-6 col-lg-6";
-  $footer_col_3_class = "";
-  $footer_col_4_class = "";
-  $footer_col_5_class = "";
+  $footer_col_3_class = "col-sm-6 col-md-6 col-md-6 col-lg-6";
+  $footer_col_4_class = "col-sm-6 col-md-6 col-md-6 col-lg-6";
+  $footer_col_5_class = "col-sm-6 col-md-6 col-md-6 col-lg-6";
 } elseif($footer_column_count == 1) {
   $footer_col_1_class = "col-sm-12 col-md-6 offset-md-3 text-center";
   $footer_col_2_class = "";

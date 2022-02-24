@@ -25,6 +25,7 @@ class block_cocoon_slider_1 extends block_base {
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
 
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->slidesnumber = '3';
           $this->config->slide_title1 = 'Self Education Resources and Infos';
           $this->config->slide_subtitle1 = 'Technology is brining a massive wave of evolution on learning things on different ways.';

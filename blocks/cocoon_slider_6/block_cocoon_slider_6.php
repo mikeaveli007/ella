@@ -27,6 +27,7 @@ class block_cocoon_slider_6 extends block_base {
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
 
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->slidesnumber = '4';
           $this->config->title_1 = 'With Edumy, Learning ';
           $this->config->title_2_1 = 'Never Ends';

@@ -11,14 +11,13 @@ class block_cocoon_hero_7 extends block_base {
       global $CFG, $DB;
       include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
       if (empty($this->config)) {
+        $this->config = new \stdClass();
         $this->config->title = 'Learn From Anywhere';
         $this->config->subtitle = 'Technology is bringing a massive wave of evolution on learning things on different ways.';
         $this->config->button_text = 'Get Started';
         $this->config->button_link = '#';
         $this->config->button_text_2 = 'View Courses';
         $this->config->button_link_2 = '#';
-
-
         $this->config->color_title = '#ffffff';
         $this->config->color_subtitle = '#bcbccc';
         $this->config->color_btn_1 = '#14b05f';

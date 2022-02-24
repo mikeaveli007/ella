@@ -4,6 +4,7 @@
   {{> theme_edumy/ccn_preloader }}
   <div class="wrapper">
     {{> theme_edumy/ccn_focus_navbar }}
+    {{#edumy_focus_sidebar}}
     <section data-simplebar="init" class="so_content dashboard_sidebar dn-1199 {{#dashboard_scroll_drawer}} ccn_dashboard_scroll_drawer {{/dashboard_scroll_drawer}}">
       <div class="dashboard_sidebars">
         <div class="user_board">
@@ -13,8 +14,9 @@
         </div>
       </div>
     </section>
+    {{/edumy_focus_sidebar}}
     <div class="our-dashbord dashbord">
-      <div class="dashboard_main_content">
+      <div class="dashboard_main_content {{^edumy_focus_sidebar}}no-sidebar{{/edumy_focus_sidebar}}">
         <div class="container-fluid">
           <div class="main_content_container">
             <div class="row">

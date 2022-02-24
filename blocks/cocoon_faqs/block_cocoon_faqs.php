@@ -40,6 +40,7 @@ class block_cocoon_faqs extends block_base {
         global $CFG, $DB;
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->slidesnumber = '4';
           $this->config->title = 'Frequently Asked Questions';
           $this->config->faq_title1 = 'Why won\'t my payment go through?';
@@ -56,12 +57,10 @@ class block_cocoon_faqs extends block_base {
           $this->config->faq_body4 = 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.';
           $this->config->color_bg = 'rgb(255,255,255)';
           $this->config->color_title = '#0a0a0a';
-
           $this->config->color_panel_bg = '#edeff7';
           $this->config->color_panel_title = '#0a0a0a';
           $this->config->color_panel_subtitle = '#3b3b3b';
           $this->config->color_panel_body = '#7e7e7e';
-
         }
     }
 

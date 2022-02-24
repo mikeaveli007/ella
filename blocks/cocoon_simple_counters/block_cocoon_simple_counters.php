@@ -16,6 +16,7 @@ class block_cocoon_simple_counters extends block_base
         global $CFG, $DB;
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->title = 'Our Story';
           $this->config->counter_1 = '6500';
           $this->config->counter_2 = '58263';

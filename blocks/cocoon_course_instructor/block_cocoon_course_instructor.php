@@ -14,6 +14,7 @@ class block_cocoon_course_instructor extends block_base
       global $CFG, $DB, $USER;
       include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
       if (empty($this->config)) {
+        $this->config = new \stdClass();
         $this->config->title = 'About the instructor';
         $this->config->user = $USER->id;
       }

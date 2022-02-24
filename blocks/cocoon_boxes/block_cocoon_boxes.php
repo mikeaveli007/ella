@@ -24,6 +24,7 @@ class block_cocoon_boxes extends block_base {
         global $CFG, $DB;
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->items = '4';
           $this->config->title1 = 'Create Account';
           $this->config->title2 = 'Create Account';

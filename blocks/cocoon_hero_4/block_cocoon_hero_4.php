@@ -48,6 +48,7 @@ class block_cocoon_hero_4 extends block_base {
         global $CFG, $DB;
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->title = 'Learn From';
           $this->config->title_2 = 'Anywhere';
           $this->config->subtitle = 'Technology is bringing a massive wave of evolution on learning things in different ways.';

@@ -18,8 +18,8 @@ class block_cocoon_featured_video extends block_base
         global $CFG, $DB;
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->slidesnumber = '4';
-
           $this->config->video_url = 'https://youtu.be/UdDwKI4DcGw';
           $this->config->title1 = 'Creative Events';
           $this->config->subtitle1 = '749';
@@ -33,7 +33,6 @@ class block_cocoon_featured_video extends block_base
           $this->config->title4 = 'People Wordwide';
           $this->config->subtitle4 = '92';
           $this->config->subtitle_2_4 = 'k';
-
           $this->config->color_bfbg = '#f9f9f9';
           $this->config->color_title = '#0067da';
           $this->config->color_subtitle = '#222222';

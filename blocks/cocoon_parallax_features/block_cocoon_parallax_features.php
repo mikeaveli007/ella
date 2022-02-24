@@ -16,6 +16,7 @@ class block_cocoon_parallax_features extends block_base
         global $CFG, $DB;
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->slidesnumber = '8';
           $this->config->title = 'Included Features';
           $this->config->subtitle = 'Cum doctus civibus efficiantur in imperdiet deterruisset.';

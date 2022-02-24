@@ -1,5 +1,10 @@
 {{#isloggedin}}
   <ul class="header_user_notif ccn-frontend-header_user_notif pull-right dn-smd">
+    {{#lang_menu_icons}}
+
+        {{{lang_menu}}}
+
+    {{/lang_menu_icons}}
     {{#if_user_dark_mode_icon}}
       <li class="user_setting ccn-settings-nav ccn-settings-nav-darkMode">
         <div class="dropdown">
@@ -25,6 +30,7 @@
         </div>
       </li>
     {{/if_user_navigation_icon}}
+
     <li class="user_setting">
       <div class="dropdown">
         <a class="btn dropdown-toggle ccn-profile-menu" href="#" data-toggle="dropdown" aria-expanded="false"><img class="rounded-circle" src="{{{ user_profile_picture }}}" alt="{{{ user_username }}}"></a>

@@ -91,7 +91,7 @@
   margin-top: 80px;
 }
 .ccn_context_frontend header.header-nav.ccnHeader3.menu_style_home_three {
-  background-color: #051925;
+  background-color: [[setting:color_header_style_3_top]];
   padding: 0;
 }
 .ccn_context_frontend header.header-nav.ccnHeader3.menu_style_home_three a.navbar_brand:before {
@@ -102,7 +102,7 @@
   float: right;
 }
 .ccn_context_frontend header.header-nav.ccnHeader3.menu_style_home_three .ace-responsive-menu li ul.sub-menu {
-  background-color: #051925;
+  background-color: [[setting:color_header_style_3_top]];
 }
 .ccn_context_frontend header.header-nav.ccnHeader3.menu_style_home_three .ace-responsive-menu li ul.sub-menu:nth-child(3) {
   left: 0;
@@ -163,7 +163,7 @@
   color: #ffffff;
 }
 .logo-widget.home3 span {
-  color: #051925;
+  color: [[setting:color_header_style_3_top]];
 }
 .ccn_context_frontend .inner_page_breadcrumb {
   margin-top: 86px;
@@ -171,7 +171,14 @@
   padding-bottom: 40px;
 }
 .ccn_context_frontend.ccn_header_style_3.ccn_hero_1 .header_top.home3 .sign_up_btn li:first-child .btn span {
-    padding-left: 7px;
+  padding-left: 7px;
+}
+.ccn_context_frontend.ccn_header_style_3.ccn_hero_1 .header_top.home3 .sign_up_btn li.cta-btn .btn i {
+  margin-right: 0;
+  vertical-align: text-bottom;
+}
+.ccn_context_frontend.ccn_header_style_3.ccn_hero_1 .header_top.home3 .sign_up_btn li.cta-btn .btn i {
+  padding-left: 4px;
 }
 @media (max-width:1700px) and (min-width: 1200px) {
   .ccn_header_style_3.ccn_context_frontend header.header-nav.ccnHeader3.menu_style_home_three .ht_left_widget.home3 {
@@ -225,7 +232,7 @@
     margin-top: 0;
   }
   .header_top.home3 {
-    background-color: #051925;
+    background-color: [[setting:color_header_style_3_top]];
   }
   .search_overlay.home3 .mk-search-trigger {
     margin-left: 10px;
@@ -257,12 +264,12 @@
     margin-top: 103px;
   }
 }
-@media (min-width: 1600px){
+@media (min-width: 1600px) {
   .ccn_header_style_3.ccn_context_frontend:not(.ccn_hero_1) header.header-nav.ccnHeader3.menu_style_home_three .mk-search-trigger {
     top: 13px;
   }
 }
-@media (max-width:1200px){
+@media (max-width:1200px) {
   .ccn_context_frontend .inner_page_breadcrumb {
     margin-top: 0;
   }

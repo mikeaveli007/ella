@@ -51,6 +51,15 @@ if ($ADMIN->fulltree) {
                     ));
     $page->add($setting);
 
+    // Back to Top
+    $setting = new admin_setting_configselect('theme_edumy/language_menu',
+        get_string('language_menu', 'theme_edumy'),
+        get_string('language_menu_desc', 'theme_edumy'), null,
+                array('0' => 'Display as flags',
+                      '1' => 'Display as text'
+                    ));
+    $page->add($setting);
+
 
     // Favicon
     $name='theme_edumy/favicon';
@@ -1002,7 +1011,8 @@ if ($ADMIN->fulltree) {
     $setting->set_updatedcallback('theme_reset_all_caches');
     $page->add($setting);
 
-
+    // // Title: Bootstrap colors
+    // $page->add(new admin_setting_heading('theme_edumy/color_bootstrap', get_string('color_bootstrap', 'theme_edumy'), NULL));
 
     $settings->add($page);
 
@@ -1534,6 +1544,27 @@ if ($ADMIN->fulltree) {
                     ));
     $page->add($setting);
 
+    // Title: Edumy Focus
+    $page->add(new admin_setting_heading('theme_edumy/edumy_focus', get_string('edumy_focus', 'theme_edumy'), get_string('edumy_focus_desc', 'theme_edumy')));
+
+    $setting = new admin_setting_configselect('theme_edumy/edumy_focus_sidebar',
+        get_string('edumy_focus_sidebar', 'theme_edumy'),
+        get_string('edumy_focus_sidebar_desc', 'theme_edumy'), '0',
+                array('0' => 'Display sidebar',
+                      '1' => 'Hide sidebar'
+                    ));
+    $page->add($setting);
+
+    // Title: Homepage
+    $page->add(new admin_setting_heading('theme_edumy/edumy_homepage', get_string('edumy_homepage', 'theme_edumy'), get_string('edumy_homepage_desc', 'theme_edumy')));
+
+    $setting = new admin_setting_configselect('theme_edumy/edumy_homepage_core',
+        get_string('edumy_homepage_core', 'theme_edumy'),
+        get_string('edumy_homepage_core_desc', 'theme_edumy'), '0',
+                array('0' => 'Website & Moodle Mobile App',
+                      '1' => 'Moodle Mobile App'
+                    ));
+    $page->add($setting);
 
     $settings->add($page);
 
@@ -1566,6 +1597,10 @@ if ($ADMIN->fulltree) {
     $setting = new admin_setting_configtextarea('theme_edumy/custom_css_dashboard', get_string('custom_css_dashboard','theme_edumy'), get_string('custom_css_dashboard_desc', 'theme_edumy'), '', PARAM_RAW);
     $setting->set_updatedcallback('theme_reset_all_caches');
     $page->add($setting);
+    // // Custom CSS H5P
+    // $setting = new admin_setting_configtextarea('theme_edumy/custom_css_h5p', get_string('custom_css_h5p','theme_edumy'), get_string('custom_css_h5p_desc', 'theme_edumy'), '', PARAM_RAW);
+    // $setting->set_updatedcallback('theme_reset_all_caches');
+    // $page->add($setting);
     // Custom JavaScript
     $setting = new admin_setting_configtextarea('theme_edumy/custom_js', get_string('custom_js','theme_edumy'), get_string('custom_js_desc', 'theme_edumy'), '', PARAM_RAW);
     $setting->set_updatedcallback('theme_reset_all_caches');

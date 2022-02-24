@@ -25,6 +25,7 @@ class block_cocoon_accordion extends block_base {
         global $CFG, $DB;
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->slidesnumber = '4';
           $this->config->title = 'Frequently Asked Questions';
           $this->config->title1 = 'Why won\'t my payment go through?';
@@ -98,9 +99,9 @@ class block_cocoon_accordion extends block_base {
 
                               $text .='
             							  	<div class="card">
-            								    <div class="card-header" id="#'.$ccnAccLink.'">
+              								    <div class="card-header" id="#'.$ccnAccLink.'">
             								    	<h2 class="mb-0">
-            								        	<button data-ccn="'.$ccnAccTitle.'" class="btn btn-link" type="button" data-toggle="collapse" data-target="#'.$ccnCollapseLink.'" aria-expanded="true" aria-controls="'.$ccnCollapseLink.'">
+            								        	<button data-ccn="'.$ccnAccTitle.'" class="btn btn-link" type="button" data-toggle="collapse" data-target="#'.$ccnCollapseLink.'" aria-expanded="false" aria-controls="'.$ccnCollapseLink.'">
             								        		'.format_text($data->$ccnAccTitle, FORMAT_HTML, array('filter' => true)).'
             								        		<span class="flaticon-right-arrow float-right"></span>
             								    		</button>

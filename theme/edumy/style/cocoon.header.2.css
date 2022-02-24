@@ -98,7 +98,8 @@ header.header-nav.ccnHeader2.home2.style_one .ace-responsive-menu li ul.sub-menu
 }
 .ccn_header_style_2 header.header-nav.ccnHeader2.home2.style_one .mk-search-trigger {
   position: relative;
-  top: 5px;
+  /* top: 5px; */
+  top: 0;
   margin-left: 5px;
   margin-right: 5px;
 }
@@ -119,6 +120,9 @@ header.header-nav.ccnHeader2.home2.style_one .ace-responsive-menu li ul.sub-menu
   header.header-nav.ccnHeader2.home2.style_one #search-button i {
     color: rgba(255, 255, 255, .6);
     font-size: 14px;
+  }
+  .inner_page_breadcrumb.ccn_breadcrumb_default.ccn-breadcrumb-title-v.ccn-breadcrumb-trail-v .breadcrumb_content {
+    margin-top: 100px;
   }
 }
 @media (max-width: 1200px) and (min-width: 992px) {

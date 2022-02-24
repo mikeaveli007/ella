@@ -3487,6 +3487,9 @@ header.header-nav.menu_style_home_seven .ace-responsive-menu>li.last {
   color: rgb(126, 126, 126);
   line-height: 1.2;
 }
+.inner_page_breadcrumb .cs_row_one .cs_instructor .cs_instrct_list li a {
+  color: #fff;
+}
 .cs_row_one .cs_instructor .cs_watch_list li a,
 .cs_row_one.csv3 .cs_watch_list li a {
   font-size: 15px;
@@ -4161,6 +4164,9 @@ header.header-nav.menu_style_home_seven .ace-responsive-menu>li.last {
   padding: 10px 20px;
   position: relative;
 }
+/* .top_courses .tc_footer:blank {
+  display: none;
+} */
 .top_courses .tc_footer .tc_meta {
   margin-bottom: 0;
 }
@@ -8795,13 +8801,13 @@ body:not(.ccn_context_dashboard) .ui_kit_select_search button.btn:focus {
 }
 .dashboard_main_content {
   max-width: 100%;
-  /* max-height: 900px; */
   padding-left: calc(280px - -20px);
   padding-left: calc(280px + 20px);
   padding-right: 20px;
   position: relative;
-  /* overflow-x: hidden;
-  overflow-y: scroll !important; */
+}
+.dashboard_main_content.no-sidebar {
+  padding-left: 20px;
 }
 .ccn_context_dashboard.ccn_dashboard_header_scroll .dashboard_main_content .main_content_container {
   padding: 80px 0 0;
@@ -8881,8 +8887,8 @@ body:not(.ccn_context_dashboard) .ui_kit_select_search button.btn:focus {
   top: 0;
   width: 2px;
 }
-.dashbord_nav_list li a span:not(.ccn_dashnav_item),
-.dashbord_nav_list li a i.icon {
+body:not(.ccn_context_focus) .dashbord_nav_list li a span:not(.ccn_dashnav_item),
+body:not(.ccn_context_focus) .dashbord_nav_list li a i.icon {
   font-size: 23px;
   margin-right: 15px;
   width: auto;
@@ -13864,9 +13870,10 @@ textarea.form-control {
   transform: scale(2);
 }
 /* CCN */
-#ccn-main .no-overflow {
+/* removed: @5742
+ #ccn-main .no-overflow {
   overflow: inherit !important;
-}
+} */
 #ccn-main .py-3 {
   padding: 0 !important;
 }
@@ -14555,9 +14562,6 @@ body>.wrapper {
   }
   .ccn_course_list_style_2.pagelayout-coursecategory #block-region-side-pre {
     margin-top: 50px;
-  }
-  .instructor_pricing_widget .price {
-    text-align: left;
   }
   .inner_page_breadcrumb .breadcrumb_content {
     margin-top: 110px;
@@ -17424,7 +17428,9 @@ ul.list_requiremetn {
 #block-region-fullwidth-top .block_cocoon_faqs,
 #block-region-fullwidth-bottom .block_cocoon_faqs,
 #block-region-fullwidth-top .block_cocoon_accordion,
-#block-region-fullwidth-bottom .block_cocoon_accordion {
+#block-region-fullwidth-bottom .block_cocoon_accordion,
+#block-region-fullwidth-top .block_cocoon_form,
+#block-region-fullwidth-bottom .block_cocoon_form {
   max-width: 880px;
   margin: 60px auto;
 }
@@ -17714,6 +17720,20 @@ ul.list_requiremetn {
 }
 ul.nav {
   list-style: none;
+}
+.block_cocoon_accordion .card-header {
+  padding: 0
+}
+.block_cocoon_accordion button {
+  padding: 1.5rem 1.25rem;
+  width: 100%;
+  text-align: left;
+}
+.block_cocoon_accordion button .float-right {
+  transition: .2s ease all;
+}
+.block_cocoon_accordion button[aria-expanded=true] .float-right {
+  transform: rotate(90deg);
 }
 /* Owl Fixes */
 .banner-style-one:not(.ccn-banner-style-boxed) .slide,

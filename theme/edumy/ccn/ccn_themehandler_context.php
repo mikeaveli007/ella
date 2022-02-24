@@ -5,6 +5,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 $templatecontext = [
+    'lang_menu' =>  $langMenu,
     'sitename' => format_string($SITE->shortname, true, ['context' => context_course::instance(SITEID), "escape" => false]),
     'output' => $OUTPUT,
     'ccnLogoUrl' => $ccnLogoUrl,
@@ -14,6 +15,7 @@ $templatecontext = [
     // 'ccn_registration' => $_ccnregistration,
     'ccn_activitynav' => $_ccnCourseSectionNav,
     'ccn_course_url' => $ccnCourseUrl,
+    'ccn_dashboard_url' => $CFG->wwwroot . '/my',
     'ccn_globalsearch' => $_ccnglobalsearch,
     'ccn_globalsearch_navbar' => $_ccnglobalsearch_navbar,
     'ccn_librarylist' => $_ccnlibrarylist,
@@ -243,6 +245,7 @@ $templatecontext = [
     'dashboard_nav_flat' => $dashboard_left_drawer == 3,
     'disable_dashboard_drawer' => $dashboard_left_drawer == 2 || ($dashboard_left_drawer == 1 && !$sidebar_left),
     'incourse' => $incourse == 1,
+    'in_course_activity'=>$inCourseActivity,
     'show_course_start' => $showCourseStartDate != 1,
     'show_course_category' => $showCourseCategory != 1,
     // 'user_profile_layout_dashboard' => $user_profile_layout_dashboard == 1,
@@ -258,6 +261,8 @@ $templatecontext = [
     'show_settings_controls' => $ccn_page_settings_controls == 1,
     'if_breadcrumb_title' => get_config('theme_edumy', 'breadcrumb_title') != 1,
     'if_breadcrumb_trail' => get_config('theme_edumy', 'breadcrumb_trail') != 1,
+    'edumy_focus_sidebar' => !empty(get_config('theme_edumy', 'edumy_focus_sidebar')) && get_config('theme_edumy', 'edumy_focus_sidebar') === '1' ? false : true,
+    'lang_menu_icons' => !empty(get_config('theme_edumy', 'language_menu')) && get_config('theme_edumy', 'language_menu') === '1' ? false : true,
 ];
 $PAGE->requires->jquery();
 $ccnLcVbCollection = array(

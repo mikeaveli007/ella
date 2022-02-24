@@ -25,6 +25,7 @@ class block_cocoon_parallax_testimonials extends block_base {
 
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->title = 'What People Say';
           $this->config->subtitle = 'Cum doctus civibus efficiantur in imperdiet deterruisset.';
           $this->config->slidesnumber = '5';
@@ -73,7 +74,7 @@ class block_cocoon_parallax_testimonials extends block_base {
         if ($this->content !== NULL) {
             return $this->content;
         }
-        $this->content         =  new stdClass;
+        $this->content         =  new \stdClass();
         if(!empty($this->config->title)){$this->content->title = $this->config->title;} else {$this->content->title = '';}
         if(!empty($this->config->subtitle)){$this->content->subtitle = $this->config->subtitle;} else {$this->content->subtitle = '';}
         if(!empty($this->config->color_bg)){$this->content->color_bg = $this->config->color_bg;} else {$this->content->color_bg = '#2441e7';}

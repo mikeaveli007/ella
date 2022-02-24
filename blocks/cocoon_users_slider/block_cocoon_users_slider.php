@@ -24,6 +24,7 @@ class block_cocoon_users_slider extends block_base {
         if (empty($this->config)) {
           $ccnUserHandler = new ccnUserHandler();
           $ccnUsers = $ccnUserHandler->ccnGetExampleUsersIds(8);
+          $this->config = new \stdClass();
           $this->config->title = 'Top Rating Instructors';
           $this->config->users = $ccnUsers;
           // $this->config->color_bg = 'rgb(255,255,255)';

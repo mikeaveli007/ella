@@ -38,7 +38,7 @@ class block_cocoon_event_body extends block_base
         }
         $date = new DateTime();
         $date = $date->setTimestamp($this->config->date);
-        $date = $date->format('d M Y');
+        $date = $date->format('d M Y H:m');
         $this->content->text = '
         <div class="mbp_thumb_post">
 							<div class="details pt0">

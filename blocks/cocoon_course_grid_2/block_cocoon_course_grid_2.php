@@ -15,10 +15,9 @@ class block_cocoon_course_grid_2 extends block_base {
 
         $ccnCourseHandler = new ccnCourseHandler();
         $ccnCourses = $ccnCourseHandler->ccnGetExampleCoursesIds(8);
-        // print_object($ccnCourses[0]->courseId);
-
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->title = 'Browse Our Top Courses';
           $this->config->subtitle = 'Cum doctus civibus efficiantur in imperdiet deterruisCum doctus civibus efficiantur in imperdiet deterruisset.';
           $this->config->hover_text = 'Preview Course';
@@ -32,7 +31,6 @@ class block_cocoon_course_grid_2 extends block_base {
           $this->config->enrol_btn_text = 'Buy Now';
           $this->config->courses = $ccnCourses;
           $this->config->group = '1';
-
           $this->config->color_bg = 'rgb(255,255,255)';
           $this->config->color_title = 'rgb(62,68,72)';
           $this->config->color_subtitle = 'rgb(111, 112, 116)';
@@ -41,8 +39,6 @@ class block_cocoon_course_grid_2 extends block_base {
           $this->config->color_course_price = 'rgb(255,255,255)';
           $this->config->color_btn = 'rgb(202, 190, 159)';
           $this->config->button_bdrrd = '20';
-
-
         }
     }
 
@@ -131,10 +127,8 @@ class block_cocoon_course_grid_2 extends block_base {
         if(
           $PAGE->theme->settings->coursecat_enrolments != 1 ||
           $PAGE->theme->settings->coursecat_announcements != 1 ||
-          isset($this->content->price) ||
-          isset($this->content->enrol_btn_text) &&
-          // ccnBreak
-          ($this->content->price == '1' || $this->content->enrol_btn == '1')
+          (isset($this->content->price) && $this->content->price == '1') ||
+          (isset($this->content->enrol_btn_text) && $this->content->enrol_btn == '1')
         ) {
           $ccnBlockShowBottomBar = 1;
           $topCoursesClass = 'ccnWithFoot';
