@@ -335,7 +335,7 @@ if($context->id == $context_site->id) {
   $incourse = 0;
 } elseif($context->id != $context_site->id && !$courseMainPage) {
   $inCourseActivity = 1;
-  $incourse = 0;
+  $incourse = 1;
 } elseif($context->id != $context_site->id){
   $incourse = 1;
 }
