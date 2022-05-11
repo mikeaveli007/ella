@@ -22,7 +22,7 @@ class block_cocoon_gallery extends block_base
         if ($this->content !== null) {
             return $this->content;
         }
-        $this->content         =  new stdClass;
+        $this->content         =  new \stdClass();
         if(!empty($this->config->title)){$this->content->title = $this->config->title;}
         if(!empty($this->config->subtitle)){$this->content->subtitle = $this->config->subtitle;}
         if(!empty($this->config->columns)){

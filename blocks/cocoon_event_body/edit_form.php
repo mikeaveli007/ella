@@ -15,7 +15,7 @@ class block_cocoon_event_body_edit_form extends block_edit_form
         $mform->setType('config_title', PARAM_RAW);
 
         // Date
-        $mform->addElement('date_selector', 'config_date', get_string('config_date', 'block_cocoon_event_body'));
+        $mform->addElement('date_time_selector', 'config_date', get_string('config_date', 'block_cocoon_event_body'));
 
         // Image
         $mform->addElement('filemanager', 'config_image', get_string('config_image', 'block_cocoon_event_body'), null,

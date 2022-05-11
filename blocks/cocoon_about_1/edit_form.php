@@ -23,7 +23,7 @@ class block_cocoon_about_1_edit_form extends block_edit_form
         // Image
         $mform->addElement('filemanager', 'config_image', get_string('config_image', 'theme_edumy'), null,
                 array('subdirs' => 0, 'maxbytes' => $maxbytes, 'areamaxbytes' => 10485760, 'maxfiles' => 1,
-                'accepted_types' => array('.png', '.jpg', '.gif') ));
+                'accepted_types' => array('.png', '.jpg', '.jpeg', '.gif') ));
 
         $radioarray=array();
         $radioarray[] = $mform->createElement('radio', 'config_style', '', 'Image Left', 0, $attributes);

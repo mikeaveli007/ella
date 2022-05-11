@@ -58,3 +58,7 @@
 [submodule "auth/crowd"]
 	path = auth/crowd
 	url = git@github.com:OCHININC/ella-auth-crowd.git
+[submodule "availability/condition/password"]
+	path = availability/condition/password
+	url = git@github.com:moodle-an-hochschulen/moodle-availability_password.git
+	branch = MOODLE_39_STABLE

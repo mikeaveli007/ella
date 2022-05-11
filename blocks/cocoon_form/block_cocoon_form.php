@@ -138,7 +138,7 @@ class block_cocoon_form extends block_base {
           exit();
         } else {
           $message = '<div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        Sorry! Your message cannot been sent. Please contact administrator!
+                        Sorry, your message failed to send. Please contact the website administrator.
                       </div>';
           if($status) {
                 $message = '<div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -213,8 +213,8 @@ class block_cocoon_form extends block_base {
     		<div class="container">
     			<div class="row">
             <div class="col-lg-12">
-              <div id="msg" class="ui_kit_message_box">'. $message .'</div>
-              <form enctype="multipart/form-data" class="form_builder contact_form" id="'. $formID .'" method="post" action="'. htmlspecialchars($_SERVER["PHP_SELF"]) .'">';
+              <div id="msg" class="">'. $message .'</div>
+              <form enctype="multipart/form-data" class="form_builder contact_form" id="'. $formID .'" method="post" --rm-action="'. htmlspecialchars($_SERVER["PHP_SELF"]) .'" action="">';
                 if($useAjax) {
                   $this->content->text .='
                   <div class="form-group">

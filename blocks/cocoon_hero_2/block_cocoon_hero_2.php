@@ -16,6 +16,7 @@ class block_cocoon_hero_2 extends block_base
         global $CFG, $DB;
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->title = 'Find the Best Courses';
           $this->config->subtitle = 'Technology is brining a massive wave of evolution on learning things on different ways.';
           $this->config->button_text = 'Ready to Get Started?';
@@ -28,7 +29,7 @@ class block_cocoon_hero_2 extends block_base
         if ($this->content !== null) {
             return $this->content;
         }
-        $this->content         =  new stdClass;
+        $this->content         =  new \stdClass();
         if(!empty($this->config->title)){$this->content->title = $this->config->title;} else {$this->content->title = ''; }
         if(!empty($this->config->subtitle)){$this->content->subtitle = $this->config->subtitle;} else {$this->content->title = ''; }
         if(!empty($this->config->button_link)){$this->content->button_link = $this->config->button_link;} else {$this->content->title = ''; }

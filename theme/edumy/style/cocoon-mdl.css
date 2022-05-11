@@ -1671,7 +1671,7 @@ body.pagelayout-maintenance .actions .singlebutton,
   padding: 2px 4px;
   border-radius: 50px;
   background-color: #fff;
-  color: #e35a9a;
+  color: [[setting:color_accent]];
   font-size: 10px;
   line-height: 10px;
   position: absolute;
@@ -2146,7 +2146,7 @@ body.pagelayout-mydashboard {
   top: -88px;
 }
 /* @media (min-width: 1200px) { */
-.ccn_context_focus .dashboard_main_content {
+.ccn_context_focus .dashboard_main_content:not(.no-sidebar) {
   padding-left: calc(400px - -20px);
   padding-left: calc(400px + 20px);
 }
@@ -2162,9 +2162,10 @@ body.pagelayout-mydashboard {
   padding: 0;
   min-height: 57px;
 }
-/* {
-  display: flex;
-} */
+.ccn_context_focus .dashbord_nav_list .details .cc_tab .panel-body .cs_list li .accesshide,
+.ccn_context_focus .ccn_dashbord_nav_list .accesshide {
+  display: none !important;
+}
 .ccn_context_focus .dashbord_nav_list .details .cc_tab .panel-body .cs_list li,
 .ccn_context_focus .ccn_dashbord_nav_list .cc_tab .panel-body .section .activity .activityinstance,
 .ccn_context_focus .dashboard_navigationbar .dropdown-content .cc_tab .panel-body .section .activity .activityinstance,
@@ -2173,6 +2174,9 @@ body.pagelayout-mydashboard {
   min-height: 57px;
   display: table;
   width: 100%;
+  max-width: none;
+  padding: 0;
+  margin: 0;
 }
 .ccn_context_focus .ccn_dashbord_nav_list .cc_tab .panel-body .cs_list li a,
 .ccn_context_focus .ccn_dashbord_nav_list .cc_tab .panel-body .cs_list .no-action,
@@ -2200,12 +2204,16 @@ body.pagelayout-mydashboard {
 .ccn_context_focus .dashboard_navigationbar .dropdown-content .cc_tab .panel-body .section .activity .activityinstance {
   width: 100%;
   padding-right: 45px;
-  /* min-height: 0; */
+  padding-left: 10px;
 }
 .ccn_context_focus .ccn_dashbord_nav_list .cc_tab .panel-body .section .activity .activityinstance>div,
 .ccn_context_focus .ccn_dashbord_nav_list .cc_tab .panel-body .section .activity .activityinstance>a,
 .ccn_context_focus .dashboard_navigationbar .dropdown-content .cc_tab .panel-body .section .activity .activityinstance>div,
-.ccn_context_focus .dashboard_navigationbar .dropdown-content .cc_tab .panel-body .section .activity .activityinstance>a {
+.ccn_context_focus .dashboard_navigationbar .dropdown-content .cc_tab .panel-body .section .activity .activityinstance>a,
+.ccn_context_focus .ccn_dashbord_nav_list .cc_tab .panel-body .section .activity .activityinstance>.inplaceeditable>a,
+.ccn_context_focus .dashboard_navigationbar .dropdown-content .cc_tab .panel-body .section .activity .activityinstance>.inplaceeditable>a,
+.ccn_context_focus .ccn_dashbord_nav_list .cc_tab .panel-body .section .activity .activityinstance>.inplaceeditable>div,
+.ccn_context_focus .dashboard_navigationbar .dropdown-content .cc_tab .panel-body .section .activity .activityinstance>.inplaceeditable>div {
   display: table-cell;
   font-family: "[[setting:primary_font]]";
   color: #7f7f7f;
@@ -2213,6 +2221,11 @@ body.pagelayout-mydashboard {
   line-height: 1;
   text-indent: 0;
   padding: 20px 20px 20px 45px;
+}
+.ccn_context_focus .ccn_dashbord_nav_list .quickeditlink,
+.ccn_context_focus .dashboard_navigationbar .quickeditlink {
+  padding: 0;
+  display: inline-block;
 }
 .ccn_context_focus .ccn_dashbord_nav_list .cc_tab .panel-body .section .activity .activityinstance .instancename,
 .ccn_context_focus .dashboard_navigationbar .dropdown-content .cc_tab .panel-body .section .activity .activityinstance .instancename {
@@ -2312,6 +2325,10 @@ body.pagelayout-mydashboard {
 }
 .ccn_context_focus .ccn_dashbord_nav_list .details .cc_tab h4.panel-title {
   background-color: transparent;
+}
+.ccn_context_focus .ccn_dashbord_nav_list ul.section {
+  margin: 0 !important;
+  padding: 0 !important;
 }
 .ccn_context_focus .btn-primary.ccn-btn-backtocourse {
   margin-top: 20px;
@@ -2476,10 +2493,56 @@ body.pagelayout-mydashboard {
   vertical-align: middle;
   margin: 0 0 0 6px;
 }
-/* .ccn_context_dashboard .tool_usertours-resettourcontainer a,
-.ccn_context_focus .tool_usertours-resettourcontainer a {
-  font-size: 13px;
-} */
+.block_settings #settingsnav {
+  padding-top: 0 !important;
+}
+.block_settings .block_tree .tree_item.branch {
+  padding-left: 0;
+}
+.block_settings .block_tree ul {
+  margin-left: 18px;
+}
+img.lang_icon {
+  width: 42px !important;
+  height: 42px;
+  object-fit: cover;
+  /* box-shadow: 0 0 0 2px rgb(0 0 0 / 10%); */
+  border-radius: 50px;
+  /* border: 2px solid rgba(255, 255, 255, .9); */
+  border: 1px solid rgba(255,255,255,.5);
+  padding: 2px;
+  position: relative;
+  /* top: -7px; */
+}
+.ccn_dashboard_header_white.ccn_context_dashboard img.lang_icon {
+  border-color: [[setting:color_accent]];
+}
+.lang_icon_flag {
+  display: inline-block;
+  margin: 0 15px 0 3px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50px;
+  overflow: hidden;
+  top: 10px;
+  position: relative;
+}
+.lang_icon_flag img {
+  width: 100% !important;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  border-radius: 50px;
+}
+ul.pagination {
+  list-style: none!important;
+}
+#page-mod-assign-grading .gradingtable {
+  padding-top: 1rem!important;
+  padding-bottom: 1rem!important;
+}
+
 /* CCN DASH DARK */
 /* White primary text */
 .ccnDarkMode.ccn_context_dashboard h1,

@@ -73,7 +73,7 @@ class block_cocoon_course_grid extends block_base {
         if(!empty($this->config->hover_accent)){$this->content->hover_accent = $this->config->hover_accent;} else {$this->content->hover_accent = '';}
         if(!empty($this->config->description)){$this->content->description = $this->config->description;} else {$this->content->description = '0';}
         if(!empty($this->config->course_image)){$this->content->course_image = $this->config->course_image;} else {$this->content->course_image = '';}
-        if(!empty($this->config->price)){$this->content->price = $this->config->price;} else {$this->content->price = '1';}
+        if(!empty($this->config->price)){$this->content->price = $this->config->price;} else {$this->content->price = '0';}
         if(!empty($this->config->enrol_btn)){$this->content->enrol_btn = $this->config->enrol_btn;} else {$this->content->enrol_btn = '0';}
         if(!empty($this->config->enrol_btn_text)){$this->content->enrol_btn_text = $this->config->enrol_btn_text;} else {$this->content->enrol_btn_text = '';}
 
@@ -115,10 +115,8 @@ class block_cocoon_course_grid extends block_base {
         if(
           $PAGE->theme->settings->coursecat_enrolments != 1 ||
           $PAGE->theme->settings->coursecat_announcements != 1 ||
-          isset($this->content->price) ||
-          isset($this->content->enrol_btn_text) &&
-          // ccnBreak
-          ($this->content->price == '1' || $this->content->enrol_btn == '1')
+          (isset($this->content->price) && $this->content->price == '1') ||
+          (isset($this->content->enrol_btn_text) && $this->content->enrol_btn == '1')
         ) {
           $ccnBlockShowBottomBar = 1;
           $topCoursesClass = 'ccnWithFoot';

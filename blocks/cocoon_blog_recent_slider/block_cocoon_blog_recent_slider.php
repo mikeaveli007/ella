@@ -26,7 +26,7 @@ class block_cocoon_blog_recent_slider extends block_base {
         global $CFG, $DB;
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
-
+          $this->config = new \stdClass();
           $this->config->title = 'Blog';
           $this->config->subtitle = 'Cum doctus civibus efficiantur in imperdiet deterruisset.';
           $this->config->color_bg = '#fff';

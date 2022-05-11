@@ -16,6 +16,7 @@ class block_cocoon_steps extends block_base
         global $CFG, $DB;
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->slidesnumber = '3';
           $this->config->title = 'See How It Works';
           $this->config->subtitle = 'Technology is brining a massive wave of evolution on learning things on different ways.';

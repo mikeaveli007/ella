@@ -19,6 +19,7 @@ class block_cocoon_action_panels extends block_base
       include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
 
       if (empty($this->config)) {
+        $this->config = new \stdClass();
         $this->config->panel_1_title = 'Become an Instructor';
         $this->config->panel_1_text = 'Teach what you love. Dove Schooll gives you the tools to create an online course.';
         $this->config->panel_1_button_text = 'Start Teaching';

@@ -15,6 +15,7 @@ class block_cocoon_parallax_subscribe_2 extends block_base
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
 
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->title = 'REGISTER TO GET IT';
           $this->config->subtitle = 'Get 100 Online Courses for Free';
           $this->config->button_text = 'Get it Now';
@@ -29,7 +30,7 @@ class block_cocoon_parallax_subscribe_2 extends block_base
         if ($this->content !== null) {
             return $this->content;
         }
-        $this->content         =  new stdClass;
+        $this->content         =  new \stdClass();
         if(!empty($this->config->title)){$this->content->title = $this->config->title;}
         if(!empty($this->config->subtitle)){$this->content->subtitle = $this->config->subtitle;}
         if(!empty($this->config->button_text)){$this->content->button_text = $this->config->button_text;}

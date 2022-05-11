@@ -28,6 +28,7 @@ class block_cocoon_hero_3 extends block_base {
         global $CFG, $DB;
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->slidesnumber = '3';
           $this->config->title = 'MORE THAN 2500 ONLINE COURSES';
           $this->config->subtitle = 'Own your future learning new skills online';

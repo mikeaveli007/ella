@@ -22,6 +22,7 @@ class block_cocoon_slider_3 extends block_base {
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
 
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->slidesnumber = '3';
           $this->config->slide_title1 = 'Self Education Resources and Infos';
           $this->config->slide_subtitle1 = 'Technology is brining a massive wave of evolution on learning things on different ways.';
@@ -47,6 +48,10 @@ class block_cocoon_slider_3 extends block_base {
           $this->config->feature_2_title = 'Primary School';
           $this->config->feature_3_title = 'Middle School';
           $this->config->feature_4_title = 'High School';
+          $this->config->feature_1_link = '#';
+          $this->config->feature_2_link = '#';
+          $this->config->feature_3_link = '#';
+          $this->config->feature_4_link = '#';
           include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization/specialization_ccn_carousel.php');
         }
     }
@@ -165,40 +170,40 @@ class block_cocoon_slider_3 extends block_base {
   		<div class="container">
   			<div class="row home7_row">
   				<div class="col-sm-6 col-lg-3">
-  					<div class="img_hvr_box home7" style="background-image: url('.$CFG->wwwroot.'/theme/edumy/images/service/5.jpg);">
+  					<a class="img_hvr_box home7" style="background-image: url('.$CFG->wwwroot.'/theme/edumy/images/service/5.jpg);" href="'.format_text($data->feature_1_link, FORMAT_HTML, array('filter' => true)).'">
   						<div class="overlay">
   							<div class="details">
   								<h4 data-ccn="feature_1_title">'.format_text($data->feature_1_title, FORMAT_HTML, array('filter' => true)).'</h4>
   							</div>
   						</div>
-  					</div>
+  					</a>
   				</div>
   				<div class="col-sm-6 col-lg-3">
-  					<div class="img_hvr_box home7 two" style="background-image: url('.$CFG->wwwroot.'/theme/edumy/images/service/6.jpg);">
+  					<a class="img_hvr_box home7 two" style="background-image: url('.$CFG->wwwroot.'/theme/edumy/images/service/6.jpg);" href="'.format_text($data->feature_2_link, FORMAT_HTML, array('filter' => true)).'">
   						<div class="overlay">
   							<div class="details">
   								<h4 data-ccn="feature_2_title">'.format_text($data->feature_2_title, FORMAT_HTML, array('filter' => true)).'</h4>
   							</div>
   						</div>
-  					</div>
+  					</a>
   				</div>
   				<div class="col-sm-6 col-lg-3">
-  					<div class="img_hvr_box home7 three" style="background-image: url('.$CFG->wwwroot.'/theme/edumy/images/service/7.jpg);">
+  					<a class="img_hvr_box home7 three" style="background-image: url('.$CFG->wwwroot.'/theme/edumy/images/service/7.jpg);" href="'.format_text($data->feature_3_link, FORMAT_HTML, array('filter' => true)).'">
   						<div class="overlay">
   							<div class="details">
   								<h4 data-ccn="feature_3_title">'.format_text($data->feature_3_title, FORMAT_HTML, array('filter' => true)).'</h4>
   							</div>
   						</div>
-  					</div>
+  					</a>
   				</div>
   				<div class="col-sm-6 col-lg-3">
-  					<div class="img_hvr_box home7 four" style="background-image: url('.$CFG->wwwroot.'/theme/edumy/images/service/8.jpg);">
+  					<a class="img_hvr_box home7 four" style="background-image: url('.$CFG->wwwroot.'/theme/edumy/images/service/8.jpg);" href="'.format_text($data->feature_4_link, FORMAT_HTML, array('filter' => true)).'">
   						<div class="overlay">
   							<div class="details">
   								<h4 data-ccn="feature_4_title">'.format_text($data->feature_4_title, FORMAT_HTML, array('filter' => true)).'</h4>
   							</div>
   						</div>
-  					</div>
+  					</a>
   				</div>
   			</div>
         </div>

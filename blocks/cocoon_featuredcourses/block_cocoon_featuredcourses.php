@@ -109,10 +109,9 @@ class block_cocoon_featuredcourses extends block_base {
         if(
           $PAGE->theme->settings->coursecat_enrolments != 1 ||
           $PAGE->theme->settings->coursecat_announcements != 1 ||
-          isset($this->content->price) ||
-          isset($this->content->enrol_btn_text) &&
+          (isset($this->content->price) && $this->content->price == '1') ||
+          (isset($this->content->enrol_btn_text) && $this->content->enrol_btn == '1')
           /* ccnBreak */
-          ($this->content->price == '1' || $this->content->enrol_btn == '1')
         ) {
           $ccnBlockShowBottomBar = 1;
           $topCoursesClass = 'ccnWithFoot';
@@ -227,7 +226,7 @@ class block_cocoon_featuredcourses extends block_base {
                   $this->content->text .='
 									</div>
                 </div>';
-                if($ccnBlockShowBottomBar == 1){
+                if($ccnBlockShowBottomBar === 1){
                   $this->content->text .='
                   <div class="tc_footer">
                     <ul class="tc_meta float-left">'.

@@ -39,6 +39,7 @@ class block_cocoon_tabs extends block_base {
         global $CFG, $DB;
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->slidesnumber = '3';
           $this->config->title = 'Frequently Asked Questions';
           $this->config->title1 = 'Education';
@@ -116,7 +117,7 @@ class block_cocoon_tabs extends block_base {
                       if($i == 1){
                         $ccnBodyClass .= ' show active';
                       }
-                      $text .='<div data-ccn="'.$ccnTabBody.'" class="'.$ccnBodyClass.'" id="'.$ccnTabLink.'" role="tabpanel" aria-labelledby="'.$ccnTabLink.'-tab">'.format_text($data->$ccnTabBody['text'], FORMAT_HTML, array('filter' => true)).'</div>';
+                      $text .='<div data-ccn="'.$ccnTabBody.'" class="'.$ccnBodyClass.'" id="'.$ccnTabLink.'" role="tabpanel" aria-labelledby="'.$ccnTabLink.'-tab">'.format_text($data->$ccnTabBody['text'], FORMAT_HTML, array('filter' => true, 'noclean' => true)).'</div>';
                     }
               $text .='
                   </div>

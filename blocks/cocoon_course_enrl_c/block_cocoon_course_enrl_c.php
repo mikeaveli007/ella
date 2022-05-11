@@ -30,7 +30,7 @@ class block_cocoon_course_enrl_c extends block_base
             return $this->content;
         }
 
-        $this->content =  new stdClass;
+        $this->content = new \stdClass();
         if (!empty($this->config) && is_object($this->config)) {
             $data = $this->config;
             $data->items = is_numeric($data->items) ? (int)$data->items : 0;

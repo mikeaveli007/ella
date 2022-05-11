@@ -25,6 +25,7 @@ class block_cocoon_parallax_apps extends block_base {
         global $CFG, $DB;
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->title = 'Download & Enjoy';
           $this->config->subtitle = 'Access your courses anywhere, anytime & prepare with practice tests.';
           $this->config->app_store_btn_title = 'App Store';

@@ -17,6 +17,7 @@ class block_cocoon_about_2 extends block_base
       include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
 
       if (empty($this->config)) {
+        $this->config = new \stdClass();
         $this->config->col_1_title = 'Who We Are';
         $this->config->col_1_body['text'] = '<p class="mt25">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis,et quasi architecto beatae vitae dicta sunt explicabo.</p><p class="mt25">Nemo enim ipsam,voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia,consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.,Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, adipisci velit, sed quia non numquam eius modi tempora</p>';
         $this->config->col_2_title = 'What We Do';
@@ -32,9 +33,9 @@ class block_cocoon_about_2 extends block_base
         $this->content         =  new stdClass;
 
         if(!empty($this->config->col_1_title)){$this->content->col_1_title = format_text($this->config->col_1_title, FORMAT_HTML, array('filter' => true));}else {$this->content->col_1_title = '';}
-        if(!empty($this->config->col_1_body)){$this->content->col_1_body = format_text($this->config->col_1_body['text'], FORMAT_HTML, array('filter' => true));}else {$this->content->col_1_body = '';}
+        if(!empty($this->config->col_1_body)){$this->content->col_1_body = format_text($this->config->col_1_body['text'], FORMAT_HTML, array('filter' => true, 'noclean' => true));}else {$this->content->col_1_body = '';}
         if(!empty($this->config->col_2_title)){$this->content->col_2_title = format_text($this->config->col_2_title, FORMAT_HTML, array('filter' => true));} else {$this->content->col_2_title = '';}
-        if(!empty($this->config->col_2_body)){$this->content->col_2_body = format_text($this->config->col_2_body['text'], FORMAT_HTML, array('filter' => true));}else {$this->content->col_2_body = '';}
+        if(!empty($this->config->col_2_body)){$this->content->col_2_body = format_text($this->config->col_2_body['text'], FORMAT_HTML, array('filter' => true, 'noclean' => true));}else {$this->content->col_2_body = '';}
 
         $this->content->text = '
 <div class="container mb70">

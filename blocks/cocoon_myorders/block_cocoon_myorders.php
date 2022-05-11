@@ -40,7 +40,7 @@ class block_cocoon_myorders extends block_list {
             return $this->content;
         }
 
-        $this->content = new stdClass;
+        $this->content = new \stdClass();
         $this->content->items = array();
         $this->content->icons = array();
         $this->content->footer = '';

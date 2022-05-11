@@ -63,9 +63,9 @@ class course_renderer extends \core_course_renderer {
       // Start content generation
       $content = '';
 
-      if ($coursecat->get_children_count()) {
-          $content .= html_writer::link('#', $linkname, array('class' => implode(' ', $classes)));
-      }
+      // if ($coursecat->get_children_count()) {
+      //     $content .= html_writer::link('#', $linkname, array('class' => implode(' ', $classes)));
+      // }
 
       $content .= $categorycontent;
 
@@ -170,7 +170,7 @@ class course_renderer extends \core_course_renderer {
         if($ccnCourseCountRender === '') {
           $ccnCourseCountRender .= '<span class="color-dark pr5">'.$ccnSubcategoryCount . '</span> ' . get_string('categories'). ' ';
         } else {
-          $ccnCourseCountRender .= '<span class="ccn-text-divider"></span><span class="color-dark pr5">'.$ccnSubcategoryCount . '</span> ' . get_string('categories', 'theme_edumy'). ' ';  
+          $ccnCourseCountRender .= '<span class="ccn-text-divider"></span><span class="color-dark pr5">'.$ccnSubcategoryCount . '</span> ' . get_string('categories', 'theme_edumy'). ' ';
         }
 
       }
@@ -1335,33 +1335,38 @@ class course_renderer extends \core_course_renderer {
    * @return string
    */
   protected function frontpage_part($skipdivid, $contentsdivid, $header, $contents) {
-      if (strval($contents) === '') {
-          return '';
-      }
-      $output = html_writer::link('#' . $skipdivid,
-          get_string('skipa', 'access', core_text::strtolower(strip_tags($header))),
-          array('class' => 'skip-block skip aabtn'));
+    global $PAGE;
 
-      // Wrap frontpage part in div container.
-      $output .= html_writer::start_tag('div', array( 'id' => $contentsdivid,
-                                                      'class'=> 'ccnPseudoFrontpageBlock mb60'));
-      // $output .= $this->heading($header);
+    if (isset($PAGE->theme->settings->edumy_homepage_core) && ($PAGE->theme->settings->edumy_homepage_core === '1')) {
+      return '';
+    }
+    if (strval($contents) === '') {
+      return '';
+    }
+    $output = html_writer::link('#' . $skipdivid,
+        get_string('skipa', 'access', core_text::strtolower(strip_tags($header))),
+        array('class' => 'skip-block skip aabtn'));
 
-      $output .= '<div class="row">
-                    <div class="col-lg-6 offset-lg-3">
-                      <div class="main-title text-center">
-                        <h3 class="mb0 mt0">'.$header.'</h3>
-                      </div>
+    // Wrap frontpage part in div container.
+    $output .= html_writer::start_tag('div', array( 'id' => $contentsdivid,
+                                                    'class'=> 'ccnPseudoFrontpageBlock mb60'));
+    // $output .= $this->heading($header);
+
+    $output .= '<div class="row">
+                  <div class="col-lg-6 offset-lg-3">
+                    <div class="main-title text-center">
+                      <h3 class="mb0 mt0">'.$header.'</h3>
                     </div>
-                  </div>';
+                  </div>
+                </div>';
 
-      $output .= $contents;
+    $output .= $contents;
 
-      // End frontpage part div container.
-      $output .= html_writer::end_tag('div');
+    // End frontpage part div container.
+    $output .= html_writer::end_tag('div');
 
-      $output .= html_writer::tag('span', '', array('class' => 'skip-block-to', 'id' => $skipdivid));
-      return $output;
+    $output .= html_writer::tag('span', '', array('class' => 'skip-block-to', 'id' => $skipdivid));
+    return $output;
   }
 
   // /**

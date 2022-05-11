@@ -103,26 +103,25 @@ class block_cocoon_course_categories extends block_base {
         }
         </style>
         <section id="our-courses" class="our-courses pt90 pt650-992" data-ccn-c="color_bg" data-ccn-co="bg" style="background-color:'.$this->content->color_bg.';">
-		<div class="container">
-			<div class="row">
-				<div class="col-lg-12">
-					'.$this->content->style.'
-				</div>
-			</div>
-		</div>
-		<div class="container">
-			<div class="row">
-				<div class="col-lg-6 offset-lg-3">
-					<div class="main-title text-center">
-						<h3 data-ccn="title" class="mt0" data-ccn-c="color_title" data-ccn-co="content" style="color:'.$this->content->color_title.';">'.format_text($this->content->title, FORMAT_HTML, array('filter' => true)).'</h3>
-						<p data-ccn="subtitle" data-ccn-c="color_subtitle" data-ccn-co="content" style="color:'.$this->content->color_subtitle.';">'.format_text($this->content->subtitle, FORMAT_HTML, array('filter' => true)).'</p>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-      <div class="col-12">
-      <div class="row">';
-
+      		<div class="container">
+      			<div class="row">
+      				<div class="col-lg-12">
+      					'.$this->content->style.'
+      				</div>
+      			</div>
+      		</div>
+      		<div class="container">
+      			<div class="row">
+      				<div class="col-lg-6 offset-lg-3">
+      					<div class="main-title text-center">
+      						<h3 data-ccn="title" class="mt0" data-ccn-c="color_title" data-ccn-co="content" style="color:'.$this->content->color_title.';">'.format_text($this->content->title, FORMAT_HTML, array('filter' => true)).'</h3>
+      						<p data-ccn="subtitle" data-ccn-c="color_subtitle" data-ccn-co="content" style="color:'.$this->content->color_subtitle.';">'.format_text($this->content->subtitle, FORMAT_HTML, array('filter' => true)).'</p>
+      					</div>
+      				</div>
+      			</div>
+      			<div class="row">
+              <div class="col-12">
+                <div class="row">';
           $topcategory = core_course_category::top();
           $col_class = "";
           if ($data->items == 1) {
@@ -144,6 +143,8 @@ class block_cocoon_course_categories extends block_base {
 
               if($ccnGetCategoryDetails->coursesCount >= 1){
                 $countNoOfCourses = '<p>'.get_string('number_of_courses', 'theme_edumy', $ccnGetCategoryDetails->coursesCount).'</p>';
+              } elseif($ccnGetCategoryDetails->subcategoriesCount >= 1) {
+                $countNoOfCourses = '<p>'.get_string('number_of_subcategories', 'theme_edumy', $ccnGetCategoryDetails->subcategoriesCount).'</p>';
               } else {
                 $countNoOfCourses = '';
               }

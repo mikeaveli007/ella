@@ -2,8 +2,8 @@
 
 include_once($CFG->dirroot . '/course/lib.php');
 require_once($CFG->dirroot. '/course/renderer.php');
-require_once($CFG->dirroot. '/theme/edumy/ccn/course_handler/ccn_course_handler.php');
 require_once($CFG->dirroot. '/theme/edumy/ccn/block_handler/ccn_block_handler.php');
+require_once($CFG->dirroot. '/theme/edumy/ccn/course_handler/ccn_course_handler.php');
 
 class block_cocoon_course_categories_3 extends block_base {
     function init() {
@@ -30,12 +30,10 @@ class block_cocoon_course_categories_3 extends block_base {
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
 
         if (empty($this->config)) {
-
           $ccnCourseHandler = new ccnCourseHandler();
           $ccnCategories = $ccnCourseHandler->ccnGetExampleCategoriesIds(5);
-
+          $this->config = new \stdClass();
           $this->config->items = '5';
-
           $this->config->title = 'Via School Categories Courses';
           $this->config->subtitle = 'Cum doctus civibus efficiantur in imperdiet deterruisset.';
           $this->config->button_text = 'View All Courses';
@@ -130,6 +128,12 @@ class block_cocoon_course_categories_3 extends block_base {
 
 
               if ($DB->record_exists('course_categories', array('id' => $data->$categoryID))) {
+
+
+                $ccnCourseHandler = new ccnCourseHandler();
+                $ccnGetCategoryDetails = $ccnCourseHandler->ccnGetCategoryDetails((int)$data->$categoryID);
+
+
                 $category = $DB->get_record('course_categories',array('id' => $data->$categoryID));
                 $chelper = new coursecat_helper();
                 $categoryID = $category->id;
@@ -143,6 +147,14 @@ class block_cocoon_course_categories_3 extends block_base {
                             } else {
                               $countNoOfCourses = '';
                             }
+
+                if($ccnGetCategoryDetails->coursesCount >= 1){
+                  $countNoOfCourses = '<p class="color-white">'.get_string('number_of_courses', 'theme_edumy', $ccnGetCategoryDetails->coursesCount).'</p>';
+                } elseif($ccnGetCategoryDetails->subcategoriesCount >= 1) {
+                  $countNoOfCourses = '<p class="color-white">'.get_string('number_of_subcategories', 'theme_edumy', $ccnGetCategoryDetails->subcategoriesCount).'</p>';
+                } else {
+                  $countNoOfCourses = '';
+                }
 
                 $this->content->text .=
                 '

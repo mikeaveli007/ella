@@ -161,6 +161,44 @@ class core_renderer extends \core_renderer {
   }
 
 
+    public function ccn_render_lang_menu() {
+      global $CFG;
+
+      $langs = get_string_manager()->get_list_of_translations();
+      $strlang = get_string('language');
+      $currentlang = current_language();
+      $haslangmenu = $this->lang_menu() != '';
+      if (isset($langs[$currentlang])) {
+        $currentlang = $langs[$currentlang];
+      } else {
+        $currentlang = $strlang;
+      }
+
+      $langArr = [];
+      foreach ($langs as $langtype => $langname) {
+        $langArr[] = [
+          'name' => $langname,
+          'url' => new moodle_url($this->page->url, array('lang' => $langtype)),
+          'code' => $langtype,
+          'icon' => $CFG->wwwroot.'/theme/edumy/pix/lang/'.strtoupper(str_replace("_", "-", $langtype)).'.svg',
+        ];
+      }
+
+      $current_icon = '';
+      foreach($langArr as $k=>$lang){
+        if($lang['name'] == $currentlang) $current_icon = $langArr[$k]['icon'];
+      }
+
+      $context =[
+        'has_lang_menu'=> $haslangmenu,
+        'current_lang'=> $currentlang,
+        'current_icon'=> $current_icon,
+        'strlang'=> $strlang,
+        'langs'=> $langArr,
+      ];
+
+      return $this->render_from_template('theme_edumy/ccn_lang_menu', $context);
+  }
 
   /**
    * Renders a custom menu object (located in outputcomponents.php)
@@ -182,32 +220,23 @@ class core_renderer extends \core_renderer {
           return '';
       }
 
-      if ($haslangmenu) {
+      if ($haslangmenu && isset($this->page->theme->settings->language_menu) && $this->page->theme->settings->language_menu === '1') {
           $strlang = get_string('language');
           $currentlang = current_language();
           if (isset($langs[$currentlang])) {
-              $currentlang = $langs[$currentlang];
+            $currentlang = $langs[$currentlang];
           } else {
-              $currentlang = $strlang;
+            $currentlang = $strlang;
           }
           $this->language = $menu->add($currentlang, new moodle_url('#'), $strlang, 10000);
           foreach ($langs as $langtype => $langname) {
-              $this->language->add($langname, new moodle_url($this->page->url, array('lang' => $langtype)), $langname);
+            $this->language->add($langname, new moodle_url($this->page->url, array('lang' => $langtype)), $langname);
           }
       }
 
       $content = '';
-      // print_object($menu->get_children());
       foreach ($menu->get_children() as $item) {
-          // $context = $item->export_for_template($this);
-          // $content .= $this->render_from_template('core/custom_menu_item', $context);
-          $content .= $this->render_custom_menu_item($item);
-
-          // foreach ($item->get_children() as $item2) {
-          //     $context = $item2->export_for_template($this);
-          //     $content .= $this->render_from_template('core/custom_menu_item', $context);
-          // }
-
+        $content .= $this->render_custom_menu_item($item);
       }
 
       return $content;
@@ -677,7 +706,7 @@ return $output;
             if(isset($value->imgsrc) && !empty($value->imgsrc)){
               $ccnMenuItemIcon = '<img class="iconsmall" src="'.$value->imgsrc.'" alt=""/>';
             }
-            
+
             $ccn_nav_items .= '<a class="dropdown-item" href="'. $value->url .'"> '. $ccnMenuItemIcon . $value->title .'</a>';
 
 
@@ -794,6 +823,7 @@ return $output;
         "cocoon_featured_video",
         "cocoon_featuredcourses",
         "cocoon_features",
+        "cocoon_form",
         "cocoon_gallery",
         "cocoon_gallery_slider",
         "cocoon_gallery_video",
@@ -1221,7 +1251,37 @@ return $output;
   //     return $this->render_from_template('ccn_signup_form_layout', $context);
   // }
 
+  /**
+   * We want to show the custom menus as a list of links in the footer on small screens.
+   * Just return the menu object exported so we can render it differently.
+   */
+  public function custom_menu_flat() {
+      global $CFG;
+      $custommenuitems = '';
 
+      if (empty($custommenuitems) && !empty($CFG->custommenuitems)) {
+          $custommenuitems = $CFG->custommenuitems;
+      }
+      $custommenu = new custom_menu($custommenuitems, current_language());
+      $langs = get_string_manager()->get_list_of_translations();
+      $haslangmenu = $this->lang_menu() != '';
+
+      if ($haslangmenu) {
+          $strlang = get_string('language');
+          $currentlang = current_language();
+          if (isset($langs[$currentlang])) {
+              $currentlang = $langs[$currentlang];
+          } else {
+              $currentlang = $strlang;
+          }
+          $this->language = $custommenu->add($currentlang, new moodle_url('#'), $strlang, 10000);
+          foreach ($langs as $langtype => $langname) {
+              $this->language->add($langname, new moodle_url($this->page->url, array('lang' => $langtype)), $langname);
+          }
+      }
+
+      return $custommenu->export_for_template($this);
+  }
 
 
 }

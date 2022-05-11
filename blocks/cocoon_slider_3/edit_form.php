@@ -77,12 +77,20 @@ class block_cocoon_slider_3_edit_form extends block_edit_form {
         $mform->setDefault('config_feature_1_title', 'Kindergarden');
         $mform->setType('config_feature_1_title', PARAM_TEXT);
 
+        $mform->addElement('text', 'config_feature_1_link', get_string('config_link', 'theme_edumy'));
+        $mform->setDefault('config_feature_1_link', '#');
+        $mform->setType('config_feature_1_link', PARAM_TEXT);
+
         // Feature 2
         $mform->addElement('header', 'config_feature_2', get_string('config_feature_2', 'theme_edumy'));
 
         $mform->addElement('text', 'config_feature_2_title', get_string('config_title', 'theme_edumy'));
         $mform->setDefault('config_feature_2_title', 'Primary School');
         $mform->setType('config_feature_2_title', PARAM_TEXT);
+
+        $mform->addElement('text', 'config_feature_2_link', get_string('config_link', 'theme_edumy'));
+        $mform->setDefault('config_feature_2_link', '#');
+        $mform->setType('config_feature_2_link', PARAM_TEXT);
 
         // Feature 3
         $mform->addElement('header', 'config_feature_3', get_string('config_feature_3', 'theme_edumy'));
@@ -91,12 +99,20 @@ class block_cocoon_slider_3_edit_form extends block_edit_form {
         $mform->setDefault('config_feature_3_title', 'Middle School');
         $mform->setType('config_feature_3_title', PARAM_TEXT);
 
+        $mform->addElement('text', 'config_feature_3_link', get_string('config_link', 'theme_edumy'));
+        $mform->setDefault('config_feature_3_link', '#');
+        $mform->setType('config_feature_3_link', PARAM_TEXT);
+
         // Feature 4
         $mform->addElement('header', 'config_feature_4', get_string('config_feature_4', 'theme_edumy'));
 
         $mform->addElement('text', 'config_feature_4_title', get_string('config_title', 'theme_edumy'));
         $mform->setDefault('config_feature_4_title', 'High School');
         $mform->setType('config_feature_4_title', PARAM_TEXT);
+
+        $mform->addElement('text', 'config_feature_4_link', get_string('config_link', 'theme_edumy'));
+        $mform->setDefault('config_feature_4_link', '#');
+        $mform->setType('config_feature_4_link', PARAM_TEXT);
 
         for($i = 1; $i <= $data->slidesnumber; $i++) {
             $mform->addElement('header', 'config_header' . $i , 'Slide ' . $i);

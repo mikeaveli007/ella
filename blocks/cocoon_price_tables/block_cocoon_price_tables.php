@@ -16,6 +16,7 @@ class block_cocoon_price_tables extends block_base
         global $CFG, $DB;
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->slidesnumber = '3';
           $this->config->title = 'Choose a Package';
           $this->config->subtitle = 'Cum doctus civibus efficiantur in imperdiet deterruisset.';

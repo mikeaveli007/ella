@@ -19,6 +19,7 @@ class block_cocoon_course_grid_5 extends block_base {
 
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->title = 'Browse Our Top Courses';
           $this->config->subtitle = 'Cum doctus civibus efficiantur in imperdiet deterruisset.';
           $this->config->hover_text = 'Preview Course';
@@ -119,10 +120,8 @@ class block_cocoon_course_grid_5 extends block_base {
         if(
           $PAGE->theme->settings->coursecat_enrolments != 1 ||
           $PAGE->theme->settings->coursecat_announcements != 1 ||
-          isset($this->content->price) ||
-          isset($this->content->enrol_btn_text) &&
-          // ccnBreak
-          ($this->content->price == '1' || $this->content->enrol_btn == '1')
+          (isset($this->content->price) && $this->content->price == '1') ||
+          (isset($this->content->enrol_btn_text) && $this->content->enrol_btn == '1')
         ) {
           $ccnBlockShowBottomBar = 1;
           $topCoursesClass = 'ccnWithFoot';

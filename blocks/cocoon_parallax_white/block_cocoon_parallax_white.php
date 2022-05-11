@@ -15,6 +15,7 @@ class block_cocoon_parallax_white extends block_base
       global $CFG, $DB;
       include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
       if (empty($this->config)) {
+        $this->config = new \stdClass();
         $this->config->title = 'Get Personalized Recommendations';
         $this->config->subtitle = 'Answer a few questions for your top picks';
         $this->config->button_link = '#';
@@ -28,7 +29,7 @@ class block_cocoon_parallax_white extends block_base
         if ($this->content !== null) {
             return $this->content;
         }
-        $this->content         =  new stdClass;
+        $this->content         =  new \stdClass();
         if(!empty($this->config->title)){$this->content->title = $this->config->title;} else {$this->content->title = '';}
         if(!empty($this->config->subtitle)){$this->content->subtitle = $this->config->subtitle;} else {$this->content->subtitle = '';}
         if(!empty($this->config->button_link)){$this->content->button_link = $this->config->button_link;} else {$this->content->button_link = '';}

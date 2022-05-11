@@ -16,6 +16,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2020102520.04; // The current plugin version (Date: YYYYMMDDXX).
+$plugin->version   = 2021090220.38; // The current plugin version (Date: YYYYMMDDXX).
 $plugin->requires  = 2017111300; // Requires this Moodle version.
 $plugin->component = 'block_cocoon_courses_slider'; // Full name of the plugin (used for diagnostics).

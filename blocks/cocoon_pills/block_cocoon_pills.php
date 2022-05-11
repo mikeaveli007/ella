@@ -27,6 +27,7 @@ class block_cocoon_pills extends block_base {
         global $CFG, $DB;
         include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
         if (empty($this->config)) {
+          $this->config = new \stdClass();
           $this->config->slidesnumber = '4';
           $this->config->slide_title1 = 'Program';
           $this->config->slide_title2 = 'Affordability';
@@ -75,7 +76,7 @@ class block_cocoon_pills extends block_base {
             $data = $this->config;
             $data->slidesnumber = is_numeric($data->slidesnumber) ? (int)$data->slidesnumber : 4;
         } else {
-            $data = new stdClass();
+            $data = new \stdClass();
             $data->slidesnumber = '4';
         }
 

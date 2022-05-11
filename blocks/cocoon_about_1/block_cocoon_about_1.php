@@ -17,8 +17,8 @@ class block_cocoon_about_1 extends block_base
       include($CFG->dirroot . '/theme/edumy/ccn/block_handler/specialization.php');
 
       if (empty($this->config)) {
+        $this->config = new \stdClass();
         $this->config->title = 'Our Values';
-        // $this->config->image = $CFG->wwwroot . '/theme/edumy/images/about/8.jpg';
         $this->config->body['text'] = '<p class="color-black22 mt20">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis,et quasi architecto beatae vitae dicta sunt explicabo.</p><p class="mt15">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis,et quasi architecto beatae vitae dicta sunt explicabo.</p><p class="mt20">Nemo enim ipsam,voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia,consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.,Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, adipisci velit, sed quia non numquam eius modi tempora</p>';
         $this->config->style = 0;
       }
@@ -27,7 +27,7 @@ class block_cocoon_about_1 extends block_base
         global $CFG, $DB;
         require_once($CFG->libdir . '/filelib.php');
         if ($this->content !== null) {
-            return $this->content;
+            // return $this->content;
         }
         $this->content =  new stdClass;
         if(!empty($this->config->title)){$this->content->title = $this->config->title;} else {$this->content->title = '';}
