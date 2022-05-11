@@ -7,6 +7,7 @@
 [submodule "blocks/grade_me"]
 	path = blocks/grade_me
 	url = git@github.com:remotelearner/moodle-block_grade_me.git
+	branch = MOODLE_39_STABLE
 [submodule "blocks/groups"]
 	path = blocks/groups
 	url = git@github.com:learnweb/moodle-block_groups.git
@@ -34,6 +35,7 @@
 [submodule "mod/questionnaire"]
 	path = mod/questionnaire
 	url = git@github.com:PoetOS/moodle-mod_questionnaire.git
+	branch = MOODLE_311_STABLE
 [submodule "mod/subcourse"]
 	path = mod/subcourse
 	url = git@github.com:mudrd8mz/moodle-mod_subcourse.git
@@ -62,3 +64,12 @@
 	path = availability/condition/password
 	url = git@github.com:moodle-an-hochschulen/moodle-availability_password.git
 	branch = MOODLE_39_STABLE
+[submodule "report/coursestats"]
+	path = report/coursestats
+	url = git@github.com:dired-ufla/coursestats.git
+[submodule "report/overviewstats"]
+	path = report/overviewstats
+	url = git@github.com:ericbram/moodle-report_overviewstats.git
+[submodule "local/contact"]
+	path = local/contact
+	url = git@github.com:michael-milette/moodle-local_contact.git
