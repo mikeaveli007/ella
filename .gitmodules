@@ -73,3 +73,7 @@
 [submodule "local/contact"]
 	path = local/contact
 	url = git@github.com:michael-milette/moodle-local_contact.git
+[submodule "mod/scheduler"]
+	path = mod/scheduler
+	url = git@github.com:bostelm/moodle-mod_scheduler.git
+	branch = MOODLE_37_STABLE
