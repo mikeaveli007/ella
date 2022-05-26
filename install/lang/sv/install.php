@@ -36,6 +36,7 @@ $string['chooselanguagesub'] = 'Vänligen välj ett språk för installationen. 
 $string['clialreadyconfigured'] = 'Filen <em>config.php</em> finns redan. Använd <code>admin/cli/install_database.php</code> för att installera Moodle på denna server.';
 $string['clialreadyinstalled'] = 'Filen <code>config.php</code> finns redan. Vänligen använd <code>admin/cli/upgrade.php</code> om du vill uppgradera Moodle på den här webbplatsen.';
 $string['cliinstallheader'] = 'Kommandoradsbaserat installationsprogram för Moodle {$a}';
+$string['clitablesexist'] = 'Databastabellerna finns redan. CLI-installationen kan inte fortsätta.';
 $string['databasehost'] = 'Databasserver';
 $string['databasename'] = 'Namn på databas';
 $string['databasetypehead'] = 'Välj drivrutin för databasen';
@@ -44,8 +45,8 @@ $string['datarootpermission'] = 'Behörigheter för datakataloger';
 $string['dbprefix'] = 'Prefix för tabeller';
 $string['dirroot'] = 'Moodle-katalog';
 $string['environmenthead'] = 'Kontrollerar miljön...';
-$string['environmentsub2'] = 'Varje Moodle-utgåva har ett lägsta PHP-versionskrav samt krav på ett antal obligatoriska PHP-tillägg.
-Fullständig miljökontroll görs före varje installation och uppgradering. Kontakta serveradministratören om du inte vet hur du installerar en ny version eller aktiverar PHP-tillägg.';
+$string['environmentsub2'] = 'Varje Moodleversion har ett lägsta PHP-versionskrav samt krav på ett antal obligatoriska PHP-tillägg.
+En fullständig kontroll av miljön görs före varje installation och uppgradering. Kontakta serveradministratören om du inte vet hur du installerar en ny version eller aktiverar PHP-tillägg.';
 $string['errorsinenvironment'] = 'Kontrollen av miljön misslyckades';
 $string['installation'] = 'Installation';
 $string['langdownloaderror'] = 'Språket "{$a}" gick tyvärr inte att ladda ner. Installationen kommer att fullföljas på engelska.';

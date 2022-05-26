@@ -134,7 +134,7 @@ trait behat_session_trait {
         }
 
         // How much we will be waiting for the element to appear.
-        if (!$timeout) {
+        if ($timeout === false) {
             $timeout = self::get_timeout();
             $microsleep = false;
         } else {
@@ -339,7 +339,7 @@ trait behat_session_trait {
     protected function spin($lambda, $args = false, $timeout = false, $exception = false, $microsleep = false) {
 
         // Using default timeout which is pretty high.
-        if (!$timeout) {
+        if ($timeout === false) {
             $timeout = self::get_timeout();
         }
 
@@ -498,10 +498,11 @@ trait behat_session_trait {
     /**
      * Require that javascript be available in the current Session.
      *
+     * @param null|string $message An additional information message to show when JS is not available
      * @throws DriverException
      */
-    protected function require_javascript() {
-        return self::require_javascript_in_session($this->getSession());
+    protected function require_javascript(?string $message = null) {
+        return self::require_javascript_in_session($this->getSession(), $message);
     }
 
     /**
@@ -518,14 +519,19 @@ trait behat_session_trait {
      * Require that javascript be available for the specified Session.
      *
      * @param Session $session
+     * @param null|string $message An additional information message to show when JS is not available
      * @throws DriverException
      */
-    protected static function require_javascript_in_session(Session $session): void {
+    protected static function require_javascript_in_session(Session $session, ?string $message = null): void {
         if (self::running_javascript_in_session($session)) {
             return;
         }
 
-        throw new DriverException('Javascript is required');
+        $error = "Javascript is required for this step.";
+        if ($message) {
+            $error = "{$error} {$message}";
+        }
+        throw new DriverException($error);
     }
 
     /**
@@ -733,8 +739,10 @@ trait behat_session_trait {
 
     /**
      * Change browser window size.
-     *   - small: 640x480
-     *   - medium: 1024x768
+     *   - mobile: 425x750
+     *   - tablet: 768x1024
+     *   - small: 1024x768
+     *   - medium: 1366x768
      *   - large: 2560x1600
      *
      * @param string $windowsize size of window.
@@ -750,6 +758,14 @@ trait behat_session_trait {
         }
 
         switch ($windowsize) {
+            case "mobile":
+                $width = 425;
+                $height = 750;
+                break;
+            case "tablet":
+                $width = 768;
+                $height = 1024;
+                break;
             case "small":
                 $width = 1024;
                 $height = 768;

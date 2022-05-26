@@ -99,11 +99,15 @@ class core_component {
         'MatthiasMullie\\Minify' => 'lib/minify/matthiasmullie-minify/src/',
         'MatthiasMullie\\PathConverter' => 'lib/minify/matthiasmullie-pathconverter/src/',
         'IMSGlobal\LTI' => 'lib/ltiprovider/src',
+        'Packback\\Lti1p3' => 'lib/lti1p3/src',
         'Phpml' => 'lib/mlbackend/php/phpml/src/Phpml',
         'PHPMailer\\PHPMailer' => 'lib/phpmailer/src',
         'RedeyeVentures\\GeoPattern' => 'lib/geopattern-php/GeoPattern',
         'MongoDB' => 'cache/stores/mongodb/MongoDB',
         'Firebase\\JWT' => 'lib/php-jwt/src',
+        'ZipStream' => 'lib/zipstream/src/',
+        'MyCLabs\\Enum' => 'lib/php-enum/src',
+        'Psr\\Http\\Message' => 'lib/http-message/src',
     );
 
     /**
@@ -730,7 +734,7 @@ $cache = '.var_export($cache, true).';
     /**
      * List all core subsystems and their location
      *
-     * This is a whitelist of components that are part of the core and their
+     * This is a list of components that are part of the core and their
      * language strings are defined in /lang/en/<<subsystem>>.php. If a given
      * plugin is not listed here and it does not have proper plugintype prefix,
      * then it is considered as course activity module.

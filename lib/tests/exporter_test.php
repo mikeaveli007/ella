@@ -39,7 +39,7 @@ class core_exporter_testcase extends advanced_testcase {
     protected $validdata = null;
     protected $invaliddata = null;
 
-    public function setUp() {
+    public function setUp(): void {
         $s = new stdClass();
         $this->validrelated = array(
             'simplestdClass' => $s,
@@ -98,26 +98,22 @@ class core_exporter_testcase extends advanced_testcase {
         $this->assertArrayNotHasKey('otherstrings', $structure->keys);
     }
 
-    /**
-     * @expectedException coding_exception
-     */
     public function test_invalid_data() {
         global $PAGE;
         $exporter = new core_testable_exporter($this->invaliddata, $this->validrelated);
         $output = $PAGE->get_renderer('core');
 
+        // The exception message is a bit misleading, it actually indicates an expected property wasn't found.
+        $this->expectException(coding_exception::class);
+        $this->expectExceptionMessage('Unexpected property stringAformat');
         $result = $exporter->export($output);
     }
 
-    /**
-     * @expectedException coding_exception
-     */
     public function test_invalid_related() {
-        global $PAGE;
+        $this->expectException(coding_exception::class);
+        $this->expectExceptionMessage('Exporter class is missing required related data: (core_testable_exporter) ' .
+            'simplestdClass => stdClass');
         $exporter = new core_testable_exporter($this->validdata, $this->invalidrelated);
-        $output = $PAGE->get_renderer('core');
-
-        $result = $exporter->export($output);
     }
 
     public function test_invalid_related_all_cases() {

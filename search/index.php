@@ -64,7 +64,7 @@ if (\core_search\manager::is_global_search_enabled() === false) {
     exit;
 }
 
-$search = \core_search\manager::instance(true);
+$search = \core_search\manager::instance(true, true);
 
 // Set up custom data for form.
 $customdata = ['searchengine' => $search->get_engine()->get_plugin_name()];
@@ -176,6 +176,11 @@ if ($data) {
     $results = $search->paged_search($data, $page);
 }
 
+// Show search information if configured by system administrator.
+if ($CFG->searchbannerenable && $CFG->searchbanner) {
+    echo $OUTPUT->notification(format_text($CFG->searchbanner, FORMAT_HTML), 'notifywarning');
+}
+
 if ($errorstr = $search->get_engine()->get_query_error()) {
     echo $OUTPUT->notification(get_string('queryerror', 'search', $errorstr), 'notifyproblem');
 } else if (empty($results->totalcount) && !empty($data)) {
@@ -185,6 +190,10 @@ if ($errorstr = $search->get_engine()->get_query_error()) {
 $mform->display();
 
 if (!empty($results)) {
+    $topresults = $search->search_top($data);
+    if (!empty($topresults)) {
+        echo $searchrenderer->render_top_results($topresults);
+    }
     echo $searchrenderer->render_results($results->results, $results->actualpage, $results->totalcount, $url, $cat);
 
     \core_search\manager::trigger_search_results_viewed([

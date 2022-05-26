@@ -118,6 +118,7 @@ if ($ok) {
         require_login($course, true, $cm);
         require_capability('mod/lti:view', $context);
         $lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
+        $lti->cmid = $cm->id;
         list($endpoint, $params) = lti_get_launch_data($lti, $nonce);
     } else {
         require_login($course);
@@ -135,7 +136,7 @@ if ($ok) {
         $title = base64_decode($titleb64);
         $text = base64_decode($textb64);
         $request = lti_build_content_item_selection_request($typeid, $course, $returnurl, $title, $text,
-                                                            [], [], false, false, false, false, false, $nonce);
+                                                            [], [], false, true, false, false, false, $nonce);
         $endpoint = $request->url;
         $params = $request->params;
     }

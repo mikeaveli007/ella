@@ -106,7 +106,8 @@ class copy_form extends \moodleform {
             // Always keep current category.
             $displaylist[$course->category] = \core_course_category::get($course->category, MUST_EXIST, true)->get_formatted_name();
         }
-        $mform->addElement('select', 'category', get_string('coursecategory'), $displaylist);
+        $mform->addElement('autocomplete', 'category', get_string('coursecategory'), $displaylist);
+        $mform->addRule('category', null, 'required', null, 'client');
         $mform->addHelpButton('category', 'coursecategory');
 
         // Course visibility.

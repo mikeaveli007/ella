@@ -36,6 +36,7 @@ $string['chooselanguagesub'] = 'Escolla un idioma para o proceso de instalación
 $string['clialreadyconfigured'] = 'Xa existe o ficheiro config.php. Empregue admin/cli/install_database.php se quere actualizar o seu sitio web.';
 $string['clialreadyinstalled'] = 'Xa existe o ficheiro config.php. Empregue admin/cli/upgrade.php se quere actualizar o seu sitio web.';
 $string['cliinstallheader'] = 'Programa de instalación de Moodle en liña de ordes {$a}';
+$string['clitablesexist'] = 'Xa existen táboas de base de datos, a instalación CLI non pode continuar.';
 $string['databasehost'] = 'Enderezo/máquina da base de datos';
 $string['databasename'] = 'Nome de base de datos';
 $string['databasetypehead'] = 'Escolla o controlador da base de datos';
@@ -80,12 +81,12 @@ $string['pathssubdataroot'] = '<p>Un directorio onde Moodle almacenará todo o c
 <p>Este directorio debería ser lexíbel e escribíbel polo usuario do servidor web (normalmente «www-data«» «ninguén» ou «apache»).</p>
 <p> Non debe ser accesíbel directamente na web. </p>
 <p> Se o directorio non existe actualmente, o proceso de instalación tentará crealo. </p>';
-$string['pathssubdirroot'] = '<p>Ruta completa do directorio de instalación de Moodle.</p>';
+$string['pathssubdirroot'] = 'Ruta completa do directorio de instalación de Moodle.';
 $string['pathssubwwwroot'] = '<p>O enderezo completo onde se accederá a Moodle, é dicir, o enderezo que os usuarios introducirán na barra de enderezos do seu navegador para acceder a Moodle.</p>
 <p>Non é posíbel acceder a Moodle con varias direccións. Se o seu sitio é accesíbel a través de varios enderezos, escolla o máis sinxelo e configure unha redirección permanente para cada un dos outros enderezos.</p>
 <p Se o seu sitio é accesíbel tanto dende a Internet como dende unha rede interna (ás veces chamada Intranet), entón use o enderezo público aquí.</p>
 <p>Se o enderezo actual non é correcto, cambie o URL na barra de enderezos do seu navegador e reinicie a instalación.</p>';
-$string['pathsunsecuredataroot'] = 'A localización de «dataroot» non é segura';
+$string['pathsunsecuredataroot'] = 'A localización de dataroot non é segura';
 $string['pathswrongadmindir'] = 'Non existe o directorio Admin';
 $string['phpextension'] = 'Extensión PHP {$a}';
 $string['phpversion'] = 'Versión PHP';

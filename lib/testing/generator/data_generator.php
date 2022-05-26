@@ -87,10 +87,18 @@ EOD;
      * @return void
      */
     public function reset() {
+        $this->gradecategorycounter = 0;
+        $this->gradeitemcounter = 0;
+        $this->gradeoutcomecounter = 0;
         $this->usercounter = 0;
         $this->categorycount = 0;
+        $this->cohortcount = 0;
         $this->coursecount = 0;
         $this->scalecount = 0;
+        $this->groupcount = 0;
+        $this->groupingcount = 0;
+        $this->rolecount = 0;
+        $this->tagcount = 0;
 
         foreach ($this->generators as $generator) {
             $generator->reset();
@@ -1097,10 +1105,15 @@ EOD;
             $data->status = ENROL_INSTANCE_ENABLED;
         }
 
+        // Default to legacy lti version.
+        if (empty($data->ltiversion) || !in_array($data->ltiversion, ['LTI-1p0/LTI-2p0', 'LTI-1p3'])) {
+            $data->ltiversion = 'LTI-1p0/LTI-2p0';
+        }
+
         // Add some extra necessary fields to the data.
-        $data->name = 'Test LTI';
-        $data->roleinstructor = $studentrole->id;
-        $data->rolelearner = $teacherrole->id;
+        $data->name = $data->name ?? 'Test LTI';
+        $data->roleinstructor = $teacherrole->id;
+        $data->rolelearner = $studentrole->id;
 
         // Get the enrol LTI plugin.
         $enrolplugin = enrol_get_plugin('lti');
@@ -1188,6 +1201,123 @@ EOD;
             unset($data['category']);
         }
         return $this->get_plugin_generator('core_customfield')->create_field($data);
+    }
+
+    /**
+     * Create a new category for custom profile fields.
+     *
+     * @param array $data Array with 'name' and optionally 'sortorder'
+     * @return \stdClass New category object
+     */
+    public function create_custom_profile_field_category(array $data): \stdClass {
+        global $DB;
+
+        // Pick next sortorder if not defined.
+        if (!array_key_exists('sortorder', $data)) {
+            $data['sortorder'] = (int)$DB->get_field_sql('SELECT MAX(sortorder) FROM {user_info_category}') + 1;
+        }
+
+        $category = (object)[
+            'name' => $data['name'],
+            'sortorder' => $data['sortorder']
+        ];
+        $category->id = $DB->insert_record('user_info_category', $category);
+
+        return $category;
+    }
+
+    /**
+     * Creates a new custom profile field.
+     *
+     * Optional fields are:
+     *
+     * categoryid (or use 'category' to specify by name). If you don't specify
+     * either, it will add the field to a 'Testing' category, which will be created for you if
+     * necessary.
+     *
+     * sortorder (if you don't specify this, it will pick the next one in the category).
+     *
+     * all the other database fields (if you don't specify this, it will pick sensible defaults
+     * based on the data type).
+     *
+     * @param array $data Array with 'datatype', 'shortname', and 'name'
+     * @return \stdClass Database object from the user_info_field table
+     */
+    public function create_custom_profile_field(array $data): \stdClass {
+        global $DB, $CFG;
+        require_once($CFG->dirroot . '/user/profile/lib.php');
+
+        // Set up category if necessary.
+        if (!array_key_exists('categoryid', $data)) {
+            if (array_key_exists('category', $data)) {
+                $data['categoryid'] = $DB->get_field('user_info_category', 'id',
+                        ['name' => $data['category']], MUST_EXIST);
+            } else {
+                // Make up a 'Testing' category or use existing.
+                $data['categoryid'] = $DB->get_field('user_info_category', 'id', ['name' => 'Testing']);
+                if (!$data['categoryid']) {
+                    $created = $this->create_custom_profile_field_category(['name' => 'Testing']);
+                    $data['categoryid'] = $created->id;
+                }
+            }
+        }
+
+        // Pick sort order if necessary.
+        if (!array_key_exists('sortorder', $data)) {
+            $data['sortorder'] = (int)$DB->get_field_sql(
+                    'SELECT MAX(sortorder) FROM {user_info_field} WHERE categoryid = ?',
+                    [$data['categoryid']]) + 1;
+        }
+
+        // Defaults for other values.
+        $defaults = [
+            'description' => '',
+            'descriptionformat' => 0,
+            'required' => 0,
+            'locked' => 0,
+            'visible' => PROFILE_VISIBLE_ALL,
+            'forceunique' => 0,
+            'signup' => 0,
+            'defaultdata' => '',
+            'defaultdataformat' => 0,
+            'param1' => '',
+            'param2' => '',
+            'param3' => '',
+            'param4' => '',
+            'param5' => ''
+        ];
+
+        // Type-specific defaults for other values.
+        $typedefaults = [
+            'text' => [
+                'param1' => 30,
+                'param2' => 2048
+            ],
+            'menu' => [
+                'param1' => "Yes\nNo",
+                'defaultdata' => 'No'
+            ],
+            'datetime' => [
+                'param1' => '2010',
+                'param2' => '2015',
+                'param3' => 1
+            ],
+            'checkbox' => [
+                'defaultdata' => 0
+            ]
+        ];
+        foreach ($typedefaults[$data['datatype']] ?? [] as $field => $value) {
+            $defaults[$field] = $value;
+        }
+
+        foreach ($defaults as $field => $value) {
+            if (!array_key_exists($field, $data)) {
+                $data[$field] = $value;
+            }
+        }
+
+        $data['id'] = $DB->insert_record('user_info_field', $data);
+        return (object)$data;
     }
 
     /**

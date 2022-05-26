@@ -140,11 +140,6 @@ class behat_field_manager {
             return self::normalise_fieldtype($fieldtype);
         }
 
-        // If the type is explicitly set on the element pointed to by the label - use it.
-        if ($fieldtype = $fieldnode->getAttribute('data-fieldtype')) {
-            return self::normalise_fieldtype($fieldtype);
-        }
-
         // Textareas are considered text based elements.
         $tagname = strtolower($node->nodeName);
         if ($tagname == 'textarea') {
@@ -185,6 +180,17 @@ class behat_field_manager {
         } else if ($tagname == 'span') {
             if ($fieldnode->hasAttribute('data-inplaceeditable') && $fieldnode->getAttribute('data-inplaceeditable')) {
                 return 'inplaceeditable';
+            }
+        }
+
+        if ($tagname == 'span') {
+            if ($node->hasAttribute('data-inplaceeditable') && $node->getAttribute('data-inplaceeditable')) {
+                // Determine appropriate editable type of this field (text or select).
+                if ($node->getAttribute('data-type') == 'select') {
+                    return 'inplaceeditable_select';
+                } else {
+                    return 'inplaceeditable';
+                }
             }
         }
 

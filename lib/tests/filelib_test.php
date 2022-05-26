@@ -104,7 +104,7 @@ class core_filelib_testcase extends advanced_testcase {
         $this->assertInstanceOf('stdClass', $response);
         $this->assertSame('200', $response->status);
         $this->assertTrue(is_array($response->headers));
-        $this->assertRegExp('|^HTTP/1\.[01] 200 OK$|', rtrim($response->response_code));
+        $this->assertMatchesRegularExpression('|^HTTP/1\.[01] 200 OK$|', rtrim($response->response_code));
         $this->assertSame($contents, $response->results);
         $this->assertSame('', $response->error);
 
@@ -128,7 +128,7 @@ class core_filelib_testcase extends advanced_testcase {
         $this->assertInstanceOf('stdClass', $response);
         $this->assertSame('404', $response->status);
         $this->assertTrue(is_array($response->headers));
-        $this->assertRegExp('|^HTTP/1\.[01] 404 Not Found$|', rtrim($response->response_code));
+        $this->assertMatchesRegularExpression('|^HTTP/1\.[01] 404 Not Found$|', rtrim($response->response_code));
         // Do not test the response starts with DOCTYPE here because some servers may return different headers.
         $this->assertSame('', $response->error);
 
@@ -152,7 +152,15 @@ class core_filelib_testcase extends advanced_testcase {
         $this->assertInstanceOf('stdClass', $response);
         $this->assertSame('200', $response->status);
         $this->assertTrue(is_array($response->headers));
-        $this->assertRegExp('|^HTTP/1\.[01] 200 OK$|', rtrim($response->response_code));
+        $this->assertMatchesRegularExpression('|^HTTP/1\.[01] 200 OK$|', rtrim($response->response_code));
+        $this->assertSame('done', $response->results);
+        $this->assertSame('', $response->error);
+
+        $response = download_file_content("$testurl?redir=2&verbose=1", null, null, true);
+        $this->assertInstanceOf('stdClass', $response);
+        $this->assertSame('200', $response->status);
+        $this->assertTrue(is_array($response->headers));
+        $this->assertMatchesRegularExpression('|^HTTP/1\.[01] 200 OK$|', rtrim($response->response_code));
         $this->assertSame('done', $response->results);
         $this->assertSame('', $response->error);
 
@@ -674,7 +682,7 @@ class core_filelib_testcase extends advanced_testcase {
         $this->assertEquals($userrepository->id, $fileref->get_repository_id());
         $this->assertSame($userfile->get_contenthash(), $fileref->get_contenthash());
         $this->assertEquals($userfile->get_filesize(), $fileref->get_filesize());
-        $this->assertRegExp('#' . $userfile->get_filename(). '$#', $fileref->get_reference_details());
+        $this->assertMatchesRegularExpression('#' . $userfile->get_filename(). '$#', $fileref->get_reference_details());
 
         $draftitemid = 0;
         file_prepare_draft_area($draftitemid, $syscontext->id, $component, $filearea, $itemid);
@@ -772,7 +780,7 @@ class core_filelib_testcase extends advanced_testcase {
         $this->assertEquals($userrepository->id, $fileref->get_repository_id());
         $this->assertSame($userfile->get_contenthash(), $fileref->get_contenthash());
         $this->assertEquals($userfile->get_filesize(), $fileref->get_filesize());
-        $this->assertRegExp('#' . $userfile->get_filename(). '$#', $fileref->get_reference_details());
+        $this->assertMatchesRegularExpression('#' . $userfile->get_filename(). '$#', $fileref->get_reference_details());
 
         $draftitemid = 0;
         file_prepare_draft_area($draftitemid, $usercontext->id, 'user', 'private', 0);
@@ -857,6 +865,28 @@ class core_filelib_testcase extends advanced_testcase {
         $text = file_save_draft_area_files(IGNORE_FILE_MERGE, $usercontext->id, 'user', 'private', 0, null, $inlinetext);
         $this->assertCount(2, $fs->get_area_files($usercontext->id, 'user', 'private'));
         $this->assertEquals($inlinetext, $text);
+    }
+
+    /**
+     * Testing deleting file_save_draft_area_files won't accidentally wipe unintended files.
+     */
+    public function test_file_save_draft_area_files_itemid_cannot_be_false() {
+        global $USER, $DB;
+        $this->resetAfterTest();
+
+        $generator = $this->getDataGenerator();
+        $user = $generator->create_user();
+        $usercontext = context_user::instance($user->id);
+        $USER = $DB->get_record('user', ['id' => $user->id]);
+
+        $draftitemid = 0;
+        file_prepare_draft_area($draftitemid, $usercontext->id, 'user', 'private', 0);
+
+        // Call file_save_draft_area_files with itemid false - which could only happen due to a bug.
+        // This should throw an exception.
+        $this->expectExceptionMessage('file_save_draft_area_files was called with $itemid false. ' .
+                'This suggests a bug, because it would wipe all (' . $usercontext->id . ', user, private) files.');
+        file_save_draft_area_files($draftitemid, $usercontext->id, 'user', 'private', false);
     }
 
     /**
@@ -1096,7 +1126,7 @@ EOF;
 
         // Do the rewrite.
         $finaltext = file_rewrite_pluginfile_urls($originaltext, 'pluginfile.php', $syscontext->id, 'user', 'private', 0);
-        $this->assertContains("pluginfile.php", $finaltext);
+        $this->assertStringContainsString("pluginfile.php", $finaltext);
 
         // Now undo.
         $options = array('reverse' => true);

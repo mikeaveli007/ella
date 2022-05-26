@@ -86,6 +86,7 @@ class behat_partial_named_selector extends \Behat\Mink\Selector\PartialNamedSele
      */
     protected static $allowedselectors = array(
         'activity' => 'activity',
+        'badge' => 'badge',
         'block' => 'block',
         'button' => 'button',
         'checkbox' => 'checkbox',
@@ -137,6 +138,9 @@ class behat_partial_named_selector extends \Behat\Mink\Selector\PartialNamedSele
         'activity' => <<<XPATH
 .//li[contains(concat(' ', normalize-space(@class), ' '), ' activity ')][descendant::*[contains(normalize-space(.), %locator%)]]
 XPATH
+        , 'badge' => <<<XPATH
+.//span[(contains(@class, 'badge')) and text()[contains(., %locator%)]]
+XPATH
         , 'block' => <<<XPATH
 .//*[@data-block][contains(concat(' ', normalize-space(@class), ' '), concat(' ', %locator%, ' ')) or
      descendant::*[self::h2|self::h3|self::h4|self::h5][normalize-space(.) = %locator%]  or
@@ -144,6 +148,7 @@ XPATH
 XPATH
         , 'dialogue' => <<<XPATH
 .//div[contains(concat(' ', normalize-space(@class), ' '), ' moodle-dialogue ') and
+    not(contains(concat(' ', normalize-space(@class), ' '), ' moodle-dialogue-hidden ')) and
     normalize-space(descendant::div[
         contains(concat(' ', normalize-space(@class), ' '), ' moodle-dialogue-hd ')
         ]) = %locator%] |

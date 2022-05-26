@@ -27,12 +27,12 @@ use stdClass;
  * Unit tests for search document.
  *
  * @package     core_search
- * @category    phpunit
+ * @category    test
  * @copyright   2016 Eric Merrill {@link http://www.merrilldigital.com}
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @coversDefaultClass \core_search\document
  */
-class document_test extends advanced_testcase {
+class document_test extends \advanced_testcase {
 
     /**
      * Setup to ensure that fixtures are loaded.
@@ -48,12 +48,12 @@ class document_test extends advanced_testcase {
      */
     protected $generator = null;
 
-    public function setUp() {
+    public function setUp(): void {
         $this->resetAfterTest();
         set_config('enableglobalsearch', true);
 
         // Set \core_search::instance to the mock_search_engine as we don't require the search engine to be working to test this.
-        $search = testable_core_search::instance();
+        $search = \testable_core_search::instance();
 
         $this->generator = self::getDataGenerator()->get_plugin_generator('core_search');
         $this->generator->setup();
@@ -127,7 +127,7 @@ class document_test extends advanced_testcase {
         $this->assertEquals($docicon, $document->get_doc_icon());
     }
 
-    public function tearDown() {
+    public function tearDown(): void {
         // For unit tests before PHP 7, teardown is called even on skip. So only do our teardown if we did setup.
         if ($this->generator) {
             // Moodle DML freaks out if we don't teardown the temp table after each run.

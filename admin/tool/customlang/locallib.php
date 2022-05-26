@@ -36,7 +36,7 @@ class tool_customlang_utils {
      * Rough number of strings that are being processed during a full checkout.
      * This is used to estimate the progress of the checkout.
      */
-    const ROUGH_NUMBER_OF_STRINGS = 30000;
+    const ROUGH_NUMBER_OF_STRINGS = 32000;
 
     /** @var array cache of {@link self::list_components()} results */
     private static $components = null;
@@ -262,7 +262,7 @@ class tool_customlang_utils {
      * @param string $lang language code
      * @return string full path
      */
-    protected static function get_localpack_location($lang) {
+    public static function get_localpack_location($lang) {
         global $CFG;
 
         return $CFG->langlocalroot.'/'.$lang.'_local';

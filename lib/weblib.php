@@ -2285,6 +2285,11 @@ function send_headers($contenttype, $cacheable = true) {
     if (empty($CFG->allowframembedding) && !core_useragent::is_moodle_app()) {
         @header('X-Frame-Options: sameorigin');
     }
+
+    // If referrer policy is set, add a referrer header.
+    if (!empty($CFG->referrerpolicy) && ($CFG->referrerpolicy !== 'default')) {
+        @header('Referrer-Policy: ' . $CFG->referrerpolicy);
+    }
 }
 
 /**
@@ -2571,11 +2576,6 @@ function get_group_picture_url($group, $courseid, $large = false, $includetoken 
         return;
     }
 
-    // If picture is hidden, only show to those with course:managegroups.
-    if ($group->hidepicture and !has_capability('moodle/course:managegroups', $context)) {
-        return;
-    }
-
     if ($large) {
         $file = 'f1';
     } else {
@@ -2711,7 +2711,7 @@ function navmenulist($course, $sections, $modinfo, $strsection, $strjumpto, $wid
         $class = 'activity '.$mod->modname;
         $class .= ($cmid == $mod->id) ? ' selected' : '';
         $menu[] = '<li class="'.$class.'">'.
-                  $OUTPUT->image_icon('icon', '', $mod->modname).
+                  $OUTPUT->image_icon('monologo', '', $mod->modname).
                   '<a href="'.$CFG->wwwroot.'/mod/'.$url.'">'.$mod->name.'</a></li>';
     }
 
@@ -2954,9 +2954,17 @@ function redirect($url, $message='', $delay=null, $messagetype = \core\output\no
     \core\session\manager::write_close();
 
     if ($delay == 0 && !$debugdisableredirect && !headers_sent()) {
+
         // This helps when debugging redirect issues like loops and it is not clear
-        // which layer in the stack sent the redirect header.
-        @header('X-Redirect-By: Moodle');
+        // which layer in the stack sent the redirect header. If debugging is on
+        // then the file and line is also shown.
+        $redirectby = 'Moodle';
+        if (debugging('', DEBUG_DEVELOPER)) {
+            $origin = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0];
+            $redirectby .= ' /' . str_replace($CFG->dirroot . '/', '', $origin['file']) . ':' . $origin['line'];
+        }
+        @header("X-Redirect-By: $redirectby");
+
         // 302 might not work for POST requests, 303 is ignored by obsolete clients.
         @header($_SERVER['SERVER_PROTOCOL'] . ' 303 See Other');
         @header('Location: '.$url);

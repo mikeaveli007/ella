@@ -22,10 +22,9 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use enrol_lti\data_connector;
-use enrol_lti\helper;
+namespace enrol_lti;
+
 use enrol_lti\task\sync_members;
-use enrol_lti\tool_provider;
 use IMSGlobal\LTI\ToolProvider\Context;
 use IMSGlobal\LTI\ToolProvider\ResourceLink;
 use IMSGlobal\LTI\ToolProvider\ToolConsumer;
@@ -40,11 +39,11 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright 2016 Jun Pataleta <jun@moodle.com>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class sync_members_testcase extends advanced_testcase {
+class sync_members_test extends \advanced_testcase {
     /** @var dummy_sync_members_task $task */
     protected $task;
 
-    /** @var  stdClass $tool The published tool. */
+    /** @var  \stdClass $tool The published tool. */
     protected $tool;
 
     /** @var User[] $members */
@@ -59,7 +58,7 @@ class sync_members_testcase extends advanced_testcase {
     /** @var  ResourceLink $resourcelink */
     protected $resourcelink;
 
-    public function setUp() {
+    public function setUp(): void {
         $this->resetAfterTest();
 
         // Set this user as the admin.
@@ -136,7 +135,7 @@ class sync_members_testcase extends advanced_testcase {
         $this->task->execute();
         $output = ob_get_clean();
         $message = 'Skipping task - ' . get_string('pluginnotenabled', 'auth', get_string('pluginname', 'auth_lti'));
-        $this->assertContains($message, $output);
+        $this->assertStringContainsString($message, $output);
     }
 
     /**
@@ -150,7 +149,7 @@ class sync_members_testcase extends advanced_testcase {
         $this->task->execute();
         $output = ob_get_clean();
         $message = 'Skipping task - ' . get_string('enrolisdisabled', 'enrol_lti');
-        $this->assertContains($message, $output);
+        $this->assertStringContainsString($message, $output);
     }
 
     /**
@@ -168,10 +167,10 @@ class sync_members_testcase extends advanced_testcase {
         $output = ob_get_clean();
 
         $membersyncmessage = "Completed - Synced members for tool '{$this->tool->id}' in the course '{$this->tool->courseid}'";
-        $this->assertContains($membersyncmessage, $output);
+        $this->assertStringContainsString($membersyncmessage, $output);
 
         $imagesyncmessage = "Completed - Synced 0 profile images.";
-        $this->assertContains($imagesyncmessage, $output);
+        $this->assertStringContainsString($imagesyncmessage, $output);
     }
 
     /**
@@ -367,12 +366,12 @@ class dummy_sync_members_task extends sync_members {
     /**
      * Exposes sync_members::sync_member_information()
      *
-     * @param stdClass $tool
+     * @param \stdClass $tool
      * @param ToolConsumer $consumer
      * @param User[] $members
      * @return array
      */
-    public function sync_member_information(stdClass $tool, ToolConsumer $consumer, $members) {
+    public function sync_member_information(\stdClass $tool, ToolConsumer $consumer, $members) {
         $result = parent::sync_member_information($tool, $consumer, $members);
         return $result;
     }
@@ -390,10 +389,10 @@ class dummy_sync_members_task extends sync_members {
     /**
      * Exposes sync_members::sync_unenrol()
      *
-     * @param stdClass $tool
+     * @param \stdClass $tool
      * @return int
      */
-    public function sync_unenrol(stdClass $tool) {
+    public function sync_unenrol(\stdClass $tool) {
         $count = parent::sync_unenrol($tool);
         return $count;
     }

@@ -452,10 +452,27 @@ function upgrade_plugin_savepoint($result, $version, $type, $plugin, $allowabort
  *
  * @return bool true means borked upgrade, false means previous PHP files were properly removed
  */
-function upgrade_stale_php_files_present() {
+function upgrade_stale_php_files_present(): bool {
     global $CFG;
 
-    $someexamplesofremovedfiles = array(
+    $someexamplesofremovedfiles = [
+        // Removed in 4.0.
+        '/admin/classes/task_log_table.php',
+        '/admin/cli/mysql_engine.php',
+        '/lib/babel-polyfill/polyfill.js',
+        '/lib/typo3/class.t3lib_cs.php',
+        '/question/tests/category_class_test.php',
+        // Removed in 3.11.
+        '/customfield/edit.php',
+        '/lib/phpunit/classes/autoloader.php',
+        '/lib/xhprof/README',
+        '/message/defaultoutputs.php',
+        '/user/files_form.php',
+        // Removed in 3.10.
+        '/grade/grading/classes/privacy/gradingform_provider.php',
+        '/lib/coursecatlib.php',
+        '/lib/form/htmleditor.php',
+        '/message/classes/output/messagearea/contact.php',
         // Removed in 3.9.
         '/course/classes/output/modchooser_item.php',
         '/course/yui/build/moodle-course-modchooser/moodle-course-modchooser-min.js',
@@ -541,7 +558,7 @@ function upgrade_stale_php_files_present() {
         // Removed in 2.0.
         '/blocks/admin/block_admin.php',
         '/blocks/admin_tree/block_admin_tree.php',
-    );
+    ];
 
     foreach ($someexamplesofremovedfiles as $file) {
         if (file_exists($CFG->dirroot.$file)) {
@@ -1206,6 +1223,7 @@ function external_update_descriptions($component) {
         $function = $functions[$dbfunction->name];
         unset($functions[$dbfunction->name]);
         $function['classpath'] = empty($function['classpath']) ? null : $function['classpath'];
+        $function['methodname'] = $function['methodname'] ?? 'execute';
 
         $update = false;
         if ($dbfunction->classname != $function['classname']) {
@@ -1255,7 +1273,7 @@ function external_update_descriptions($component) {
         $dbfunction = new stdClass();
         $dbfunction->name       = $fname;
         $dbfunction->classname  = $function['classname'];
-        $dbfunction->methodname = $function['methodname'];
+        $dbfunction->methodname = $function['methodname'] ?? 'execute';
         $dbfunction->classpath  = empty($function['classpath']) ? null : $function['classpath'];
         $dbfunction->component  = $component;
         $dbfunction->capabilities = array_key_exists('capabilities', $function)?$function['capabilities']:'';
@@ -2713,4 +2731,56 @@ function check_admin_dir_usage(environment_results $result): ?environment_result
     $result->setStatus(false);
 
     return $result;
+}
+
+/**
+ * Check whether the XML-RPC protocol is enabled and warn if so.
+ *
+ * The XML-RPC protocol will be removed in a future version (4.1) as it is no longer supported by PHP.
+ *
+ * See MDL-70889 for further information.
+ *
+ * @param environment_results $result
+ * @return null|environment_results
+ */
+function check_xmlrpc_usage(environment_results $result): ?environment_results {
+    global $CFG;
+
+    // Checking Web Service protocols.
+    if (!empty($CFG->webserviceprotocols)) {
+        $plugins = array_flip(explode(',', $CFG->webserviceprotocols));
+        if (array_key_exists('xmlrpc', $plugins)) {
+            $result->setInfo('xmlrpc_webservice_usage');
+            $result->setFeedbackStr('xmlrpcwebserviceenabled');
+            return $result;
+        }
+    }
+
+    if (isset($CFG->mnet_dispatcher_mode) && $CFG->mnet_dispatcher_mode == 'strict') {
+        // Checking Mnet hosts.
+        $mnethosts = mnet_get_hosts();
+        if ($mnethosts) {
+            $actualhost = 0;
+            foreach ($mnethosts as $mnethost) {
+                if ($mnethost->id != $CFG->mnet_all_hosts_id) {
+                    $actualhost++;
+                }
+            }
+            if ($actualhost > 0) {
+                $result->setInfo('xmlrpc_mnet_usage');
+                $result->setFeedbackStr('xmlrpcmnetenabled');
+                return $result;
+            }
+        }
+
+        // Checking Mahara.
+        $portfolios = \core\plugininfo\portfolio::get_enabled_plugins();
+        if (array_key_exists('mahara', $portfolios)) {
+            $result->setInfo('xmlrpc_mahara_usage');
+            $result->setFeedbackStr('xmlrpcmaharaenabled');
+            return $result;
+        }
+    }
+
+    return null;
 }

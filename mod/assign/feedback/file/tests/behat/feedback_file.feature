@@ -43,14 +43,13 @@ Feature: In an assignment, teacher can submit feedback files during grading
       | file    | mod/assign/feedback/file/tests/fixtures/submission.txt  |
 
     And I am on the "Test assignment name" Activity page logged in as teacher1
-    And I click on "Grade" "link" in the ".submissionlinks" "css_element"
+    And I click on "Grade" "link" in the ".tertiary-navigation" "css_element"
     And I upload "mod/assign/feedback/file/tests/fixtures/feedback.txt" file to "Feedback files" filemanager
 
   @javascript
   Scenario: A teacher can provide a feedback file when grading an assignment.
     Given I set the field "applytoall" to "0"
     And I press "Save changes"
-    And I click on "OK" "button"
     And I click on "Course 1" "link" in the "[data-region=assignment-info]" "css_element"
     And I log out
     And I am on the "Test assignment name" Activity page logged in as student1
@@ -62,7 +61,6 @@ Feature: In an assignment, teacher can submit feedback files during grading
   @javascript
   Scenario: A teacher can provide a feedback file when grading an assignment and all students in the group will receive the file.
     Given I press "Save changes"
-    And I click on "OK" "button"
     And I click on "Course 1" "link" in the "[data-region=assignment-info]" "css_element"
     And I log out
     And I am on the "Test assignment name" Activity page logged in as student1

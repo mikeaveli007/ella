@@ -45,9 +45,6 @@
 function xmldb_block_badges_upgrade($oldversion, $block) {
     global $CFG;
 
-    // Automatically generated Moodle v3.5.0 release upgrade line.
-    // Put any upgrade step following this.
-
     // Automatically generated Moodle v3.6.0 release upgrade line.
     // Put any upgrade step following this.
 
@@ -60,5 +57,11 @@ function xmldb_block_badges_upgrade($oldversion, $block) {
     // Automatically generated Moodle v3.9.0 release upgrade line.
     // Put any upgrade step following this.
 
+<<<<<<< HEAD
+=======
+    // Automatically generated Moodle v4.0.0 release upgrade line.
+    // Put any upgrade step following this.
+
+>>>>>>> MOODLE_400_STABLE
     return true;
 }
