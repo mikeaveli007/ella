@@ -61,8 +61,6 @@ function xmldb_block_calendar_month_upgrade($oldversion, $block) {
     // Automatically generated Moodle v3.9.0 release upgrade line.
     // Put any upgrade step following this.
 
-<<<<<<< HEAD
-=======
     if ($oldversion < 2022030200) {
         // Update all calendar_month blocks in the my-index to be in the main content region.
         upgrade_block_set_defaultregion('calendar_month', '__default', 'my-index', 'content');
@@ -77,6 +75,5 @@ function xmldb_block_calendar_month_upgrade($oldversion, $block) {
     // Automatically generated Moodle v4.0.0 release upgrade line.
     // Put any upgrade step following this.
 
->>>>>>> MOODLE_400_STABLE
     return true;
 }
