@@ -59,6 +59,17 @@
                   {{/disable_dashboard_drawer}}
                   {{{ output.standard_top_of_body_html }}}
                   {{{ output.full_header }}}
+                  {{#primarymoremenu}}
+                      <div class="primary-navigation">
+                          {{> core/moremenu}}
+                      </div>
+                  {{/primarymoremenu}}
+                  {{#secondarymoremenu}}
+                      <div class="secondary-navigation">
+                          {{> core/moremenu}}
+                      </div>
+                  {{/secondarymoremenu}}
+                  {{{ output.edit_switch }}}
                   <div id="ccnSettingsMenuContainer">
                     <div id="ccnSettingsMenuInner">{{! @ccnIrrevocable: These container divs #ccnSettingsMenuContainer/Inner must exist unconditionally, only contents can be conditional }}
                       {{#show_settings_controls}}
@@ -75,9 +86,9 @@
                   {{/has_blocks_above_content}}
                   {{{ output.course_content_header }}}
                   {{{ output.main_content }}}
-                  {{#incourse}}
+                  {{#in_course_activity}}
                     {{{ output.activity_navigation }}}
-                  {{/incourse}}
+                  {{/in_course_activity}}
                   {{{ output.course_content_footer }}}
                   {{#has_blocks_below_content}}
                     {{{ blocks_below_content }}}

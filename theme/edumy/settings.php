@@ -18,7 +18,11 @@
 defined('MOODLE_INTERNAL') || die();
 
 $ccnFontList = include($CFG->dirroot . '/theme/edumy/ccn/font_handler/ccn_font_select.php');
+require_once($CFG->dirroot . '/theme/edumy/ccn/mdl_handler/ccn_mdl_handler.php');
 
+$ccnMdlHandler = new ccnMdlHandler();
+$ccnMdlVersion = $ccnMdlHandler->ccnGetCoreVersion();
+$ccnMdlVersion = (int)$ccnMdlVersion;
 // This is used for performance, we don't need to know about these settings on every page in Moodle, only when
 // we are looking at the admin settings pages.
 if ($ADMIN->fulltree) {
@@ -126,6 +130,14 @@ if ($ADMIN->fulltree) {
     $setting = new admin_setting_configstoredfile($name, $title, $description, 'headerlogo3');
     $setting->set_updatedcallback('theme_reset_all_caches');
     $page->add($setting);
+    // Header logo login
+    // Applies only to ccn_login_1, _2, _3, not default/legacy login page.
+    $name='theme_edumy/headerlogo4';
+    $title = get_string('headerlogo4', 'theme_edumy');
+    $description = get_string('headerlogo4_desc', 'theme_edumy');
+    $setting = new admin_setting_configstoredfile($name, $title, $description, 'headerlogo4');
+    $setting->set_updatedcallback('theme_reset_all_caches');
+    $page->add($setting);
     // Header logo mobile
     $name='theme_edumy/headerlogo_mobile';
     $title = get_string('headerlogo_mobile', 'theme_edumy');
@@ -216,6 +228,18 @@ if ($ADMIN->fulltree) {
                     ));
     $setting->set_updatedcallback('theme_reset_all_caches');
     $page->add($setting);
+
+
+    if($ccnMdlVersion >= 400){
+      $setting = new admin_setting_configselect('theme_edumy/disable_primary_nav',
+          get_string('disable_primary_nav', 'theme_edumy'),
+          get_string('disable_primary_nav_desc', 'theme_edumy'), '0',
+                  array('0' => 'Enable primary navigation',
+                        '1' => 'Disable primary navigation'
+                      ));
+      $setting->set_updatedcallback('theme_reset_all_caches');
+      $page->add($setting);
+    }
 
     // Header type
     $setting = new admin_setting_configselect('theme_edumy/headertype',

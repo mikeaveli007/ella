@@ -396,6 +396,7 @@ body.ccn_context_dashboard {
 .dashboard_main_content .btn-primary,
 .dashboard_main_content .btn-secondary,
 .dashboard_main_content .btn:not(.btn-link),
+.ccn_context_frontend .primary-navigation .moremenu .ccn-activate-more-dropdown> a.dropdown-toggle,
 .modal:not(.sign_up_modal) .btn-primary,
 .modal:not(.sign_up_modal) .btn-secondary,
 .modal:not(.sign_up_modal) .btn:not(.btn-link),
@@ -442,10 +443,12 @@ body.ccn_context_dashboard {
 .btn-primary:hover,
 .page-context-header .btn:hover,
 /* Additional button-type selectors that we want to apply btn-secondary to: */
+.ccn_context_frontend .primary-navigation .moremenu .ccn-activate-more-dropdown >a.dropdown-toggle:hover,
 .ccn-forum-discussion-tools .btn.btn-link.dropdown-toggle:hover,
 .format-remuiformat .course-content .cards .wdm-card-section .card-section-leftnav .btn:hover,
 .format-remuiformat .course-content .cards .wdm-card-section .card-section-rightnav .btn:hover,
-.message_container .iu_heading .candidate_revew_search_box .btn:hover {
+.message_container .iu_heading .candidate_revew_search_box .btn:hover,
+.primary-navigation .moremenu.navigation .ccn-activate-more-dropdown>.btn:focus {
   background-color: transparent;
   border-color: [[setting:color_tertiary]];
   color: [[setting:color_tertiary]];
@@ -453,6 +456,9 @@ body.ccn_context_dashboard {
   -moz-box-shadow: 0px 1px 4px 0px rgba(0, 0, 0, 0);
   box-shadow: 0px 1px 4px 0px rgba(0, 0, 0, 0);
   text-decoration: none;
+}
+.dashboard_main_content .btn.btn-thm.white:not(.btn-link):hover {
+  background-color: transparent!important;
 }
 .dashboard_main_content .btn-primary:hover,
 .modal:not(.sign_up_modal) .btn-primary:hover,
@@ -2509,7 +2515,7 @@ img.lang_icon {
   /* box-shadow: 0 0 0 2px rgb(0 0 0 / 10%); */
   border-radius: 50px;
   /* border: 2px solid rgba(255, 255, 255, .9); */
-  border: 1px solid rgba(255,255,255,.5);
+  border: 1px solid rgba(255, 255, 255, .5);
   padding: 2px;
   position: relative;
   /* top: -7px; */
@@ -2536,13 +2542,12 @@ img.lang_icon {
   border-radius: 50px;
 }
 ul.pagination {
-  list-style: none!important;
+  list-style: none !important;
 }
 #page-mod-assign-grading .gradingtable {
-  padding-top: 1rem!important;
-  padding-bottom: 1rem!important;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
 }
-
 /* CCN DASH DARK */
 /* White primary text */
 .ccnDarkMode.ccn_context_dashboard h1,
@@ -3573,4 +3578,14 @@ a.ccnLcEl--i:hover {
   color: rgb(255, 0, 95);
   border-color: inherit;
   background-color: inherit;
+}
+a[data-key="cocoon_customizer"] .ccn--ico {
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  display: inline-block !important;
+  height: 23px !important;
+  width: 15px !important;
+  background-size: contain !important;
+  position: relative !important;
+  top: 6px !important;
 }

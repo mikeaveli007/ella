@@ -86,6 +86,12 @@ $THEME->layouts = [
         'regions' => array('fullwidth-top', 'fullwidth-bottom', 'above-content', 'below-content', 'left', 'side-pre'),
         'defaultregion' => 'side-pre',
     ),
+    'mycourses' => array(
+        'file' => 'ccn_my.php',
+        'regions' => array('fullwidth-top', 'fullwidth-bottom', 'above-content', 'below-content', 'left', 'side-pre'),
+        'defaultregion' => 'side-pre',
+        'options' => array('nonavbar' => true),
+    ),
     // My dashboard page.
     'mydashboard' => array(
         'file' => 'ccn_my.php',
@@ -157,35 +163,41 @@ $THEME->layouts = [
 
 
 
-$ccnSheetsReset = array();
-$ccnSheetsTheme = array(
-  'bootstrap.min',
-  'jquery-ui.min',
-  'font-awesome.min',
-  'font-awesome-animation.min',
-  'line-awesome.min',
-  'nouislider.min',
-  'menu',
-  'ace-responsive-menu',
-  'megadropdown',
-  'bootstrap-select.min',
-  'simplebar.min',
-  'progressbar',
-  'ccn-flaticon',
-  'flaticon',
-  'animate',
-  'slider',
-  'magnific-popup',
-  'timecounter',
-  'jquery.fancybox.min',
-  'spectrum',
-  'cocoon',
-  'dashbord_navitaion',
-  'cocoon-mdl',
-  'cocoon-dashboard',
-  'responsive'
-);
-$ccnSheetsAppend = array();
+$ccnSheetsReset = [];
+$ccnSheetsTheme = [];
+
+if($ccnMdlVersion !== '400') {
+  $ccnSheetsTheme[] = 'bootstrap.min';
+}
+if($ccnMdlVersion == '400') {
+  $ccnSheetsTheme[] = 'bootstrap-edumy';
+}
+$ccnSheetsTheme[] = 'jquery-ui.min';
+$ccnSheetsTheme[] = 'font-awesome.min';
+$ccnSheetsTheme[] = 'font-awesome-animation.min';
+$ccnSheetsTheme[] = 'line-awesome.min';
+$ccnSheetsTheme[] = 'nouislider.min';
+$ccnSheetsTheme[] = 'menu';
+$ccnSheetsTheme[] = 'ace-responsive-menu';
+$ccnSheetsTheme[] = 'bootstrap-select.min';
+$ccnSheetsTheme[] = 'simplebar.min';
+$ccnSheetsTheme[] = 'progressbar';
+$ccnSheetsTheme[] = 'ccn-flaticon';
+$ccnSheetsTheme[] = 'flaticon';
+$ccnSheetsTheme[] = 'animate';
+$ccnSheetsTheme[] = 'slider';
+$ccnSheetsTheme[] = 'swiper-bundle.min';
+$ccnSheetsTheme[] = 'magnific-popup';
+$ccnSheetsTheme[] = 'timecounter';
+$ccnSheetsTheme[] = 'jquery.fancybox.min';
+$ccnSheetsTheme[] = 'spectrum';
+$ccnSheetsTheme[] = 'cocoon';
+$ccnSheetsTheme[] = 'dashbord_navitaion';
+$ccnSheetsTheme[] = 'cocoon-mdl';
+$ccnSheetsTheme[] = 'cocoon-dashboard';
+$ccnSheetsTheme[] = 'responsive';
+
+$ccnSheetsAppend = [];
 $ccnSheetsReset[] = 'cocoon-mdl-reset';
 if($ccnMdlVersion == '37') {
   $ccnSheetsReset[] = 'cocoon.mdl.reset.37';
@@ -207,35 +219,65 @@ if($ccnMdlVersion == '311') {
   $ccnSheetsReset[] = 'cocoon.mdl.reset.311';
   $ccnSheetsAppend[] = 'cocoon.mdl.311';
 }
+$ccnMdlVersions = [
+  '37',
+  '38',
+  '39',
+  '310',
+  '311'
+];
+
+if(in_array($ccnMdlVersion, $ccnMdlVersions)) {
+  $ccnSheetsAppend[] = 'bootstrap.min';
+}
+if($ccnMdlVersion == '400') {
+  $ccnSheetsReset[] = 'cocoon.mdl.reset.400';
+  $ccnSheetsAppend[] = 'cocoon.mdl.400';
+  $ccnSheetsAppend[] = 'bootstrap-edumy';
+}
 
 if(!empty($THEME->settings->headertype) && $THEME->settings->headertype == 2 ){
   $ccnSheetsAppend[] = 'cocoon.header.2';
+  if((int)$ccnMdlVersion >= 400) $ccnSheetsAppend[] = 'cocoon.header.2.400';
 } elseif(!empty($THEME->settings->headertype) && $THEME->settings->headertype == 3 ){
   $ccnSheetsAppend[] = 'cocoon.header.3';
+  if((int)$ccnMdlVersion >= 400) $ccnSheetsAppend[] = 'cocoon.header.3.400';
 } elseif(!empty($THEME->settings->headertype) && $THEME->settings->headertype == 4 ){
   $ccnSheetsAppend[] = 'cocoon.header.4';
+  if((int)$ccnMdlVersion >= 400) $ccnSheetsAppend[] = 'cocoon.header.4.400';
 } elseif(!empty($THEME->settings->headertype) && $THEME->settings->headertype == 5 ){
   $ccnSheetsAppend[] = 'cocoon.header.5';
+  if((int)$ccnMdlVersion >= 400) $ccnSheetsAppend[] = 'cocoon.header.5.400';
 } elseif(!empty($THEME->settings->headertype) && $THEME->settings->headertype == 6 ){
   $ccnSheetsAppend[] = 'cocoon.header.6';
+  if((int)$ccnMdlVersion >= 400) $ccnSheetsAppend[] = 'cocoon.header.6.400';
 } elseif(!empty($THEME->settings->headertype) && $THEME->settings->headertype == 7 ){
   $ccnSheetsAppend[] = 'cocoon.header.7';
+  if((int)$ccnMdlVersion >= 400) $ccnSheetsAppend[] = 'cocoon.header.7.400';
 } elseif(!empty($THEME->settings->headertype) && $THEME->settings->headertype == 8 ){
   $ccnSheetsAppend[] = 'cocoon.header.8';
+  if((int)$ccnMdlVersion >= 400) $ccnSheetsAppend[] = 'cocoon.header.8.400';
 } elseif(!empty($THEME->settings->headertype) && $THEME->settings->headertype == 9 ){
   $ccnSheetsAppend[] = 'cocoon.header.9';
+  if((int)$ccnMdlVersion >= 400) $ccnSheetsAppend[] = 'cocoon.header.9.400';
 } elseif(!empty($THEME->settings->headertype) && $THEME->settings->headertype == 10 ){
   $ccnSheetsAppend[] = 'cocoon.header.10';
+  if((int)$ccnMdlVersion >= 400) $ccnSheetsAppend[] = 'cocoon.header.10.400';
 } elseif(!empty($THEME->settings->headertype) && $THEME->settings->headertype == 11 ){
   $ccnSheetsAppend[] = 'cocoon.header.11';
+  if((int)$ccnMdlVersion >= 400) $ccnSheetsAppend[] = 'cocoon.header.11.400';
 } elseif(!empty($THEME->settings->headertype) && $THEME->settings->headertype == 12 ){
   $ccnSheetsAppend[] = 'cocoon.header.12';
+  if((int)$ccnMdlVersion >= 400) $ccnSheetsAppend[] = 'cocoon.header.12.400';
 } elseif(!empty($THEME->settings->headertype) && $THEME->settings->headertype == 13 ){
   $ccnSheetsAppend[] = 'cocoon.header.13';
+  if((int)$ccnMdlVersion >= 400) $ccnSheetsAppend[] = 'cocoon.header.13.400';
 } elseif(!empty($THEME->settings->headertype) && $THEME->settings->headertype == 14 ){
   $ccnSheetsAppend[] = 'cocoon.header.14';
+  if((int)$ccnMdlVersion >= 400) $ccnSheetsAppend[] = 'cocoon.header.14.400';
 } else {
   $ccnSheetsAppend[] = 'cocoon.header.1';
+  if((int)$ccnMdlVersion >= 400) $ccnSheetsAppend[] = 'cocoon.header.1.400';
 }
 
 if(!empty($THEME->settings->footertype) && $THEME->settings->footertype == 9 ){
@@ -293,6 +335,7 @@ $THEME->javascripts = array(
   'wow.min',
   'progressbar',
   'slider',
+  'swiper-bundle.min',
   'timepicker',
   'lozad.min',
   'spectrum',
@@ -307,3 +350,6 @@ $THEME->javascripts = array(
 $THEME->iconsystem = '\\theme_edumy\\output\\icon_system_fontawesome';
 
 $THEME->csspostprocess = 'theme_edumy_process_css';
+$THEME->activityheaderconfig = [
+    'notitle' => true
+];

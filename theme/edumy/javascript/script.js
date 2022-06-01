@@ -38,7 +38,7 @@
     }
     /** Main Menu Custom Script Start **/
     $(window).on('load', function() {
-      $("#respMenu").aceResponsiveMenu({
+      $(".ace-responsive-menu").aceResponsiveMenu({
         resizeWidth: '768', // Set the same in Media query
         animationSpeed: 'fast', //slow, medium, fast
         accoridonExpAll: false //Expands all the accordion menu on click
@@ -1231,6 +1231,114 @@
         })
       }
     });
+
+
+    if ($('.mySwiper').length) {
+      var swiper = new Swiper(".mySwiper", {
+        slidesPerView: 4,
+        centeredSlides: false,
+        slidesPerGroupSkip: 0,
+        spaceBetween: 0,
+        grabCursor: false,
+        autoplay: false,
+        loop: true,
+        keyboard: {
+          enabled: false,
+        },
+        breakpoints: {
+          320: {
+            slidesPerView: 1,
+            slidesPerGroup: 1,
+          },
+          // when window width is >= 480px
+          480: {
+            slidesPerView: 1,
+            slidesPerGroup: 1,
+          },
+          // when window width is >= 640px
+          640: {
+            slidesPerView: 2,
+            slidesPerGroup: 1,
+          },
+          991: {
+            slidesPerView: 2,
+            slidesPerGroup: 1,
+          },
+          1024: {
+            slidesPerView: 3,
+            slidesPerGroup: 1,
+          },
+          1200: {
+            slidesPerView: 4,
+            slidesPerGroup: 1,
+          }
+        },
+        scrollbar: {
+          el: ".swiper-scrollbar",
+        },
+        navigation: {
+          nextEl: ".swiper-button-next",
+          prevEl: ".swiper-button-prev",
+        },
+        pagination: {
+          el: ".swiper-pagination",
+          clickable: false,
+        },
+      });
+    }
+
+
+    if ($('.uv2_insta_slider').length) {
+      $('.uv2_insta_slider').owlCarousel({
+        loop: true,
+        margin: 0,
+        dots: false,
+        nav: false,
+        rtl: false,
+        autoplayHoverPause: false,
+        autoplay: 500,
+        singleItem: true,
+        smartSpeed: 1200,
+        navText: [
+          '<i class="flaticon-left-arrow"></i>',
+          '<i class="flaticon-right-arrow-1"></i>'
+        ],
+        responsive: {
+          0: {
+            items: 1,
+            center: false
+          },
+          480: {
+            items: 1,
+            center: false
+          },
+          520: {
+            items: 1,
+            center: false
+          },
+          600: {
+            items: 2,
+            center: false
+          },
+          768: {
+            items: 2
+          },
+          992: {
+            items: 3
+          },
+          1200: {
+            items: 4
+          },
+          1400: {
+            items: 5
+          }
+        }
+      })
+    }
+
+
+
+
     /* ----- Scroll To top ----- */
     function scrollToTop() {
       $(window).scroll(function() {
@@ -1328,6 +1436,8 @@
     $(window).on('load', function() {
       // add your functions
       counterNumber();
+        /* We do this for M4 More Menu.Should have no effect on earlier Mdl versions */ window.dispatchEvent(new Event('resize'));
+
       /* Stellar init function was responsible for causing messy menu bug. Disabling for now. */
       // jQuery(window).stellar({
       //     horizontalScrolling: false,

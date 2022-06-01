@@ -1,7 +1,7 @@
 {{> theme_boost/head }}
 <body {{{ bodyattributes }}}>
   {{> theme_edumy/ccn_preloader }}
-  <div class="wrapper">
+  <div class="wrapper" id="page-content">
     {{> theme_boost/navbar }}
     <div id="ccn-page-wrapper">
       <div id="ccnSettingsMenuContainer"><div id="ccnSettingsMenuInner">{{! @ccnIrrevocable: These container divs #ccnSettingsMenuContainer/Inner must exist unconditionally, only contents can be conditional }}
@@ -16,6 +16,17 @@
       {{{ output.standard_top_of_body_html }}}
       <div>
         {{{ output.full_header }}}
+        {{#primarymoremenu}}
+            <div class="primary-navigation">
+                {{> core/moremenu}}
+            </div>
+        {{/primarymoremenu}}
+        {{#secondarymoremenu}}
+            <div class="secondary-navigation">
+                {{> core/moremenu}}
+            </div>
+        {{/secondarymoremenu}}
+        {{{ output.edit_switch }}}
         {{{ blocks_fullwidth_top }}}
         <div id="ccn-main-region">
           <div class="container">
@@ -66,9 +77,9 @@
                   {{/is_course}}
                   {{{ output.course_content_header }}}
                   {{{ output.main_content }}}
-                  {{#incourse}}
+                  {{#in_course_activity}}
                     {{{ output.activity_navigation }}}
-                  {{/incourse}}
+                  {{/in_course_activity}}
                   {{{ output.course_content_footer }}}
                   {{#is_course}}
                     {{#display_course_content}}

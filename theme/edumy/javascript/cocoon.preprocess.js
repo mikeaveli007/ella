@@ -151,7 +151,7 @@ $(function() {
     $(".addbloglink").each(function() {
       $(this).find("a").addClass("btn dbxshad btn-primary btn-thm");
     });
-    $("body.role-standard:not(.path-contentbank):not(#page-contentbank) #ccn-main-region").each(function() {
+    $("body.course-1.role-standard:not(.path-contentbank):not(#page-contentbank) #ccn-main-region").each(function() {
       if (!$(this).find(".block").length && !$(this).find("#ccn-main").text().trim().length) {
         $("#ccn-main-region").css({
           'padding-top': '0',

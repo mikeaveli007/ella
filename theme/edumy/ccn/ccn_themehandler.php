@@ -6,6 +6,7 @@
 defined('MOODLE_INTERNAL') || die();
 global $USER, $CFG, $SESSION, $OUTPUT, $COURSE, $DB;
 require_once($CFG->libdir . '/behat/lib.php');
+require_once($CFG->dirroot . '/course/lib.php');
 // require_once($CFG->libdir . '/lib/blocklib.php');
 include($CFG->dirroot . '/theme/edumy/ccn/ccn_loginform.php');
 include($CFG->dirroot . '/theme/edumy/ccn/ccn_globalsearch.php');
@@ -49,6 +50,11 @@ if(method_exists('theme_edumy\output\core_renderer', 'get_theme_image_headerlogo
   $headerlogo3 = $OUTPUT->get_theme_image_headerlogo3(null, 100);
 } else {
   $headerlogo3 = $CFG->wwwroot . '/theme/edumy/images/header-logo4.png';
+}
+if(method_exists('theme_edumy\output\core_renderer', 'get_theme_image_headerlogo4') && method_exists('theme_edumy\output\core_renderer_maintenance', 'get_theme_image_headerlogo4') && !empty($OUTPUT->get_theme_image_headerlogo4())){
+  $headerlogo4 = $OUTPUT->get_theme_image_headerlogo4(null, 100);
+} else {
+  $headerlogo4 = $CFG->wwwroot . '/theme/edumy/images/header-logo.png';
 }
 if(method_exists('theme_edumy\output\core_renderer', 'get_theme_image_headerlogo_mobile') && method_exists('theme_edumy\output\core_renderer_maintenance', 'get_theme_image_headerlogo_mobile') && !empty($OUTPUT->get_theme_image_headerlogo_mobile())){
   $headerlogo_mobile = $OUTPUT->get_theme_image_headerlogo_mobile(null, 100);
@@ -241,7 +247,7 @@ $hasleftblocks = strpos($leftblocks, 'data-block=') !== false;
 $sidebar_left = strpos($leftblocks, 'data-block=') !== false;
 $sidebar_right = strpos($blockshtml, 'data-block=') !== false;
 
-$regionmainsettingsmenu = $OUTPUT->region_main_settings_menu();
+// $regionmainsettingsmenu = $OUTPUT->region_main_settings_menu();
 $hassideblocks = ($hasblocks || $hasleftblocks);
 $sidebar_single = (($hasblocks && !$hasleftblocks) || (!$hasblocks && $hasleftblocks));
 $sidebar_single_left = (!$hasblocks && $hasleftblocks);
@@ -349,7 +355,14 @@ if($ccnDashLayoutSetting == '1'){
 $singlecourse_blocks_setting = get_config('theme_edumy', 'singlecourse_blocks');
 $userProfileFromCourseParticipants = strpos($_SERVER['REQUEST_URI'], "user/view.php") !== false && isset($_GET["course"]);
 
-if ($singlecourse_blocks_setting == 1 && (strpos($_SERVER['REQUEST_URI'], "user/index.php") !== false || strpos($_SERVER['REQUEST_URI'], "course/edit.php") !== false || strpos($_SERVER['REQUEST_URI'], "course/completion.php") !== false || strpos($_SERVER['REQUEST_URI'], "course/admin.php") !== false || $courseSectionPage) || $userProfileFromCourseParticipants){
+if ($singlecourse_blocks_setting == 1 && (
+  strpos($_SERVER['REQUEST_URI'], "user/index.php") !== false ||
+  strpos($_SERVER['REQUEST_URI'], "course/edit.php") !== false ||
+  strpos($_SERVER['REQUEST_URI'], "course/completion.php") !== false ||
+  strpos($_SERVER['REQUEST_URI'], "course/admin.php") !== false ||
+  (strpos($_SERVER['REQUEST_URI'], "blocks/dedication/dedication.php") !== false && isset($_GET['courseid'])) ||
+  $courseSectionPage
+  ) || $userProfileFromCourseParticipants){
   // Disable ALL block regions, regardless of all other parameters and permission settings
   $sidebar_left = false;
   $sidebar_right = false;
@@ -630,3 +643,30 @@ if(!empty($USER->firstname)){$USER->firstname = $USER->firstname;}else{$USER->fi
 if(!empty($USER->lastname)){$USER->lastname = $USER->lastname;}else{$USER->lastname = '';}
 if(!empty($USER->email)){$USER->email = $USER->email;}else{$USER->email = '';}
 if(!empty($USER->lang)){$USER->lang = $USER->lang;}else{$USER->lang = '';}
+
+
+$secondarynavigation = false;
+$overflow = '';
+if (method_exists($PAGE, 'has_secondary_navigation') && $PAGE->has_secondary_navigation()) {
+    $tablistnav = $PAGE->has_tablist_secondary_navigation();
+    $moremenu = new \core\navigation\output\more_menu($PAGE->secondarynav, 'nav-tabs', true, $tablistnav);
+    $secondarynavigation = $moremenu->export_for_template($OUTPUT);
+    $overflowdata = $PAGE->secondarynav->get_overflow_menu_data();
+    if (!is_null($overflowdata)) {
+        $overflow = $overflowdata->export_for_template($OUTPUT);
+    }
+}
+
+
+if(class_exists('core\navigation\output\primary')) {
+  $primary = new \theme_edumy\navigation\primary($PAGE);
+  $renderer = $PAGE->get_renderer('core');
+  $primarymenu = $primary->export_for_template($renderer);
+  $buildregionmainsettings = !$PAGE->include_region_main_settings_in_header_actions()  && !$PAGE->has_secondary_navigation();
+  // If the settings menu will be included in the header then don't add it here.
+  $regionmainsettingsmenu = $buildregionmainsettings ? $OUTPUT->region_main_settings_menu() : false;
+
+  $header = $PAGE->activityheader;
+  $headercontent = $header->export_for_template($renderer);
+
+}

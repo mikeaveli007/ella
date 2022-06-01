@@ -663,6 +663,7 @@ class ccnCourseHandler {
       $outputimage = '';
       //ccnComm: Fetching the image manually added to the coursecat description via the editor.
       $description = $chelper->get_category_formatted_description($categoryObject);
+      $src = null;
       if ($description) {
         $dom = new DOMDocument();
         $dom->loadHTML($description);

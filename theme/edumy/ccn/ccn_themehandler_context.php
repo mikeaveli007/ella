@@ -39,6 +39,7 @@ $templatecontext = [
     'headerlogo1' => $headerlogo1,
     'headerlogo2' => $headerlogo2,
     'headerlogo3' => $headerlogo3,
+    'headerlogo4' => $headerlogo4,
     'headerlogo_mobile' => $headerlogo_mobile,
     'footerlogo1' => $footerlogo1,
     'heading_bg' => $heading_bg,
@@ -263,7 +264,28 @@ $templatecontext = [
     'if_breadcrumb_trail' => get_config('theme_edumy', 'breadcrumb_trail') != 1,
     'edumy_focus_sidebar' => !empty(get_config('theme_edumy', 'edumy_focus_sidebar')) && get_config('theme_edumy', 'edumy_focus_sidebar') === '1' ? false : true,
     'lang_menu_icons' => !empty(get_config('theme_edumy', 'language_menu')) && get_config('theme_edumy', 'language_menu') === '1' ? false : true,
+    'is_4' => (int)$ccnMdlVersion >= 400 ? true : false
 ];
+
+if((int)$ccnMdlVersion >= 400) {
+  $templatecontext['primarymoremenu'] = $primarymenu['moremenu'];
+  $templatecontext['secondarymoremenu'] = $secondarynavigation ? : false;
+  $templatecontext['eithermoremenu'] = !empty($primarymenu['moremenu']) || $secondarynavigation ? true : false;
+  $templatecontext['mobileprimarynav'] = $primarymenu['mobileprimarynav'];
+  $templatecontext['headercontent'] = $headercontent;
+  $templatecontext['overflow'] = $overflow;
+  $templatecontext['addblockbutton'] = $addblockbutton;
+  // 'primarymoremenu' => $primarymenu['moremenu'],
+  // 'secondarymoremenu' => $secondarynavigation ? : false,
+  // 'eithermoremenu' => !empty($primarymenu['moremenu']) || $secondarynavigation ? true : false,
+  // 'mobileprimarynav' => $primarymenu['mobileprimarynav'],
+  // 'headercontent' => $headercontent,
+  // 'overflow' => $overflow,
+  // 'addblockbutton' => $addblockbutton,
+}
+
+
+// var_dump($primarymenu['moremenu']);
 $PAGE->requires->jquery();
 $ccnLcVbCollection = array(
   "cocoon_about_1",

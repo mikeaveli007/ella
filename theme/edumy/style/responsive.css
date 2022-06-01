@@ -254,7 +254,7 @@
   .img_hvr_box.home7 {
     width: auto;
   }
-  .block_cocoon_slider_3 .img_hvr_box.home7 { 
+  .block_cocoon_slider_3 .img_hvr_box.home7 {
     width: 100%;
   }
 }
@@ -1435,7 +1435,7 @@
     float: none !important;
   }
   .home_icon_box.home4 .icon {
-    color: #2441e7;
+    color: [[setting:color_primary]];
   }
   .home_icon_box.home4 p {
     color: #6f7074;
@@ -1955,7 +1955,7 @@
     opacity: 1;
   }
   .testimonial_slider_home2 .owl-item.active .testimonial_item.home2 .details {
-    background-color: #2441e7;
+    background-color: [[setting:color_primary]];
   }
   .testimonial_slider_home2 .owl-item.active .testimonial_item.home2 .details p {
     color: #ffffff;
