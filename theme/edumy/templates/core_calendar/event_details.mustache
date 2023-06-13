@@ -55,57 +55,69 @@
         "subscriptionurl": "http://subscriptionurl"
     }
 }}
-{{#description}}
-  <p>{{{.}}}</p>
-{{/description}}
-<ul class="mb0">
-  <li>
-    <span class="flaticon-appointment"></span> {{{formattedtime}}}
-  </li>
-  {{#normalisedeventtypetext}}
+
+<div class="p-2">
+  <ul class="list-unstyled">
     <li>
-      <span class="flaticon-clock"></span> {{normalisedeventtypetext}}
+      <span class="flaticon-appointment"></span> {{{formattedtime}}}
     </li>
-  {{/normalisedeventtypetext}}
-  {{#location}}
-    <li>
-      <span class="flaticon-placeholder"></span> {{{.}}}
-    </li>
-  {{/location}}
-  {{#isactionevent}}
-    <li>
-      <span class="flaticon-clock"></span> <a href="{{course.viewurl}}">{{{course.fullname}}}</a>
-    </li>
-  {{/isactionevent}}
-  {{#iscategoryevent}}
-    <li>
-      <span class="flaticon-clock"></span> {{{category.nestedname}}}
-    </li>
-  {{/iscategoryevent}}
-  {{#iscourseevent}}
-    <li>
-      <span class="flaticon-clock"></span> <a href="{{url}}">{{{course.fullname}}}</a>
-    </li>
-  {{/iscourseevent}}
-  {{#groupname}}
-    <li>
-      <span class="flaticon-clock"></span> <a href="{{url}}">{{{course.fullname}}}</a>
-    </li>
-    <li>
-      <span class="flaticon-clock"></span> {{{groupname}}}
-    </li>
-  {{/groupname}}
-  {{#subscription}}
-    {{#displayeventsource}}
+    {{#normalisedeventtypetext}}
       <li>
-        <span class="flaticon-clock"></span>
-        {{#subscriptionurl}}
-          <a href="{{subscriptionurl}}">{{#str}}subscriptionsource, core_calendar, {{{subscriptionname}}}{{/str}}</a>
-        {{/subscriptionurl}}
-        {{^subscriptionurl}}
-          {{#str}}subscriptionsource, core_calendar, {{{subscriptionname}}}{{/str}}
-        {{/subscriptionurl}}
+        <span class="flaticon-clock"></span> {{normalisedeventtypetext}}
       </li>
-    {{/displayeventsource}}
-  {{/subscription}}
-</ul>
+    {{/normalisedeventtypetext}}
+    {{#location}}
+      <li>
+        <span class="flaticon-placeholder"></span> {{{.}}}
+      </li>
+    {{/location}}
+    {{#isactionevent}}
+      <li>
+        <span class="flaticon-clock"></span> <a href="{{course.viewurl}}">{{{course.fullname}}}</a>
+      </li>
+    {{/isactionevent}}
+    {{#iscategoryevent}}
+      <li>
+        <span class="flaticon-clock"></span> {{{category.nestedname}}}
+      </li>
+    {{/iscategoryevent}}
+    {{#iscourseevent}}
+      <li>
+        <span class="flaticon-clock"></span> <a href="{{url}}">{{{course.fullname}}}</a>
+      </li>
+    {{/iscourseevent}}
+    {{#groupname}}
+      <li>
+        <span class="flaticon-clock"></span> <a href="{{url}}">{{{course.fullname}}}</a>
+      </li>
+      <li>
+        <span class="flaticon-clock"></span> {{{groupname}}}
+      </li>
+    {{/groupname}}
+    {{#subscription}}
+      {{#displayeventsource}}
+        <li>
+          <span class="flaticon-clock"></span>
+          {{#subscriptionurl}}
+            <a href="{{subscriptionurl}}">{{#str}}subscriptionsource, core_calendar, {{{subscriptionname}}}{{/str}}</a>
+          {{/subscriptionurl}}
+          {{^subscriptionurl}}
+            {{#str}}subscriptionsource, core_calendar, {{{subscriptionname}}}{{/str}}
+          {{/subscriptionurl}}
+        </li>
+      {{/displayeventsource}}
+    {{/subscription}}
+  </ul>
+</div>
+{{#description}}
+  {{#multilinedesc}}
+    <div class="calendar-event-details pa-toggle-text">
+      <p class="et_pb_text_inner">{{{description}}}</p>
+    </div>
+  {{/multilinedesc}}
+  {{^multilinedesc}}
+    <div class="calendar-event-details">
+      <p class="">{{{description}}}</p>
+    </div>
+  {{/multilinedesc}}
+{{/description}}

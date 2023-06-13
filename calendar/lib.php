@@ -2525,6 +2525,8 @@ function calendar_format_event_time($event, $now, $linkparams = null, $usecommon
         }
     } else { // There is no time duration.
         $time = calendar_time_representation($event->timestart);
+        if($time == "12:00 AM") $time = get_string('allday', 'calendar');
+
         // Set printable representation.
         if (!$showtime) {
             $day = calendar_day_representation($event->timestart, $now, $usecommonwords);
@@ -2866,9 +2868,20 @@ function calendar_add_subscription($sub) {
 function calendar_add_icalendar_event($event, $unused = null, $subscriptionid, $timezone='UTC') {
     global $DB;
 
+    $alldayevent = false;
+
     // Probably an unsupported X-MICROSOFT-CDO-BUSYSTATUS event.
     if (empty($event->properties['SUMMARY'])) {
         return 0;
+    }
+
+    // Skip unconfirmed events
+    if(isset($event->properties['STATUS'][0]) & $event->properties['STATUS'][0]->value != "CONFIRMED" ) {
+        return CALENDAR_IMPORT_EVENT_SKIPPED;
+    }
+
+    if(isset($event->properties['X-MICROSOFT-CDO-ALLDAYEVENT'][0]) & $event->properties['X-MICROSOFT-CDO-ALLDAYEVENT'][0]->value == "TRUE") {
+        $alldayevent = true;
     }
 
     $name = $event->properties['SUMMARY'][0]->value;
@@ -2915,7 +2928,7 @@ function calendar_add_icalendar_event($event, $unused = null, $subscriptionid, $
     }
 
     // Check to see if it should be treated as an all day event.
-    if ($eventrecord->timeduration == DAYSECS) {
+    if ($eventrecord->timeduration == DAYSECS || $alldayevent) {
         // Check to see if the event started at Midnight on the imported calendar.
         date_default_timezone_set($timezone);
         if (date('H:i:s', $eventrecord->timestart) === "00:00:00") {
@@ -3104,7 +3117,7 @@ function calendar_import_icalendar_events($ical, $unused = null, $subscriptionid
     if (isset($ical->properties['X-WR-TIMEZONE'][0]->value)) {
         $timezone = $ical->properties['X-WR-TIMEZONE'][0]->value;
     } else {
-        $timezone = 'UTC';
+        $timezone = 'Pacific Standard Time';
     }
 
     $icaluuids = [];
