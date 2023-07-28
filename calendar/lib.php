@@ -2991,14 +2991,14 @@ function calendar_add_icalendar_event($event, $unused = null, $subscriptionid, $
     }
 
     if ($createdevent = \calendar_event::create($eventrecord, false)) {
-        //if (!empty($event->properties['RRULE'])) {
+        if (!empty($event->properties['RRULE'])) {
             // Repeating events.
-        //    date_default_timezone_set($tz); // Change time zone to parse all events.
-        //    $rrule = new \core_calendar\rrule_manager($event->properties['RRULE'][0]->value);
-        //    $rrule->parse_rrule();
-        //    $rrule->create_events($createdevent);
-        //    \core_date::set_default_server_timezone(); // Change time zone back to what it was.
-        //}
+            date_default_timezone_set($tz); // Change time zone to parse all events.
+            $rrule = new \core_calendar\rrule_manager($event->properties['RRULE'][0]->value);
+            $rrule->parse_rrule();
+            $rrule->create_events($createdevent);
+            \core_date::set_default_server_timezone(); // Change time zone back to what it was.
+        }
         return $return;
     } else {
         return 0;
@@ -3138,7 +3138,9 @@ function calendar_import_icalendar_events($ical, $unused = null, $subscriptionid
     }
 
     $icaluuids = [];
-    foreach ($ical->components['VEVENT'] as $event) {
+    $filteredEvents = filter_events($ical->components['VEVENT']);
+
+    foreach ($filteredEvents as $event) {
         $icaluuids[] = $event->properties['UID'][0]->value . $event->properties['DTSTART'][0]->value;
         $res = calendar_add_icalendar_event($event, null, $subscriptionid, $timezone);
         switch ($res) {
@@ -3186,6 +3188,31 @@ function calendar_import_icalendar_events($ical, $unused = null, $subscriptionid
     $return .= "<p>" . get_string('eventsskipped', 'calendar', $skippedcount) . "</p> ";
     $return .= "<p>" . get_string('eventsupdated', 'calendar', $updatecount) . "</p>";
     return $return;
+}
+
+/**
+* Filter exceptions from recurring events that occur the same datetime as the series start
+* @param array $events An array of RFC-2445 iCalendar events
+* @return array A list of filtered events.
+*/
+function filter_events($events) {
+    return array_filter($events, function($event) use($events) {
+        // Check if event is an exception to recurring event
+        if(!empty($event->properties['RECURRENCE-ID'][0]->value)) {
+
+            // Find if there is a source event with same date and time
+            $sourceevent = array_filter($events, function($n) use($event) {
+                if($n->properties['UID'][0]->value == $event->properties['UID'][0]->value 
+                    && $n->properties['DTSTART'][0]->value == $event->properties['DTSTART'][0]->value) return true;
+            });
+
+            // If there is a source event with the same starttime skip this event
+            if(count($sourceevent)) {
+                return false;
+            }
+        }
+        return true;
+    });
 }
 
 /**
