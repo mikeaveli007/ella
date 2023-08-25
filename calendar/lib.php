@@ -3167,7 +3167,8 @@ function calendar_import_icalendar_events($ical, $unused = null, $subscriptionid
 
     $existing = $DB->get_field('event_subscriptions', 'lastupdated', ['id' => $subscriptionid]);
     if (!empty($existing)) {
-        $eventsuuids = $DB->get_records_menu('event', ['subscriptionid' => $subscriptionid], '', 'id, uuid');
+        $select = "subscriptionid = :subscriptionid AND uuid <> ''";
+        $eventsuuids = $DB->get_records_select_menu('event', $select, ['subscriptionid' => $subscriptionid], '', 'id, uuid');
 
         $icaleventscount = count($icaluuids);
         $tobedeleted = [];
