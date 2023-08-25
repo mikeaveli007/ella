@@ -2880,10 +2880,6 @@ function calendar_add_icalendar_event($event, $unused = null, $subscriptionid, $
         return CALENDAR_IMPORT_EVENT_SKIPPED;
     }
 
-    if(isset($event->properties['X-MICROSOFT-CDO-ALLDAYEVENT'][0]) & $event->properties['X-MICROSOFT-CDO-ALLDAYEVENT'][0]->value == "TRUE") {
-        $alldayevent = true;
-    }
-
     $name = $event->properties['SUMMARY'][0]->value;
     $name = str_replace('\n', '<br />', $name);
     $name = str_replace('\\', '', $name);
@@ -2906,6 +2902,19 @@ function calendar_add_icalendar_event($event, $unused = null, $subscriptionid, $
     // Probably a repeating event with RRULE etc. TODO: skip for now.
     if (empty($event->properties['DTSTART'][0]->value)) {
         return 0;
+    }
+
+    // Check if event is all day and if it is longer than one day
+    if(isset($event->properties['X-MICROSOFT-CDO-ALLDAYEVENT'][0]) & $event->properties['X-MICROSOFT-CDO-ALLDAYEVENT'][0]->value == "TRUE") {
+        $alldayevent = true;
+        if(!empty($event->properties['DTEND'][0]->value)) {
+            $startdate = $event->properties['DTSTART'][0]->value;
+            $enddate = $event->properties['DTEND'][0]->value;
+            $datediff = (new DateTime($startdate))->diff(new DateTime($enddate))->days;
+            if($datediff > 1) { 
+                $multidayevent = true;
+            }
+        }
     }
 
     if (isset($event->properties['DTSTART'][0]->parameters['TZID'])) {
@@ -2934,14 +2943,22 @@ function calendar_add_icalendar_event($event, $unused = null, $subscriptionid, $
         if (date('H:i:s', $eventrecord->timestart) === "00:00:00") {
             // This event should be an all day event. This is not correct, we don't do anything differently for all day events.
             // See MDL-56227.
-            $eventrecord->timeduration = 0;
+
+            // If event spans multiple days, subtract from the time so it does not show on the folling day
+            // otherwise set duration to 0 for one day events
+            if($multidayevent) {
+                $eventrecord->timeduration -= 1;
+            }
+            else {
+                $eventrecord->timeduration = 0;
+            }
         }
         \core_date::set_default_server_timezone();
     }
 
     $eventrecord->location = empty($event->properties['LOCATION'][0]->value) ? '' :
             trim(str_replace('\\', '', $event->properties['LOCATION'][0]->value));
-    $eventrecord->uuid = $event->properties['UID'][0]->value;
+    $eventrecord->uuid = $event->properties['UID'][0]->value . $event->properties['DTSTART'][0]->value;
     $eventrecord->timemodified = time();
 
     // Add the iCal subscription details if required.
@@ -3121,8 +3138,10 @@ function calendar_import_icalendar_events($ical, $unused = null, $subscriptionid
     }
 
     $icaluuids = [];
-    foreach ($ical->components['VEVENT'] as $event) {
-        $icaluuids[] = $event->properties['UID'][0]->value;
+    $filteredEvents = filter_events($ical->components['VEVENT']);
+
+    foreach ($filteredEvents as $event) {
+        $icaluuids[] = $event->properties['UID'][0]->value . $event->properties['DTSTART'][0]->value;
         $res = calendar_add_icalendar_event($event, null, $subscriptionid, $timezone);
         switch ($res) {
             case CALENDAR_IMPORT_EVENT_UPDATED:
@@ -3148,11 +3167,12 @@ function calendar_import_icalendar_events($ical, $unused = null, $subscriptionid
 
     $existing = $DB->get_field('event_subscriptions', 'lastupdated', ['id' => $subscriptionid]);
     if (!empty($existing)) {
-        $eventsuuids = $DB->get_records_menu('event', ['subscriptionid' => $subscriptionid], '', 'id, uuid');
+        $select = "subscriptionid = :subscriptionid AND uuid <> ''";
+        $eventsuuids = $DB->get_records_select_menu('event', $select, ['subscriptionid' => $subscriptionid], '', 'id, uuid');
 
         $icaleventscount = count($icaluuids);
         $tobedeleted = [];
-        if (count($eventsuuids) > $icaleventscount) {
+        if (count($eventsuuids) <> $icaleventscount) {
             foreach ($eventsuuids as $eventid => $eventuuid) {
                 if (!in_array($eventuuid, $icaluuids)) {
                     $tobedeleted[] = $eventid;
@@ -3169,6 +3189,31 @@ function calendar_import_icalendar_events($ical, $unused = null, $subscriptionid
     $return .= "<p>" . get_string('eventsskipped', 'calendar', $skippedcount) . "</p> ";
     $return .= "<p>" . get_string('eventsupdated', 'calendar', $updatecount) . "</p>";
     return $return;
+}
+
+/**
+* Filter exceptions from recurring events that occur the same datetime as the series start
+* @param array $events An array of RFC-2445 iCalendar events
+* @return array A list of filtered events.
+*/
+function filter_events($events) {
+    return array_filter($events, function($event) use($events) {
+        // Check if event is an exception to recurring event
+        if(!empty($event->properties['RECURRENCE-ID'][0]->value)) {
+
+            // Find if there is a source event with same date and time
+            $sourceevent = array_filter($events, function($n) use($event) {
+                if($n->properties['UID'][0]->value == $event->properties['UID'][0]->value 
+                    && $n->properties['DTSTART'][0]->value == $event->properties['DTSTART'][0]->value) return true;
+            });
+
+            // If there is a source event with the same starttime skip this event
+            if(count($sourceevent)) {
+                return false;
+            }
+        }
+        return true;
+    });
 }
 
 /**
